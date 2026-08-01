@@ -1,0 +1,33 @@
+import UIKit
+
+@MainActor
+protocol FLHosting: UIView {
+    var contentSize: CGSize { get }
+}
+
+@MainActor
+final class FLHostView<Node: FLNode>: UIView, FLHosting {
+    private let contentView = Node.View()
+
+    private(set) var contentSize: CGSize = .zero
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+
+        addSubview(contentView)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not supported")
+    }
+
+    override var intrinsicContentSize: CGSize { contentSize }
+
+    func apply(node: Node, layout: Node.Layout, environment: FLEnvironment = .default) {
+        contentSize = layout.size
+        contentView.frame = CGRect(origin: .zero, size: layout.size)
+        contentView.update(node: node, layout: layout, environment: environment)
+        invalidateIntrinsicContentSize()
+    }
+}
