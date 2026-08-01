@@ -364,7 +364,7 @@ final class FLStackView<Axis: FLStackAxis, Group: FLGroup>: FLStructuralView, FL
             if childView.superview !== self {
                 addSubview(childView)
             }
-            childView.frame = childFrame
+            childView.flSetFrame(childFrame, in: context)
         }
     }
 }

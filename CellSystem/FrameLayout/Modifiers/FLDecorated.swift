@@ -114,7 +114,7 @@ final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         clipsToBounds = decoration.clipsToBounds
         drawsContent = decoration.backgroundColor.cgColor.alpha > 0 || decoration.borderWidth > 0
 
-        wrappedView.frame = CGRect(origin: .zero, size: layout.wrapped.size)
+        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.wrapped.size), in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }

@@ -48,10 +48,10 @@ final class FLAdjustedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 
     func update(node: FLAdjusted<Wrapped>, layout: FLAdjustedLayout<Wrapped.Layout>, context: FLRenderContext) {
-        alpha = node.adjustments.opacity
+        context.perform { self.alpha = node.adjustments.opacity }
         isUserInteractionEnabled = node.adjustments.allowsHitTesting
 
-        wrappedView.frame = CGRect(origin: .zero, size: layout.size)
+        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }

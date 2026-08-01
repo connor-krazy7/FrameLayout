@@ -73,10 +73,10 @@ final class FLBackgroundView<Content: FLNode, Background: FLNode>: FLStructuralV
     }
 
     func update(node: Node, layout: FLLayeredLayout<Content.Layout, Background.Layout>, context: FLRenderContext) {
-        backgroundView.frame = layout.secondaryFrame
+        backgroundView.flSetFrame(layout.secondaryFrame, in: context)
         backgroundView.update(node: node.background, layout: layout.secondary, context: context)
 
-        contentView.frame = CGRect(origin: .zero, size: layout.primary.size)
+        contentView.flSetFrame(CGRect(origin: .zero, size: layout.primary.size), in: context)
         contentView.update(node: node.content, layout: layout.primary, context: context)
     }
 }
@@ -116,10 +116,10 @@ final class FLOverlayView<Content: FLNode, Overlay: FLNode>: FLStructuralView, F
     }
 
     func update(node: Node, layout: FLLayeredLayout<Content.Layout, Overlay.Layout>, context: FLRenderContext) {
-        contentView.frame = CGRect(origin: .zero, size: layout.primary.size)
+        contentView.flSetFrame(CGRect(origin: .zero, size: layout.primary.size), in: context)
         contentView.update(node: node.content, layout: layout.primary, context: context)
 
-        overlayView.frame = layout.secondaryFrame
+        overlayView.flSetFrame(layout.secondaryFrame, in: context)
         overlayView.update(node: node.overlay, layout: layout.secondary, context: context)
     }
 }

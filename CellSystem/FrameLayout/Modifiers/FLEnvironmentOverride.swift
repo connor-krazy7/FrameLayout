@@ -33,7 +33,7 @@ final class FLEnvironmentOverrideView<Wrapped: FLNode>: FLStructuralView, FLNode
     }
 
     func update(node: Node, layout: Wrapped.Layout, context: FLRenderContext) {
-        wrappedView.frame = CGRect(origin: .zero, size: layout.size)
+        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
         wrappedView.update(
             node: node.wrapped,
             layout: layout,

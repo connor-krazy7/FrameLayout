@@ -111,7 +111,7 @@ final class FLAspectRatioView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 
     func update(node: FLAspectRatio<Wrapped>, layout: FLAspectRatioLayout<Wrapped.Layout>, context: FLRenderContext) {
-        wrappedView.frame = layout.wrappedFrame
+        wrappedView.flSetFrame(layout.wrappedFrame, in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }

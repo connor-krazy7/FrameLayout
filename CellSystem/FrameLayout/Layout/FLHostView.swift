@@ -13,6 +13,8 @@ final class FLHostView<Node: FLNode>: UIView, FLHosting {
 
     private(set) var contentSize: CGSize = .zero
 
+    private var hasApplied = false
+
     override init(frame: CGRect) {
         super.init(frame: frame)
 
@@ -27,6 +29,19 @@ final class FLHostView<Node: FLNode>: UIView, FLHosting {
     override var intrinsicContentSize: CGSize { contentSize }
 
     func apply(node: Node, layout: Node.Layout, environment: FLEnvironment = .default) {
+        guard hasApplied else {
+            UIView.performWithoutAnimation {
+                applyContent(node: node, layout: layout, environment: environment)
+            }
+            hasApplied = true
+
+            return
+        }
+
+        applyContent(node: node, layout: layout, environment: environment)
+    }
+
+    private func applyContent(node: Node, layout: Node.Layout, environment: FLEnvironment) {
         registry.removeAll()
         contentSize = layout.size
         contentView.frame = CGRect(origin: .zero, size: layout.size)

@@ -41,7 +41,7 @@ final class FLIdentifiedView<Wrapped: FLNode, ID: Hashable & Sendable>: FLStruct
     func update(node: Node, layout: FLIdentifiedLayout<Wrapped.Layout>, context: FLRenderContext) {
         context.registry?.register(self, as: node.id)
 
-        wrappedView.frame = CGRect(origin: .zero, size: layout.size)
+        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }

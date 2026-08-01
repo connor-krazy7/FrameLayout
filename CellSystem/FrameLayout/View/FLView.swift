@@ -70,7 +70,7 @@ final class FLComposedView<Composite: FLView>: FLStructuralView, FLNodeView {
     }
 
     func update(node: FLComposed<Composite>, layout: Composite.Body.Layout, context: FLRenderContext) {
-        bodyView.frame = CGRect(origin: .zero, size: layout.size)
+        bodyView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
         bodyView.update(node: node.body, layout: layout, context: context)
     }
 }

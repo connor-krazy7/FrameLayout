@@ -87,14 +87,14 @@ final class FLEitherView<First: FLNode, Second: FLNode>: FLStructuralView, FLNod
             secondView?.removeFromSuperview()
 
             let view = attachedFirstView()
-            view.frame = CGRect(origin: .zero, size: childLayout.size)
+            view.flSetFrame(CGRect(origin: .zero, size: childLayout.size), in: context)
             view.update(node: childNode, layout: childLayout, context: context)
 
         case let (.second(childNode), .second(childLayout)):
             firstView?.removeFromSuperview()
 
             let view = attachedSecondView()
-            view.frame = CGRect(origin: .zero, size: childLayout.size)
+            view.flSetFrame(CGRect(origin: .zero, size: childLayout.size), in: context)
             view.update(node: childNode, layout: childLayout, context: context)
 
         case (.first, .second), (.second, .first):
@@ -153,7 +153,7 @@ final class FLOptionalView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
             addSubview(view)
         }
 
-        view.frame = CGRect(origin: .zero, size: childLayout.size)
+        view.flSetFrame(CGRect(origin: .zero, size: childLayout.size), in: context)
         view.update(node: childNode, layout: childLayout, context: context)
     }
 }

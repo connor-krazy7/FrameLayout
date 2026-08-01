@@ -115,7 +115,7 @@ final class FLFrameView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 
     func update(node: FLFrame<Wrapped>, layout: FLFrameLayout<Wrapped.Layout>, context: FLRenderContext) {
-        wrappedView.frame = layout.wrappedFrame
+        wrappedView.flSetFrame(layout.wrappedFrame, in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }
