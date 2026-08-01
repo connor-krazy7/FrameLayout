@@ -72,12 +72,12 @@ final class FLBackgroundView<Content: FLNode, Background: FLNode>: FLStructuralV
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: Node, layout: FLLayeredLayout<Content.Layout, Background.Layout>, environment: FLEnvironment) {
+    func update(node: Node, layout: FLLayeredLayout<Content.Layout, Background.Layout>, context: FLRenderContext) {
         backgroundView.frame = layout.secondaryFrame
-        backgroundView.update(node: node.background, layout: layout.secondary, environment: environment)
+        backgroundView.update(node: node.background, layout: layout.secondary, context: context)
 
         contentView.frame = CGRect(origin: .zero, size: layout.primary.size)
-        contentView.update(node: node.content, layout: layout.primary, environment: environment)
+        contentView.update(node: node.content, layout: layout.primary, context: context)
     }
 }
 
@@ -115,12 +115,12 @@ final class FLOverlayView<Content: FLNode, Overlay: FLNode>: FLStructuralView, F
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: Node, layout: FLLayeredLayout<Content.Layout, Overlay.Layout>, environment: FLEnvironment) {
+    func update(node: Node, layout: FLLayeredLayout<Content.Layout, Overlay.Layout>, context: FLRenderContext) {
         contentView.frame = CGRect(origin: .zero, size: layout.primary.size)
-        contentView.update(node: node.content, layout: layout.primary, environment: environment)
+        contentView.update(node: node.content, layout: layout.primary, context: context)
 
         overlayView.frame = layout.secondaryFrame
-        overlayView.update(node: node.overlay, layout: layout.secondary, environment: environment)
+        overlayView.update(node: node.overlay, layout: layout.secondary, context: context)
     }
 }
 

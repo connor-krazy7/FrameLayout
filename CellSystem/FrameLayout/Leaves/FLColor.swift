@@ -43,7 +43,7 @@ final class FLColorView: UIView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLColor, layout: FLColorLayout, environment: FLEnvironment) {
+    func update(node: FLColor, layout: FLColorLayout, context: FLRenderContext) {
         backgroundColor = node.color
     }
 }

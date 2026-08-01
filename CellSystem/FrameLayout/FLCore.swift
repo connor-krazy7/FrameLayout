@@ -337,5 +337,5 @@ protocol FLNodeView: UIView {
 
     init()
 
-    func update(node: Node, layout: Node.Layout, environment: FLEnvironment)
+    func update(node: Node, layout: Node.Layout, context: FLRenderContext)
 }

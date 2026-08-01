@@ -81,21 +81,21 @@ final class FLEitherView<First: FLNode, Second: FLNode>: FLStructuralView, FLNod
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: Node, layout: Node.Layout, environment: FLEnvironment) {
+    func update(node: Node, layout: Node.Layout, context: FLRenderContext) {
         switch (node, layout) {
         case let (.first(childNode), .first(childLayout)):
             secondView?.removeFromSuperview()
 
             let view = attachedFirstView()
             view.frame = CGRect(origin: .zero, size: childLayout.size)
-            view.update(node: childNode, layout: childLayout, environment: environment)
+            view.update(node: childNode, layout: childLayout, context: context)
 
         case let (.second(childNode), .second(childLayout)):
             firstView?.removeFromSuperview()
 
             let view = attachedSecondView()
             view.frame = CGRect(origin: .zero, size: childLayout.size)
-            view.update(node: childNode, layout: childLayout, environment: environment)
+            view.update(node: childNode, layout: childLayout, context: context)
 
         case (.first, .second), (.second, .first):
             break
@@ -139,7 +139,7 @@ final class FLOptionalView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLOptional<Wrapped>, layout: FLOptionalLayout<Wrapped.Layout>, environment: FLEnvironment) {
+    func update(node: FLOptional<Wrapped>, layout: FLOptionalLayout<Wrapped.Layout>, context: FLRenderContext) {
         guard let childNode = node.wrapped, let childLayout = layout.wrapped else {
             wrappedView?.removeFromSuperview()
 
@@ -154,6 +154,6 @@ final class FLOptionalView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         }
 
         view.frame = CGRect(origin: .zero, size: childLayout.size)
-        view.update(node: childNode, layout: childLayout, environment: environment)
+        view.update(node: childNode, layout: childLayout, context: context)
     }
 }

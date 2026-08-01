@@ -7,6 +7,8 @@ protocol FLHosting: UIView {
 
 @MainActor
 final class FLHostView<Node: FLNode>: UIView, FLHosting {
+    let registry = FLViewRegistry()
+
     private let contentView = Node.View()
 
     private(set) var contentSize: CGSize = .zero
@@ -25,9 +27,14 @@ final class FLHostView<Node: FLNode>: UIView, FLHosting {
     override var intrinsicContentSize: CGSize { contentSize }
 
     func apply(node: Node, layout: Node.Layout, environment: FLEnvironment = .default) {
+        registry.removeAll()
         contentSize = layout.size
         contentView.frame = CGRect(origin: .zero, size: layout.size)
-        contentView.update(node: node, layout: layout, environment: environment)
+        contentView.update(
+            node: node,
+            layout: layout,
+            context: FLRenderContext(environment: environment, registry: registry)
+        )
         invalidateIntrinsicContentSize()
     }
 }

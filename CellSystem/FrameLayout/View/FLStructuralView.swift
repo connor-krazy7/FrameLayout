@@ -15,8 +15,12 @@ class FLStructuralView: UIView {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hitView = super.hitTest(point, with: event)
 
-        guard hitView === self, !drawsContent else { return hitView }
+        guard hitView === self, !drawsContent, !acceptsTouches else { return hitView }
 
         return nil
+    }
+
+    private var acceptsTouches: Bool {
+        !(gestureRecognizers ?? []).isEmpty || !interactions.isEmpty
     }
 }

@@ -264,9 +264,9 @@ final class FLTextView: UILabel, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLText, layout: FLTextLayout, environment: FLEnvironment) {
+    func update(node: FLText, layout: FLTextLayout, context: FLRenderContext) {
         numberOfLines = node.lineLimit
         lineBreakMode = node.lineBreakMode
-        attributedText = node.resolvedText(in: environment)
+        attributedText = node.resolvedText(in: context.environment)
     }
 }

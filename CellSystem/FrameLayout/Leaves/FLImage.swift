@@ -116,8 +116,8 @@ final class FLImageView: UIView, FLNodeView {
         imageView.frame = bounds
     }
 
-    func update(node: FLImage, layout: FLImageLayout, environment: FLEnvironment) {
-        let tint = node.tintColor.or(environment.foregroundColor)
+    func update(node: FLImage, layout: FLImageLayout, context: FLRenderContext) {
+        let tint = node.tintColor.or(context.environment.foregroundColor)
 
         imageView.image = tint == nil ? node.image : node.image?.withRenderingMode(.alwaysTemplate)
         imageView.tintColor = tint

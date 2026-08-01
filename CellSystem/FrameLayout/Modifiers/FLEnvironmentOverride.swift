@@ -32,12 +32,12 @@ final class FLEnvironmentOverrideView<Wrapped: FLNode>: FLStructuralView, FLNode
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: Node, layout: Wrapped.Layout, environment: FLEnvironment) {
+    func update(node: Node, layout: Wrapped.Layout, context: FLRenderContext) {
         wrappedView.frame = CGRect(origin: .zero, size: layout.size)
         wrappedView.update(
             node: node.wrapped,
             layout: layout,
-            environment: environment.applying(node.overrides)
+            context: context.applying(node.overrides)
         )
     }
 }

@@ -38,5 +38,5 @@ final class FLSpacerView: UIView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLSpacer, layout: FLSpacerLayout, environment: FLEnvironment) {}
+    func update(node: FLSpacer, layout: FLSpacerLayout, context: FLRenderContext) {}
 }

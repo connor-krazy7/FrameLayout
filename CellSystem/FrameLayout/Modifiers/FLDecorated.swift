@@ -102,7 +102,7 @@ final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLDecorated<Wrapped>, layout: FLDecoratedLayout<Wrapped.Layout>, environment: FLEnvironment) {
+    func update(node: FLDecorated<Wrapped>, layout: FLDecoratedLayout<Wrapped.Layout>, context: FLRenderContext) {
         let decoration = node.decoration
 
         backgroundColor = decoration.backgroundColor
@@ -115,7 +115,7 @@ final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         drawsContent = decoration.backgroundColor.cgColor.alpha > 0 || decoration.borderWidth > 0
 
         wrappedView.frame = CGRect(origin: .zero, size: layout.wrapped.size)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, environment: environment)
+        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }
 

@@ -69,9 +69,9 @@ final class FLComposedView<Composite: FLView>: FLStructuralView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLComposed<Composite>, layout: Composite.Body.Layout, environment: FLEnvironment) {
+    func update(node: FLComposed<Composite>, layout: Composite.Body.Layout, context: FLRenderContext) {
         bodyView.frame = CGRect(origin: .zero, size: layout.size)
-        bodyView.update(node: node.body, layout: layout, environment: environment)
+        bodyView.update(node: node.body, layout: layout, context: context)
     }
 }
 

@@ -25,5 +25,5 @@ protocol FLGroupViews: AnyObject {
 
     init()
 
-    func update(group: Group, layout: Group.Layout, environment: FLEnvironment) -> [UIView]
+    func update(group: Group, layout: Group.Layout, context: FLRenderContext) -> [UIView]
 }

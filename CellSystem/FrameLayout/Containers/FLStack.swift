@@ -357,8 +357,8 @@ final class FLStackView<Axis: FLStackAxis, Group: FLGroup>: FLStructuralView, FL
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLStack<Axis, Group>, layout: FLStackLayout<Group.Layout>, environment: FLEnvironment) {
-        let childViews = groupViews.update(group: node.group, layout: layout.group, environment: environment)
+    func update(node: FLStack<Axis, Group>, layout: FLStackLayout<Group.Layout>, context: FLRenderContext) {
+        let childViews = groupViews.update(group: node.group, layout: layout.group, context: context)
 
         for (childView, childFrame) in zip(childViews, layout.childFrames) {
             if childView.superview !== self {

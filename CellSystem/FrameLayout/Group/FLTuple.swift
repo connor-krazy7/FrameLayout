@@ -108,14 +108,14 @@ final class FLTupleViews<each Child: FLNode>: FLGroupViews {
         views = (repeat (each Child).View())
     }
 
-    func update(group: Group, layout: FLTupleLayout, environment: FLEnvironment) -> [UIView] {
+    func update(group: Group, layout: FLTupleLayout, context: FLRenderContext) -> [UIView] {
         var updatedViews: [UIView] = []
         var index = 0
 
         for (view, child) in repeat (each views, each group.children) {
             guard index < layout.childLayouts.count else { break }
 
-            Self.apply(view: view, node: child, erased: layout.childLayouts[index], environment: environment)
+            Self.apply(view: view, node: child, erased: layout.childLayouts[index], context: context)
             updatedViews.append(view)
             index += 1
         }
@@ -127,10 +127,10 @@ final class FLTupleViews<each Child: FLNode>: FLGroupViews {
         view: Node.View,
         node: Node,
         erased: FLAnyLayout,
-        environment: FLEnvironment
+        context: FLRenderContext
     ) {
         guard let childLayout = erased.unwrap(as: Node.Layout.self) else { return }
-        view.update(node: node, layout: childLayout, environment: environment)
+        view.update(node: node, layout: childLayout, context: context)
     }
 }
 

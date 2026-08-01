@@ -114,9 +114,9 @@ final class FLFrameView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLFrame<Wrapped>, layout: FLFrameLayout<Wrapped.Layout>, environment: FLEnvironment) {
+    func update(node: FLFrame<Wrapped>, layout: FLFrameLayout<Wrapped.Layout>, context: FLRenderContext) {
         wrappedView.frame = layout.wrappedFrame
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, environment: environment)
+        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }
 

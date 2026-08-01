@@ -47,12 +47,12 @@ final class FLAdjustedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLAdjusted<Wrapped>, layout: FLAdjustedLayout<Wrapped.Layout>, environment: FLEnvironment) {
+    func update(node: FLAdjusted<Wrapped>, layout: FLAdjustedLayout<Wrapped.Layout>, context: FLRenderContext) {
         alpha = node.adjustments.opacity
         isUserInteractionEnabled = node.adjustments.allowsHitTesting
 
         wrappedView.frame = CGRect(origin: .zero, size: layout.size)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, environment: environment)
+        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }
 
