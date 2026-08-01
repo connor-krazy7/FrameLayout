@@ -23,12 +23,15 @@ struct FLAnimatedLayout<WrappedLayout: FLLayout>: FLLayout {
     var size: CGSize { wrapped.size }
 }
 
-struct FLAnimated<Wrapped: FLNode>: FLNode {
-    typealias View = FLAnimatedView<Wrapped>
+struct FLAnimationAlways: Hashable, Sendable {}
+
+struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
+    typealias View = FLAnimatedView<Wrapped, Value>
 
     static var typeIdentifier: String { "animated(\(Wrapped.typeIdentifier))" }
 
     let animation: FLAnimation?
+    let value: Value?
     let wrapped: Wrapped
 
     var isEmpty: Bool { wrapped.isEmpty }
@@ -39,11 +42,12 @@ struct FLAnimated<Wrapped: FLNode>: FLNode {
     }
 }
 
-final class FLAnimatedView<Wrapped: FLNode>: FLStructuralView, FLNodeView, FLFrameApplying {
-    typealias Node = FLAnimated<Wrapped>
+final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: FLStructuralView, FLNodeView, FLFrameApplying {
+    typealias Node = FLAnimated<Wrapped, Value>
 
     private let wrappedView = Wrapped.View()
     private var animation: FLAnimation?
+    private var lastValue: Value?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -66,18 +70,46 @@ final class FLAnimatedView<Wrapped: FLNode>: FLStructuralView, FLNodeView, FLFra
         animation.run { self.frame = frame }
     }
 
-    func update(node: FLAnimated<Wrapped>, layout: FLAnimatedLayout<Wrapped.Layout>, context: FLRenderContext) {
-        animation = node.animation
+    func update(node: Node, layout: FLAnimatedLayout<Wrapped.Layout>, context: FLRenderContext) {
+        let effectiveAnimation = node.animation.filter { _ in shouldAnimate(for: node.value) }
 
-        let childContext = context.animating(node.animation)
+        animation = effectiveAnimation
+
+        let childContext = context.animating(effectiveAnimation)
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
     }
+
+    private func shouldAnimate(for value: Value?) -> Bool {
+        guard let value else { return true }
+
+        let previous = lastValue
+        lastValue = value
+
+        guard let previous else { return false }
+
+        return previous != value
+    }
+}
+
+extension Optional {
+    fileprivate func filter(_ isIncluded: (Wrapped) -> Bool) -> Wrapped? {
+        guard let self, isIncluded(self) else { return nil }
+
+        return self
+    }
 }
 
 extension FLNode {
-    func animation(_ animation: FLAnimation?) -> FLAnimated<Self> {
-        FLAnimated(animation: animation, wrapped: self)
+    func animation(_ animation: FLAnimation?) -> FLAnimated<Self, FLAnimationAlways> {
+        FLAnimated(animation: animation, value: nil, wrapped: self)
+    }
+
+    func animation<Value: Hashable & Sendable>(
+        _ animation: FLAnimation?,
+        value: Value
+    ) -> FLAnimated<Self, Value> {
+        FLAnimated(animation: animation, value: value, wrapped: self)
     }
 }

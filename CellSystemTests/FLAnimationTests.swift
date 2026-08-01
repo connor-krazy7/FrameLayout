@@ -141,3 +141,141 @@ struct FLAnimationTests {
         #expect(spring == FLAnimation.spring(0.5, damping: 0.7, initialVelocity: 0.1))
     }
 }
+
+private struct ValueRow: FLView {
+    let height: CGFloat
+    let tracked: Int
+
+    var body: some FLNode {
+        FLColor(.systemBlue)
+            .frame(width: 100, height: height)
+            .id(Part.animated)
+            .animation(.linear(0.3), value: tracked)
+    }
+}
+
+@MainActor
+@Suite("Animation scoped to a value")
+struct FLAnimationValueTests {
+    private let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+
+    private func hosted() -> FLHost<ValueRow> {
+        let host = FLHost<ValueRow>()
+
+        window.addSubview(host)
+        window.makeKeyAndVisible()
+        apply(height: 40, tracked: 0, to: host)
+
+        return host
+    }
+
+    private func apply(height: CGFloat, tracked: Int, to host: FLHost<ValueRow>) {
+        let node = ValueRow(height: height, tracked: tracked).node
+        let layout = node.layout(in: FLContext(width: 300))
+
+        host.frame = CGRect(origin: .zero, size: layout.size)
+        host.apply(node: node, layout: layout)
+    }
+
+    private func animation(in host: FLHost<ValueRow>) -> CAAnimation? {
+        guard let view = host.registry.view(for: Part.animated),
+              let key = view.layer.animationKeys()?.first else { return nil }
+
+        return view.layer.animation(forKey: key)
+    }
+
+    @Test("a change to the tracked value animates")
+    func trackedChangeAnimates() {
+        let host = hosted()
+
+        apply(height: 90, tracked: 1, to: host)
+
+        #expect(animation(in: host)?.duration == 0.3)
+    }
+
+    @Test("a layout change with the value unchanged does not animate")
+    func untrackedChangeDoesNotAnimate() {
+        let host = hosted()
+
+        apply(height: 90, tracked: 0, to: host)
+
+        #expect(animation(in: host) == nil)
+    }
+
+    @Test("the tracked value gates each apply independently")
+    func gatingIsPerApply() {
+        let host = hosted()
+
+        apply(height: 90, tracked: 1, to: host)
+        #expect(animation(in: host)?.duration == 0.3)
+
+        clearAnimations(in: host)
+        apply(height: 140, tracked: 1, to: host)
+        #expect(animation(in: host) == nil)
+
+        clearAnimations(in: host)
+        apply(height: 200, tracked: 2, to: host)
+        #expect(animation(in: host)?.duration == 0.3)
+    }
+
+    private func clearAnimations(in host: FLHost<ValueRow>) {
+        host.registry.view(for: Part.animated)?.layer.removeAllAnimations()
+    }
+
+    @Test("the tracked value takes part in node equality")
+    func valueAffectsIdentity() {
+        let base = FLColor(.red).frame(width: 10, height: 10)
+
+        #expect(base.animation(.linear(0.2), value: 1) == base.animation(.linear(0.2), value: 1))
+        #expect(base.animation(.linear(0.2), value: 1) != base.animation(.linear(0.2), value: 2))
+    }
+}
+
+@MainActor
+@Suite("Transition playground")
+struct FLTransitionPlaygroundTests {
+    private let context = FLContext(width: 320)
+
+    private func collapsing(_ showsRetry: Bool) -> CGFloat {
+        CollapsingDemoRow(showsRetry: showsRetry, animation: .linear(0.2)).node.layout(in: context).size.height
+    }
+
+    private func conditional(_ showsRetry: Bool) -> CGFloat {
+        ConditionalDemoRow(showsRetry: showsRetry).node.layout(in: context).size.height
+    }
+
+    @Test("both rows are the same height while the retry is showing")
+    func sameHeightWhenShown() {
+        #expect(collapsing(true) == conditional(true))
+    }
+
+    @Test("collapsing gives back the retry's height but keeps its spacing")
+    func collapsingKeepsSpacing() {
+        #expect(collapsing(true) - collapsing(false) == 26)
+        #expect(collapsing(false) - conditional(false) == 8)
+    }
+
+    @Test("removing gives back the height and the spacing")
+    func conditionalGivesBackBoth() {
+        #expect(conditional(true) - conditional(false) == 34)
+    }
+
+    @Test("the retry part is registered while collapsed, and gone when removed")
+    func registrationDiffersBetweenTheTwo() {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        let collapsingHost = FLHost<CollapsingDemoRow>()
+        let conditionalHost = FLHost<ConditionalDemoRow>()
+
+        window.addSubview(collapsingHost)
+        window.addSubview(conditionalHost)
+
+        let collapsed = CollapsingDemoRow(showsRetry: false, animation: .linear(0.2)).node
+        let removed = ConditionalDemoRow(showsRetry: false).node
+
+        collapsingHost.apply(node: collapsed, layout: collapsed.layout(in: context))
+        conditionalHost.apply(node: removed, layout: removed.layout(in: context))
+
+        #expect(collapsingHost.registry.contains(TransitionDemoPart.retry))
+        #expect(conditionalHost.registry.contains(TransitionDemoPart.retry) == false)
+    }
+}

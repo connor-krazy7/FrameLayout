@@ -57,7 +57,10 @@ struct FLAnimation: Hashable, Sendable {
 
 extension FLAnimation {
     @MainActor
-    func run(_ changes: @escaping @MainActor () -> Void) {
+    func run(
+        _ changes: @escaping @MainActor () -> Void,
+        completion: (@MainActor (Bool) -> Void)? = nil
+    ) {
         let options: UIView.AnimationOptions = [
             timing.options,
             .overrideInheritedDuration,
@@ -66,7 +69,13 @@ extension FLAnimation {
         ]
 
         guard let spring = timing.spring else {
-            UIView.animate(withDuration: duration, delay: delay, options: options, animations: changes)
+            UIView.animate(
+                withDuration: duration,
+                delay: delay,
+                options: options,
+                animations: changes,
+                completion: completion
+            )
 
             return
         }
@@ -77,7 +86,8 @@ extension FLAnimation {
             usingSpringWithDamping: spring.damping,
             initialSpringVelocity: spring.initialVelocity,
             options: options,
-            animations: changes
+            animations: changes,
+            completion: completion
         )
     }
 }
