@@ -125,3 +125,40 @@ extension FLNodeProviding {
         FLAspectRatio(ratio: ratio, contentMode: contentMode, alignment: alignment, wrapped: flNode)
     }
 }
+
+// A ratio-driven node answers from the width it was proposed and never learns about a height bound, so
+// `frame(maxHeight:)` shrinks the box while the content keeps overflowing it. These bound the width
+// instead — `maxHeight * ratio` is the width at which the height reaches the cap — which is the only
+// axis a bound can act on. SwiftUI behaves the same way; see the layout-proposals rule.
+extension FLNodeProviding {
+    func aspectRatio(
+        _ ratio: CGFloat,
+        contentMode: FLAspectContentMode = .fit,
+        maxWidth: CGFloat,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
+        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
+            .frame(maxWidth: maxWidth)
+    }
+
+    func aspectRatio(
+        _ ratio: CGFloat,
+        contentMode: FLAspectContentMode = .fit,
+        maxHeight: CGFloat,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
+        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
+            .frame(maxWidth: maxHeight * ratio)
+    }
+
+    func aspectRatio(
+        _ ratio: CGFloat,
+        contentMode: FLAspectContentMode = .fit,
+        maxWidth: CGFloat,
+        maxHeight: CGFloat,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
+        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
+            .frame(maxWidth: min(maxWidth, maxHeight * ratio))
+    }
+}

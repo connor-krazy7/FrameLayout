@@ -192,6 +192,44 @@ struct FLSwiftUIParityTests {
         #expect(fl.height == cap)
     }
 
+    @Test("the maxHeight overload matches the maxHeight-times-ratio spelling it replaces")
+    func maxHeightOverloadMatchesTheArithmetic() {
+        for sample in FlexiblePhotoSample.samples {
+            let cap = FlexiblePhotoSample.maximumHeight
+            let fl = FLImage(sample.image)
+                .resizable()
+                .aspectRatio(sample.ratio, contentMode: .fit, maxWidth: sample.pixelSize.width, maxHeight: cap)
+                .layout(in: FLContext(width: box))
+                .size
+            let swiftUI = swiftUISize(
+                Image(uiImage: sample.image)
+                    .resizable()
+                    .aspectRatio(sample.ratio, contentMode: .fit)
+                    .frame(maxWidth: min(sample.pixelSize.width, cap * sample.ratio))
+            )
+
+            expectSame(fl, swiftUI, tolerance: 1)
+            #expect(fl.height <= cap + 1)
+            #expect(fl.width <= box)
+        }
+    }
+
+    @Test("the maxHeight overload caps the height the plain modifier could not")
+    func maxHeightOverloadCapsTheHeight() {
+        let tallRatio = portrait.size.width / portrait.size.height
+        let cap: CGFloat = 100
+        let plain = FLImage(portrait).resizable().aspectRatio(tallRatio, contentMode: .fit)
+            .frame(maxHeight: cap)
+            .layout(in: FLContext(width: box)).size
+        let capped = FLImage(portrait).resizable()
+            .aspectRatio(tallRatio, contentMode: .fit, maxHeight: cap)
+            .layout(in: FLContext(width: box)).size
+
+        #expect(plain.width == box)
+        #expect(capped.height <= cap)
+        #expect(abs(capped.width / capped.height - tallRatio) < 0.02)
+    }
+
     @Test("padding shrinks the proposal the child sees, in both systems")
     func paddingShrinksTheProposal() {
         expectSame(

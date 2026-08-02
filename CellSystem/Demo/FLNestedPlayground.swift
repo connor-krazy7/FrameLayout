@@ -68,8 +68,12 @@ struct DemoConversationPhoto: FLView {
         FLImage(UIImage(systemName: photo.symbol))
             .resizable()
             .foregroundColor(.white)
-            .aspectRatio(photo.ratio, contentMode: .fit)
-            .frame(maxWidth: min(photo.pixelSize.width, Self.maximumHeight * photo.ratio))
+            .aspectRatio(
+                photo.ratio,
+                contentMode: .fit,
+                maxWidth: photo.pixelSize.width,
+                maxHeight: Self.maximumHeight
+            )
             .background(.white.withAlphaComponent(0.15), in: .roundedRectangle(12))
             .clipped()
     }
