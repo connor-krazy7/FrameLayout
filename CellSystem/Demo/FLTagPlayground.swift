@@ -64,7 +64,7 @@ struct DemoMessageRow: FLView {
 }
 
 @MainActor
-final class FLIdentityPlaygroundViewController: UIViewController {
+final class FLTagPlaygroundViewController: UIViewController {
     private let host = FLHost<DemoMessageRow>()
     private let logLabel = UILabel().then {
         $0.numberOfLines = 0
@@ -261,7 +261,7 @@ final class FLIdentityPlaygroundViewController: UIViewController {
     }
 }
 
-#Preview("id + gestures") {
-    FLIdentityPlaygroundViewController.asViewRepresentable()
+#Preview("tags + gestures") {
+    FLTagPlaygroundViewController.asViewRepresentable()
         .ignoresSafeArea()
 }
