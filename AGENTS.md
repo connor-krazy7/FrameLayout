@@ -12,6 +12,7 @@ Claude Code loads that directory directly; other agents should read the files li
 - `.claude/rules/style/value-expressions.md` — producing values at declaration, and keeping expressions short enough to infer
 - `.claude/rules/architecture/leaf-views.md` — wrap UIKit controls rather than subclassing them; picking `FLStructuralView` vs `UIView` and how hit-test pass-through works
 - `.claude/rules/architecture/node-equality.md` — let `Hashable` synthesis produce a node's `==`/`hash`, and why no identity fast path
+- `.claude/rules/architecture/layout-proposals.md` — a proposal is a question, not a constraint; only a pinned frame hands a size down, and how to measure parity against real SwiftUI
 
 ## Architecture
 
@@ -36,8 +37,9 @@ must never hold closures, handlers, or view references.
   layout-neutral. `background` and `border` must wrap so translucent colours composite and fills escape
   an outer clip.
 - `if` / `if let` / `else if` in a builder produce `FLEither` and `FLOptional`, so both branches stay
-  statically typed. An absent child reports `isEmpty`, which the stack uses to skip it when spending
-  spacing — otherwise a branch that produced nothing would leave a gap.
+  statically typed. Groups flatten: a group contributes *N* children to its parent, so an absent branch
+  contributes none and the stack never spends spacing on it. `FLForEach` is the same mechanism at
+  runtime arity.
 
 ## Build settings that are load-bearing
 
@@ -106,4 +108,9 @@ inflates every figure, so switch the test action to Release before trusting abso
 suite documents its own results table.
 
 Visual behaviour is checked against SwiftUI side by side in `Demo/FLChainPreview.swift`
-(previews: `all cases`, `padding + background`, `alpha compositing`, `lineLimit + alignment`).
+(previews: `all cases`, `padding + background`, `alpha compositing`, `lineLimit + alignment`) and
+`Demo/FLImageComparison.swift` (intrinsic vs resizable, aspect ratio, content mode, tinting).
+
+Layout parity is also asserted numerically: `FLSwiftUIParityTests` measures FL's computed sizes against
+real SwiftUI through `UIHostingController.sizeThatFits(in:)`. See the layout-proposals rule for what that
+measurement can and cannot tell you.

@@ -63,8 +63,10 @@ struct FLFrame<Wrapped: FLNode>: FLNode {
         case let .exact(value):
             .exact(clamp(value, min: lower, max: upper))
         case .unspecified:
-            // A constrained frame still bounds its child even with nothing proposed from above.
-            finite(upper).or(lower).map { .exact(clamp($0, min: lower, max: upper)) }.or(.unspecified)
+            // With nothing proposed from above, only a frame pinned to one value can hand a size
+            // down. A bounded one clamps whatever the child answers instead — proposing the bound
+            // would inflate a flexible child to it, which is not what maxWidth/maxHeight mean.
+            pinned(min: lower, max: upper).map { FLProposal.exact($0) }.or(.unspecified)
         case .minimum, .maximum:
             proposal
         }
@@ -93,8 +95,10 @@ struct FLFrame<Wrapped: FLNode>: FLNode {
         return lower.map { Swift.max(capped, $0) }.or(capped)
     }
 
-    private static func finite(_ value: CGFloat?) -> CGFloat? {
-        value.flatMap { $0.isFinite ? $0 : nil }
+    private static func pinned(min lower: CGFloat?, max upper: CGFloat?) -> CGFloat? {
+        guard let lower, let upper, lower == upper, lower.isFinite else { return nil }
+
+        return lower
     }
 }
 
