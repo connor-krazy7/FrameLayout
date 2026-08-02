@@ -212,7 +212,7 @@ final class FLTagPlaygroundViewController: UIViewController {
 
     private func updateRegisteredLabel() {
         let registered = DemoRowPart.allCases
-            .filter { host.registry.contains($0) }
+            .filter { host.registry.containsView(withTag: $0) }
             .map(\.title)
 
         registeredLabel.text = "registered parts  \(registered.joined(separator: ", "))"

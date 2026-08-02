@@ -275,7 +275,7 @@ struct FLTransitionPlaygroundTests {
         collapsingHost.apply(node: collapsed, layout: collapsed.layout(in: context))
         conditionalHost.apply(node: removed, layout: removed.layout(in: context))
 
-        #expect(collapsingHost.registry.contains(TransitionDemoPart.retry))
-        #expect(conditionalHost.registry.contains(TransitionDemoPart.retry) == false)
+        #expect(collapsingHost.registry.containsView(withTag: TransitionDemoPart.retry))
+        #expect(conditionalHost.registry.containsView(withTag: TransitionDemoPart.retry) == false)
     }
 }

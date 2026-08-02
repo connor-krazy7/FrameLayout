@@ -184,7 +184,7 @@ struct FLButtonPlaygroundTests {
 
     private func hosted(isDisabled: Bool) -> FLHost<ButtonDemoToolbar> {
         let host = FLHost<ButtonDemoToolbar>()
-        let node = ButtonDemoToolbar(isDisabled: isDisabled).node
+        let node = ButtonDemoToolbar(isDisabled: isDisabled, showsRetry: false).node
         let layout = node.layout(in: FLContext(width: 320))
 
         host.frame = CGRect(origin: .zero, size: layout.size)
@@ -203,6 +203,41 @@ struct FLButtonPlaygroundTests {
         for part in [ButtonDemoPart.send, .cancel, .more, .card] {
             #expect(host.registry.button(withTag: part) != nil)
         }
+    }
+
+    @Test("a binding declared once reaches the conditional button when it appears")
+    func conditionalButtonIsBoundOnArrival() {
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 600))
+        let host = FLHost<ButtonDemoToolbar>()
+        var retries = 0
+
+        window.addSubview(host)
+        window.makeKeyAndVisible()
+        host.registry.bindAction(withTag: ButtonDemoPart.retry) { _ in retries += 1 }
+
+        func apply(showsRetry: Bool) {
+            let node = ButtonDemoToolbar(isDisabled: false, showsRetry: showsRetry).node
+            let layout = node.layout(in: FLContext(width: 320))
+
+            host.frame = CGRect(origin: .zero, size: layout.size)
+            host.apply(node: node, layout: layout)
+            host.layoutIfNeeded()
+        }
+
+        apply(showsRetry: false)
+
+        #expect(host.registry.button(withTag: ButtonDemoPart.retry) == nil)
+
+        apply(showsRetry: true)
+        host.registry.button(withTag: ButtonDemoPart.retry)?.sendActions(for: .touchUpInside)
+
+        #expect(retries == 1)
+
+        apply(showsRetry: false)
+        apply(showsRetry: true)
+        host.registry.button(withTag: ButtonDemoPart.retry)?.sendActions(for: .touchUpInside)
+
+        #expect(retries == 2)
     }
 
     @Test("one disabled modifier turns the whole toolbar off")
@@ -230,8 +265,8 @@ struct FLButtonPlaygroundTests {
         let context = FLContext(width: 320)
 
         #expect(
-            ButtonDemoToolbar(isDisabled: true).node.layout(in: context).size
-                == ButtonDemoToolbar(isDisabled: false).node.layout(in: context).size
+            ButtonDemoToolbar(isDisabled: true, showsRetry: false).node.layout(in: context).size
+                == ButtonDemoToolbar(isDisabled: false, showsRetry: false).node.layout(in: context).size
         )
     }
 }

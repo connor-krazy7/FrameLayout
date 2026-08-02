@@ -38,7 +38,7 @@ final class FLTaggedView<Wrapped: FLNode, Tag: Hashable & Sendable>: FLStructura
     }
 
     func update(node: Node, layout: FLTaggedLayout<Wrapped.Layout>, context: FLRenderContext) {
-        context.registry?.register(self, withTag: node.tag)
+        context.registry?.registerView(self, withTag: node.tag)
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)

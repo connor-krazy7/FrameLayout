@@ -1,11 +1,12 @@
 import SwiftUI
 import UIKit
 
-enum ButtonDemoPart: Hashable, Sendable {
+enum ButtonDemoPart: Hashable, Sendable, CaseIterable {
     case send
     case cancel
     case more
     case card
+    case retry
 
     var title: String {
         switch self {
@@ -13,12 +14,14 @@ enum ButtonDemoPart: Hashable, Sendable {
         case .cancel: "cancel"
         case .more: "more"
         case .card: "card"
+        case .retry: "retry"
         }
     }
 }
 
 struct ButtonDemoToolbar: FLView {
     let isDisabled: Bool
+    let showsRetry: Bool
 
     var body: some FLNode {
         FLVStack(alignment: .leading, spacing: 12) {
@@ -74,6 +77,18 @@ struct ButtonDemoToolbar: FLView {
                 .background(.secondarySystemBackground, in: .roundedRectangle(14))
             }
             .accessibilityLabel("Open profile")
+
+            if showsRetry {
+                FLButton(tag: ButtonDemoPart.retry, style: .scaling(0.94, opacity: 0.7)) {
+                    FLText("Retry")
+                        .font(.systemFont(ofSize: 13, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(.systemRed, in: .capsule)
+                }
+                .accessibilityLabel("Retry sending")
+            }
         }
         .disabled(isDisabled)
     }
@@ -85,6 +100,7 @@ final class FLButtonPlaygroundViewController: UIViewController {
     private let host = FLHost<ButtonDemoToolbar>()
     private let delaysToggle = UISwitch().then { $0.isOn = true }
     private let disabledToggle = UISwitch()
+    private let retryToggle = UISwitch()
     private let log = UILabel().then {
         $0.numberOfLines = 0
         $0.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
@@ -116,6 +132,7 @@ final class FLButtonPlaygroundViewController: UIViewController {
         let controls = UIStackView(arrangedSubviews: [
             toggleRow("scroll view delays content touches", delaysToggle),
             toggleRow("disable the whole toolbar", disabledToggle),
+            toggleRow("show the retry button", retryToggle),
             log,
         ]).then {
             $0.axis = .vertical
@@ -156,6 +173,17 @@ final class FLButtonPlaygroundViewController: UIViewController {
 
         disabledToggle.addAction(UIAction { [weak self] _ in self?.reload() }, for: .valueChanged)
 
+        retryToggle.addAction(
+            UIAction { [weak self] _ in
+                guard let self else { return }
+
+                reload()
+                record("retry button \(retryToggle.isOn ? "appeared" : "went away")")
+            },
+            for: .valueChanged
+        )
+
+        bindActions()
         reload()
     }
 
@@ -169,24 +197,17 @@ final class FLButtonPlaygroundViewController: UIViewController {
 
     private func reload() {
         let width = max(1, view.bounds.width - 32)
-        let node = ButtonDemoToolbar(isDisabled: disabledToggle.isOn).node
+        let node = ButtonDemoToolbar(isDisabled: disabledToggle.isOn, showsRetry: retryToggle.isOn).node
 
         host.apply(node: node, layout: node.layout(in: FLContext(width: width)))
-        attachActions()
         record("toolbar \(disabledToggle.isOn ? "disabled" : "enabled")")
     }
 
-    private func attachActions() {
-        for part in [ButtonDemoPart.send, .cancel, .more, .card] {
-            guard let button = host.registry.button(withTag: part) else { continue }
-
-            button.removeAction(identifiedBy: UIAction.Identifier(part.title), for: .touchUpInside)
-            button.addAction(
-                UIAction(identifier: UIAction.Identifier(part.title)) { [weak self] _ in
-                    self?.record("tapped \(part.title)")
-                },
-                for: .touchUpInside
-            )
+    private func bindActions() {
+        for part in ButtonDemoPart.allCases {
+            host.registry.bindAction(withTag: part) { [weak self] _ in
+                self?.record("tapped \(part.title)")
+            }
         }
     }
 

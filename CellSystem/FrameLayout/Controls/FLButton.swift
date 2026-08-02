@@ -82,7 +82,7 @@ final class FLButtonView<Wrapped: FLNode, Tag: Hashable & Sendable>: UIControl, 
     }
 
     func update(node: Node, layout: FLButtonLayout<Wrapped.Layout>, context: FLRenderContext) {
-        context.registry?.register(self, withTag: node.tag)
+        context.registry?.registerView(self, withTag: node.tag)
 
         style = node.style
         isEnabled = context.isEnabled

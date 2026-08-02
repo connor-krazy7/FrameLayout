@@ -62,9 +62,9 @@ struct FLTagTests {
         let host = hosted(Row(hasFailed: true))
 
         #expect(host.registry.count == 3)
-        #expect(host.registry.contains(RowPart.avatar))
-        #expect(host.registry.contains(RowPart.bubble))
-        #expect(host.registry.contains(RowPart.retry))
+        #expect(host.registry.containsView(withTag: RowPart.avatar))
+        #expect(host.registry.containsView(withTag: RowPart.bubble))
+        #expect(host.registry.containsView(withTag: RowPart.retry))
     }
 
     @Test("an unknown tag resolves to nothing")
@@ -93,8 +93,8 @@ struct FLTagTests {
         let present = hosted(Row(hasFailed: true))
 
         #expect(absent.registry.count == 2)
-        #expect(absent.registry.contains(RowPart.retry) == false)
-        #expect(present.registry.contains(RowPart.retry))
+        #expect(absent.registry.containsView(withTag: RowPart.retry) == false)
+        #expect(present.registry.containsView(withTag: RowPart.retry))
     }
 
     @Test("reapplying refreshes the registry rather than accumulating")
@@ -108,7 +108,7 @@ struct FLTagTests {
         host.layoutIfNeeded()
 
         #expect(host.registry.count == 2)
-        #expect(host.registry.contains(RowPart.retry) == false)
+        #expect(host.registry.containsView(withTag: RowPart.retry) == false)
     }
 
     @Test("a tag takes part in node equality")
@@ -186,10 +186,10 @@ struct FLTagTests {
         host.apply(node: node, layout: layout)
         host.layoutIfNeeded()
 
-        #expect(host.registry.contains(DemoRowPart.avatar))
-        #expect(host.registry.contains(DemoRowPart.bubble))
-        #expect(host.registry.contains(DemoRowPart.replyPreview))
-        #expect(host.registry.contains(DemoRowPart.retry) == false)
+        #expect(host.registry.containsView(withTag: DemoRowPart.avatar))
+        #expect(host.registry.containsView(withTag: DemoRowPart.bubble))
+        #expect(host.registry.containsView(withTag: DemoRowPart.replyPreview))
+        #expect(host.registry.containsView(withTag: DemoRowPart.retry) == false)
     }
 
     @Test("the playground row gains and loses parts with its state")
@@ -207,12 +207,12 @@ struct FLTagTests {
 
         apply(replyingTo: nil, hasFailed: true)
 
-        #expect(host.registry.contains(DemoRowPart.replyPreview) == false)
-        #expect(host.registry.contains(DemoRowPart.retry))
+        #expect(host.registry.containsView(withTag: DemoRowPart.replyPreview) == false)
+        #expect(host.registry.containsView(withTag: DemoRowPart.retry))
 
         apply(replyingTo: "Replying to Ann", hasFailed: false)
 
-        #expect(host.registry.contains(DemoRowPart.replyPreview))
-        #expect(host.registry.contains(DemoRowPart.retry) == false)
+        #expect(host.registry.containsView(withTag: DemoRowPart.replyPreview))
+        #expect(host.registry.containsView(withTag: DemoRowPart.retry) == false)
     }
 }
