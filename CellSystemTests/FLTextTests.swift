@@ -216,6 +216,28 @@ struct FLTextStylingTests {
         #expect(node.lineBreakMode == .byTruncatingTail)
     }
 
+    @Test("the styling nearest the text wins, collapsed onto the node or nested around it")
+    func theNearestStylingWins() {
+        let collapsed = FLText("Hello")
+            .foregroundColor(.systemGreen)
+            .font(.systemFont(ofSize: 20))
+            .foregroundColor(.systemBlue)
+            .font(.systemFont(ofSize: 40))
+        let nested = FLText("Hello")
+            .foregroundColor(.systemGreen)
+            .font(.systemFont(ofSize: 20))
+
+        let fromChain = collapsed.resolvedText(in: FLEnvironment())
+        let fromEnvironment = nested.resolvedText(
+            in: FLEnvironment(foregroundColor: .systemBlue, font: .systemFont(ofSize: 40))
+        )
+
+        #expect(fromChain.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor == .systemGreen)
+        #expect(fromChain.attribute(.font, at: 0, effectiveRange: nil) as? UIFont == .systemFont(ofSize: 20))
+        #expect(fromEnvironment.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor == .systemGreen)
+        #expect(fromEnvironment.attribute(.font, at: 0, effectiveRange: nil) as? UIFont == .systemFont(ofSize: 20))
+    }
+
     @Test("text modifiers preserve styling set before them")
     func textModifiersPreserveStyling() {
         let styled = FLText("Hello").font(.systemFont(ofSize: 20))

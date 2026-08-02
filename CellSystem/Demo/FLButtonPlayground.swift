@@ -47,7 +47,7 @@ struct ButtonDemoToolbar: FLView {
 
                 FLButton(tag: ButtonDemoPart.more, style: .scaling(0.88)) {
                     FLImage(UIImage(systemName: "ellipsis"))
-                        .tint(.label)
+                        .foregroundColor(.label)
                         .frame(width: 36, height: 36)
                         .background(.secondarySystemFill, in: .capsule)
                 }

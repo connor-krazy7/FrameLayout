@@ -67,8 +67,7 @@ struct DemoConversationPhoto: FLView {
     var body: some FLNode {
         FLImage(UIImage(systemName: photo.symbol))
             .resizable()
-            .contentMode(.scaleAspectFill)
-            .tint(.white)
+            .foregroundColor(.white)
             .aspectRatio(photo.ratio, contentMode: .fit)
             .frame(maxWidth: min(photo.pixelSize.width, Self.maximumHeight * photo.ratio))
             .background(.white.withAlphaComponent(0.15), in: .roundedRectangle(12))
@@ -117,7 +116,7 @@ struct DemoAttachmentRow: FLView {
     var body: some FLNode {
         FLHStack(spacing: 8) {
             FLImage(UIImage(systemName: attachment.symbol))
-                .tint(.white)
+                .foregroundColor(.white)
                 .frame(width: 22, height: 22)
 
             FLVStack(alignment: .leading, spacing: 1) {

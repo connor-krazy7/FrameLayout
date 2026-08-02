@@ -64,8 +64,8 @@ struct FLEnvironmentOverrides: Sendable, Hashable {
 
     func merging(_ other: FLEnvironmentOverrides) -> FLEnvironmentOverrides {
         FLEnvironmentOverrides(
-            foregroundColor: other.foregroundColor.or(foregroundColor),
-            font: other.font.or(font)
+            foregroundColor: foregroundColor.or(other.foregroundColor),
+            font: font.or(other.font)
         )
     }
 }

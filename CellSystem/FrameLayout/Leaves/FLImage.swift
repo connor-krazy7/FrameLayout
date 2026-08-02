@@ -13,38 +13,46 @@ struct FLImage: FLNode {
 
     let image: UIImage?
     let contentMode: UIView.ContentMode
-    let tintColor: UIColor?
+    let overrides: FLEnvironmentOverrides
     let isResizable: Bool
 
     init(_ image: UIImage?) {
-        self.init(image, contentMode: .scaleAspectFill, tintColor: nil, isResizable: false)
+        self.init(image, contentMode: .scaleAspectFit, overrides: FLEnvironmentOverrides(), isResizable: false)
     }
 
     private init(
         _ image: UIImage?,
         contentMode: UIView.ContentMode,
-        tintColor: UIColor?,
+        overrides: FLEnvironmentOverrides,
         isResizable: Bool
     ) {
         self.image = image
         self.contentMode = contentMode
-        self.tintColor = tintColor
+        self.overrides = overrides
         self.isResizable = isResizable
     }
 
     /// Only the image knows it can be resampled, so willingness to take a proposal has to live here
     /// rather than in a modifier.
     func resizable() -> FLImage {
-        FLImage(image, contentMode: contentMode, tintColor: tintColor, isResizable: true)
+        FLImage(image, contentMode: contentMode, overrides: overrides, isResizable: true)
     }
 
     func contentMode(_ contentMode: UIView.ContentMode) -> FLImage {
-        FLImage(image, contentMode: contentMode, tintColor: tintColor, isResizable: isResizable)
+        FLImage(image, contentMode: contentMode, overrides: overrides, isResizable: isResizable)
+    }
+    
+    func foregroundColor(_ color: UIColor?) -> FLImage {
+        environment(FLEnvironmentOverrides(foregroundColor: color))
     }
 
-    /// A tint implies template rendering, which is applied when the view is configured.
-    func tint(_ color: UIColor?) -> FLImage {
-        FLImage(image, contentMode: contentMode, tintColor: color, isResizable: isResizable)
+    func environment(_ other: FLEnvironmentOverrides) -> FLImage {
+        FLImage(
+            image,
+            contentMode: contentMode,
+            overrides: overrides.merging(other),
+            isResizable: isResizable
+        )
     }
 
     func layout(in context: FLContext) -> FLImageLayout {
@@ -75,14 +83,14 @@ struct FLImage: FLNode {
 extension FLImage {
     static func == (lhs: FLImage, rhs: FLImage) -> Bool {
         lhs.contentMode == rhs.contentMode
-            && lhs.tintColor == rhs.tintColor
+            && lhs.overrides == rhs.overrides
             && lhs.isResizable == rhs.isResizable
             && (lhs.image === rhs.image || lhs.image == rhs.image)
     }
 
     func hash(into hasher: inout Hasher) {
         hasher.combine(contentMode)
-        hasher.combine(tintColor)
+        hasher.combine(overrides)
         hasher.combine(isResizable)
         hasher.combine(image?.size.width)
         hasher.combine(image?.size.height)
@@ -117,7 +125,7 @@ final class FLImageView: UIView, FLNodeView {
     }
 
     func update(node: FLImage, layout: FLImageLayout, context: FLRenderContext) {
-        let tint = node.tintColor.or(context.environment.foregroundColor)
+        let tint = context.environment.applying(node.overrides).foregroundColor
 
         imageView.image = tint == nil ? node.image : node.image?.withRenderingMode(.alwaysTemplate)
         imageView.tintColor = tint

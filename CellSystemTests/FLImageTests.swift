@@ -135,7 +135,7 @@ struct FLImageTintTests {
     @Test("a tint does not affect measurement")
     func tintIsNotGeometry() {
         let plain = FLImage(swatch)
-        let tinted = FLImage(swatch).tint(.systemRed)
+        let tinted = FLImage(swatch).foregroundColor(.systemRed)
 
         #expect(plain.layout(in: FLContext(width: 300)).size == tinted.layout(in: FLContext(width: 300)).size)
     }
@@ -144,16 +144,16 @@ struct FLImageTintTests {
     func tintAffectsIdentity() {
         let image = swatch
 
-        #expect(FLImage(image) != FLImage(image).tint(.systemRed))
-        #expect(FLImage(image).tint(.systemRed) == FLImage(image).tint(.systemRed))
-        #expect(FLImage(image).tint(.systemRed) != FLImage(image).tint(.systemBlue))
-        #expect(FLImage(image).tint(nil) == FLImage(image))
+        #expect(FLImage(image) != FLImage(image).foregroundColor(.systemRed))
+        #expect(FLImage(image).foregroundColor(.systemRed) == FLImage(image).foregroundColor(.systemRed))
+        #expect(FLImage(image).foregroundColor(.systemRed) != FLImage(image).foregroundColor(.systemBlue))
+        #expect(FLImage(image).foregroundColor(nil) == FLImage(image))
     }
 
     @Test("tint survives resizable and the initialiser form")
     func tintComposes() {
-        #expect(FLImage(swatch).tint(.systemRed).tintColor == .systemRed)
-        #expect(FLImage(swatch).tint(.systemRed).resizable().tintColor == .systemRed)
-        #expect(FLImage(swatch).resizable().tint(.systemRed).isResizable)
+        #expect(FLImage(swatch).foregroundColor(.systemRed).overrides.foregroundColor == .systemRed)
+        #expect(FLImage(swatch).foregroundColor(.systemRed).resizable().overrides.foregroundColor == .systemRed)
+        #expect(FLImage(swatch).resizable().foregroundColor(.systemRed).isResizable)
     }
 }
