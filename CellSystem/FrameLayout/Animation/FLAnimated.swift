@@ -34,7 +34,6 @@ struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
     let value: Value?
     let wrapped: Wrapped
 
-    var isEmpty: Bool { wrapped.isEmpty }
     var isSpacer: Bool { wrapped.isSpacer }
 
     func layout(in context: FLContext) -> FLAnimatedLayout<Wrapped.Layout> {

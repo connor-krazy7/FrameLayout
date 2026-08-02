@@ -14,7 +14,6 @@ struct FLIdentified<Wrapped: FLNode, ID: Hashable & Sendable>: FLNode {
     let id: ID
     let wrapped: Wrapped
 
-    var isEmpty: Bool { wrapped.isEmpty }
     var isSpacer: Bool { wrapped.isSpacer }
 
     func layout(in context: FLContext) -> FLIdentifiedLayout<Wrapped.Layout> {

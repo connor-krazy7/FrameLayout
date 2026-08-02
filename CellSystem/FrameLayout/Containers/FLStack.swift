@@ -10,7 +10,6 @@ struct FLStackGeometry: Sendable, Equatable {
 struct FLStackChild {
     let size: CGSize
     let isSpacer: Bool
-    let isEmpty: Bool
 }
 
 struct FLStackChildren {
@@ -19,11 +18,7 @@ struct FLStackChildren {
 
     var count: Int { children.count }
 
-    /// Spacing is only spent between children that are actually there, so an `if` that produced
-    /// nothing does not leave a gap behind.
-    var spacingTotal: CGFloat {
-        CGFloat(max(0, children.filter { !$0.isEmpty }.count - 1)) * spacing
-    }
+    var spacingTotal: CGFloat { CGFloat(max(0, count - 1)) * spacing }
 
     var spacerCount: Int { children.filter(\.isSpacer).count }
 
@@ -85,14 +80,10 @@ enum FLStackAllocation {
     }
 }
 
-extension FLGroupLayout {
+extension FLGroupChildren {
     var stackChildren: [FLStackChild] {
-        childSizes.indices.map { index in
-            FLStackChild(
-                size: childSizes[index],
-                isSpacer: childIsSpacer[index],
-                isEmpty: childIsEmpty[index]
-            )
+        sizes.indices.map { index in
+            FLStackChild(size: sizes[index], isSpacer: isSpacer[index])
         }
     }
 }
@@ -146,11 +137,6 @@ enum FLVerticalAxis: FLStackAxis {
         childFrames.reserveCapacity(children.count)
 
         for child in children.children {
-            guard !child.isEmpty else {
-                childFrames.append(.zero)
-                continue
-            }
-
             let childSize = child.size
             let childHeight = child.isSpacer
                 ? max(childSize.height, perSpacer.or(childSize.height))
@@ -200,11 +186,6 @@ enum FLHorizontalAxis: FLStackAxis {
         childFrames.reserveCapacity(children.count)
 
         for child in children.children {
-            guard !child.isEmpty else {
-                childFrames.append(.zero)
-                continue
-            }
-
             let childSize = child.size
             let childWidth = child.isSpacer
                 ? max(childSize.width, perSpacer.or(childSize.width))
@@ -263,8 +244,8 @@ enum FLZAxis: FLStackAxis {
     }
 }
 
-struct FLStackLayout<GroupLayout: FLGroupLayout>: FLLayout {
-    let group: GroupLayout
+struct FLStackLayout: FLLayout {
+    let children: FLGroupChildren
     let childFrames: [CGRect]
     let size: CGSize
 }
@@ -288,53 +269,53 @@ struct FLStack<Axis: FLStackAxis, Group: FLGroup>: FLNode {
         group = content()
     }
 
-    func layout(in context: FLContext) -> FLStackLayout<Group.Layout> {
+    func layout(in context: FLContext) -> FLStackLayout {
         // Phase one: measure every child at the container's own proposal to learn its ideal.
-        let idealLayout = group.layout(in: context)
+        let idealChildren = group.layout(in: context)
 
         // Phase two: only when the ideals do not fit does anyone get re-proposed. The common case
         // costs nothing extra.
-        let groupLayout = redistributedLayout(from: idealLayout, in: context).or(idealLayout)
+        let children = redistributedChildren(from: idealChildren, in: context).or(idealChildren)
 
         let geometry = Axis.resolve(
-            children: FLStackChildren(children: groupLayout.stackChildren, spacing: spacing),
+            children: FLStackChildren(children: children.stackChildren, spacing: spacing),
             alignment: alignment,
             in: context
         )
 
         return FLStackLayout(
-            group: groupLayout,
+            children: children,
             childFrames: geometry.childFrames,
             size: geometry.size
         )
     }
 
-    private func redistributedLayout(
-        from idealLayout: Group.Layout,
+    private func redistributedChildren(
+        from ideal: FLGroupChildren,
         in context: FLContext
-    ) -> Group.Layout? {
+    ) -> FLGroupChildren? {
         guard Axis.distributesAlongAxis, let available = Axis.proposal(in: context).exactValue else {
             return nil
         }
 
-        let ideals = idealLayout.childSizes.map(Axis.extent(of:))
+        let ideals = ideal.sizes.map(Axis.extent(of:))
         let spacingTotal = CGFloat(max(0, ideals.count - 1)) * spacing
 
         guard ideals.reduce(0, +) + spacingTotal > available else { return nil }
 
-        let minimumLayout = group.layout(
-            childContexts: ideals.map { _ in Axis.childContext(context, extent: .minimum) }
+        let minimums = group.layout(
+            childContexts: ideals.map { _ in Axis.childContext(context, extent: .minimum) }[...]
         )
         let extents = FLStackAllocation.extents(
             ideals: ideals,
-            minimums: minimumLayout.childSizes.map(Axis.extent(of:)),
-            isSpacer: idealLayout.childIsSpacer,
+            minimums: minimums.sizes.map(Axis.extent(of:)),
+            isSpacer: ideal.isSpacer,
             available: available,
             spacingTotal: spacingTotal
         )
 
         return group.layout(
-            childContexts: extents.map { Axis.childContext(context, extent: .exact($0)) }
+            childContexts: extents.map { Axis.childContext(context, extent: .exact($0)) }[...]
         )
     }
 }
@@ -357,8 +338,8 @@ final class FLStackView<Axis: FLStackAxis, Group: FLGroup>: FLStructuralView, FL
         fatalError("init(coder:) is not supported")
     }
 
-    func update(node: FLStack<Axis, Group>, layout: FLStackLayout<Group.Layout>, context: FLRenderContext) {
-        let childViews = groupViews.update(group: node.group, layout: layout.group, context: context)
+    func update(node: FLStack<Axis, Group>, layout: FLStackLayout, context: FLRenderContext) {
+        let childViews = groupViews.update(group: node.group, children: layout.children, context: context)
 
         for (childView, childFrame) in zip(childViews, layout.childFrames) {
             if childView.superview !== self {

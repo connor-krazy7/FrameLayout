@@ -25,7 +25,7 @@ enum FLChainSamples {
     typealias TextBlock = FLDecorated<FLPadded<FLText>>
     typealias Bubble = FLDecorated<FLPadded<FLText>>
     typealias Badge = FLDecorated<FLPadded<FLText>>
-    typealias ZStacked = FLZStack<FLTuple<Swatch, Swatch>>
+    typealias ZStacked = FLZStack<FLConcat<FLSingle<Swatch>, FLSingle<Swatch>>>
     typealias BackedText = FLBackground<FLPadded<FLText>, FLDecorated<FLColor>>
     typealias BadgedSwatch = FLOverlay<Swatch, Badge>
 

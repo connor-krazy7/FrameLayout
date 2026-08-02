@@ -23,12 +23,6 @@ enum FLEither<First: FLNode, Second: FLNode>: FLNode {
         "either(\(First.typeIdentifier),\(Second.typeIdentifier))"
     }
 
-    var isEmpty: Bool {
-        switch self {
-        case let .first(node): node.isEmpty
-        case let .second(node): node.isEmpty
-        }
-    }
 
     var isSpacer: Bool {
         switch self {
@@ -58,7 +52,6 @@ struct FLOptional<Wrapped: FLNode>: FLNode {
 
     let wrapped: Wrapped?
 
-    var isEmpty: Bool { wrapped.map(\.isEmpty).or(true) }
     var isSpacer: Bool { wrapped.map(\.isSpacer).or(false) }
 
     func layout(in context: FLContext) -> FLOptionalLayout<Wrapped.Layout> {

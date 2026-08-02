@@ -23,7 +23,6 @@ struct FLAdjusted<Wrapped: FLNode>: FLNode {
     let adjustments: FLAdjustments
     let wrapped: Wrapped
 
-    var isEmpty: Bool { wrapped.isEmpty }
     var isSpacer: Bool { wrapped.isSpacer }
 
     func layout(in context: FLContext) -> FLAdjustedLayout<Wrapped.Layout> {

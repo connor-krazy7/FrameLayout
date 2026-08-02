@@ -56,10 +56,9 @@ struct FLConditionalTests {
         }
         .layout(in: context)
 
-        #expect(layout.childFrames.count == 3)
+        #expect(layout.childFrames.count == 2)
         #expect(layout.childFrames[0].minY == 0)
-        #expect(layout.childFrames[1] == .zero)
-        #expect(layout.childFrames[2].minY == 18)
+        #expect(layout.childFrames[1].minY == 18)
     }
 
     @Test("if let contributes its content when the value is there")
@@ -112,13 +111,15 @@ struct FLConditionalTests {
         #expect(node(outer: false, inner: false).layout(in: context).size.height == 0)
     }
 
-    @Test("emptiness survives a layout-neutral modifier")
-    func emptinessForwardsThroughAdjustments() {
-        let absent = FLOptional<FLColor>(wrapped: nil)
+    @Test("an absent branch contributes no children to its group")
+    func absentBranchContributesNothing() {
+        let present = FLOptionalGroup(wrapped: FLSingle(node: FLColor(.red).frame(width: 10, height: 10)))
+        let absent = FLOptionalGroup<FLSingle<FLFrame<FLColor>>>(wrapped: nil)
 
-        #expect(absent.isEmpty)
-        #expect(absent.opacity(0.5).isEmpty)
-        #expect(FLOptional(wrapped: FLColor(.red)).isEmpty == false)
+        #expect(present.childCount == 1)
+        #expect(absent.childCount == 0)
+        #expect(present.layout(in: context).count == 1)
+        #expect(absent.layout(in: context).count == 0)
     }
 
     @Test("a spacer stays flexible through a conditional")

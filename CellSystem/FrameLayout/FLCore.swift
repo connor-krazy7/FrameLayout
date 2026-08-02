@@ -321,14 +321,12 @@ protocol FLNode: Sendable, Hashable {
     static var typeIdentifier: String { get }
 
     var isSpacer: Bool { get }
-    var isEmpty: Bool { get }
 
     func layout(in context: FLContext) -> Layout
 }
 
 extension FLNode {
     var isSpacer: Bool { false }
-    var isEmpty: Bool { false }
 }
 
 @MainActor
