@@ -16,12 +16,8 @@ struct FLImage: FLNode {
     let tintColor: UIColor?
     let isResizable: Bool
 
-    init(
-        _ image: UIImage?,
-        contentMode: UIView.ContentMode = .scaleAspectFill,
-        tintColor: UIColor? = nil
-    ) {
-        self.init(image, contentMode: contentMode, tintColor: tintColor, isResizable: false)
+    init(_ image: UIImage?) {
+        self.init(image, contentMode: .scaleAspectFill, tintColor: nil, isResizable: false)
     }
 
     private init(
@@ -40,6 +36,10 @@ struct FLImage: FLNode {
     /// rather than in a modifier.
     func resizable() -> FLImage {
         FLImage(image, contentMode: contentMode, tintColor: tintColor, isResizable: true)
+    }
+
+    func contentMode(_ contentMode: UIView.ContentMode) -> FLImage {
+        FLImage(image, contentMode: contentMode, tintColor: tintColor, isResizable: isResizable)
     }
 
     /// A tint implies template rendering, which is applied when the view is configured.

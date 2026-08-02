@@ -102,7 +102,7 @@ struct FLImageTests {
 
         #expect(FLImage(image) == FLImage(image))
         #expect(FLImage(image) != FLImage(image).resizable())
-        #expect(FLImage(image) != FLImage(image, contentMode: .center))
+        #expect(FLImage(image) != FLImage(image).contentMode(.center))
     }
 
     @Test("an image composes with padding and a stack")
@@ -152,7 +152,7 @@ struct FLImageTintTests {
 
     @Test("tint survives resizable and the initialiser form")
     func tintComposes() {
-        #expect(FLImage(swatch, tintColor: .systemRed).tintColor == .systemRed)
+        #expect(FLImage(swatch).tint(.systemRed).tintColor == .systemRed)
         #expect(FLImage(swatch).tint(.systemRed).resizable().tintColor == .systemRed)
         #expect(FLImage(swatch).resizable().tint(.systemRed).isResizable)
     }

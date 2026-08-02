@@ -21,6 +21,14 @@ struct DemoReactionSummary: Identifiable, Hashable, Sendable {
     let isMine: Bool
 }
 
+struct DemoPhoto: Hashable, Sendable {
+    let id: String
+    let symbol: String
+    let pixelSize: CGSize
+
+    var ratio: CGFloat { pixelSize.height > 0 ? pixelSize.width / pixelSize.height : 1 }
+}
+
 struct DemoReplyContext: Hashable, Sendable {
     let author: String
     let snippet: String
@@ -37,6 +45,7 @@ struct DemoMessage: Identifiable, Hashable, Sendable {
     let author: DemoAuthor
     let text: String
     let replyContext: DemoReplyContext?
+    let photo: DemoPhoto?
     let attachments: [DemoAttachment]
     let reactions: [DemoReactionSummary]
     let delivery: DemoDelivery
@@ -47,6 +56,24 @@ enum DemoMessagePart: Hashable, Sendable {
     case bubble(String)
     case retry(String)
     case attachment(String)
+    case photo(String)
+}
+
+struct DemoConversationPhoto: FLView {
+    static var maximumHeight: CGFloat { 220 }
+
+    let photo: DemoPhoto
+
+    var body: some FLNode {
+        FLImage(UIImage(systemName: photo.symbol))
+            .resizable()
+            .contentMode(.scaleAspectFill)
+            .tint(.white)
+            .aspectRatio(photo.ratio, contentMode: .fit)
+            .frame(maxWidth: min(photo.pixelSize.width, Self.maximumHeight * photo.ratio))
+            .background(.white.withAlphaComponent(0.15), in: .roundedRectangle(12))
+            .clipped()
+    }
 }
 
 struct DemoMessageAvatar: FLView {
@@ -140,6 +167,11 @@ struct DemoMessageBubble: FLView {
                 .font(.systemFont(ofSize: 15))
                 .foregroundColor(.white)
 
+            if let photo = message.photo {
+                DemoConversationPhoto(photo: photo)
+                    .tag(DemoMessagePart.photo(message.id))
+            }
+
             FLForEach(message.attachments) { attachment in
                 DemoAttachmentRow(attachment: attachment)
             }
@@ -223,6 +255,14 @@ final class FLNestedPlaygroundViewController: UIViewController {
     private var hosts: [String: FLHost<DemoNestedMessageRow>] = [:]
     private var nextReaction = 0
     private var nextAttachment = 0
+    private var nextPhoto = -1
+
+    private static let photoShapes: [DemoPhoto?] = [
+        nil,
+        DemoPhoto(id: "landscape", symbol: "photo.fill", pixelSize: CGSize(width: 1600, height: 900)),
+        DemoPhoto(id: "portrait", symbol: "person.fill", pixelSize: CGSize(width: 900, height: 1600)),
+        DemoPhoto(id: "tiny", symbol: "seal.fill", pixelSize: CGSize(width: 80, height: 60)),
+    ]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -293,9 +333,12 @@ final class FLNestedPlaygroundViewController: UIViewController {
                 let host = hosts[message.id]
                 let parts = host.map { $0.registry.count } ?? 0
 
+                let photoBox = host?.registry.view(withTag: DemoMessagePart.photo(message.id))?.bounds.size
+
                 return "\(message.id)  \(Int(host?.contentSize.height ?? 0))pt   "
                     + "\(message.attachments.count) attachments, \(message.reactions.count) reactions, "
                     + "\(parts) tagged parts"
+                    + (photoBox.map { ", photo \(Int($0.width))x\(Int($0.height))" } ?? "")
             }
             .joined(separator: "\n")
     }
@@ -315,6 +358,7 @@ final class FLNestedPlaygroundViewController: UIViewController {
                 author: message.author,
                 text: message.text,
                 replyContext: message.replyContext,
+                photo: message.photo,
                 attachments: message.attachments,
                 reactions: message.reactions,
                 delivery: .sent
@@ -332,6 +376,28 @@ final class FLNestedPlaygroundViewController: UIViewController {
         let attachment = UIButton(configuration: .bordered()).then { $0.setTitle("+ attachment", for: .normal) }
         let reply = UIButton(configuration: .bordered()).then { $0.setTitle("reply", for: .normal) }
         let fail = UIButton(configuration: .bordered()).then { $0.setTitle("fail", for: .normal) }
+        let photo = UIButton(configuration: .bordered()).then { $0.setTitle("photo", for: .normal) }
+
+        photo.addAction(
+            UIAction { [weak self] _ in
+                guard let self, let first = messages.first else { return }
+
+                nextPhoto += 1
+                mutate(first.id) { message in
+                    DemoMessage(
+                        id: message.id,
+                        author: message.author,
+                        text: message.text,
+                        replyContext: message.replyContext,
+                        photo: Self.photoShapes[self.nextPhoto % Self.photoShapes.count],
+                        attachments: message.attachments,
+                        reactions: message.reactions,
+                        delivery: message.delivery
+                    )
+                }
+            },
+            for: .touchUpInside
+        )
 
         reaction.addAction(
             UIAction { [weak self] _ in
@@ -351,6 +417,7 @@ final class FLNestedPlaygroundViewController: UIViewController {
                         author: message.author,
                         text: message.text,
                         replyContext: message.replyContext,
+                        photo: message.photo,
                         attachments: message.attachments,
                         reactions: message.reactions + [added],
                         delivery: message.delivery
@@ -378,6 +445,7 @@ final class FLNestedPlaygroundViewController: UIViewController {
                         author: message.author,
                         text: message.text,
                         replyContext: message.replyContext,
+                        photo: message.photo,
                         attachments: message.attachments + [added],
                         reactions: message.reactions,
                         delivery: message.delivery
@@ -399,6 +467,7 @@ final class FLNestedPlaygroundViewController: UIViewController {
                         replyContext: message.replyContext == nil
                             ? DemoReplyContext(author: "Ann", snippet: "are we still on for tomorrow?")
                             : nil,
+                        photo: message.photo,
                         attachments: message.attachments,
                         reactions: message.reactions,
                         delivery: message.delivery
@@ -418,6 +487,7 @@ final class FLNestedPlaygroundViewController: UIViewController {
                         author: message.author,
                         text: message.text,
                         replyContext: message.replyContext,
+                        photo: message.photo,
                         attachments: message.attachments,
                         reactions: message.reactions,
                         delivery: message.delivery == .failed ? .sent : .failed
@@ -427,7 +497,7 @@ final class FLNestedPlaygroundViewController: UIViewController {
             for: .touchUpInside
         )
 
-        return UIStackView(arrangedSubviews: [reaction, attachment, reply, fail]).then {
+        return UIStackView(arrangedSubviews: [reaction, attachment, reply, fail, photo]).then {
             $0.axis = .horizontal
             $0.spacing = 8
             $0.distribution = .fillProportionally
@@ -443,6 +513,7 @@ extension DemoMessage {
                 author: DemoAuthor(id: "u1", name: "Ann Petrova", initials: "AP"),
                 text: "Every level here is its own FLView, and the data is nested to match.",
                 replyContext: nil,
+                photo: nil,
                 attachments: [],
                 reactions: [DemoReactionSummary(id: "seed", emoji: "❤️", count: 2, isMine: false)],
                 delivery: .sent
@@ -452,6 +523,7 @@ extension DemoMessage {
                 author: DemoAuthor(id: "u2", name: "Marek Nowak", initials: "MN"),
                 text: "This one starts with a reply and an attachment.",
                 replyContext: DemoReplyContext(author: "Ann Petrova", snippet: "Every level here is its own FLView"),
+                photo: DemoPhoto(id: "p1", symbol: "photo.fill", pixelSize: CGSize(width: 1600, height: 900)),
                 attachments: [DemoAttachment(id: "seed", symbol: "doc.fill", title: "Spec.pdf", detail: "412 KB")],
                 reactions: [],
                 delivery: .failed
@@ -461,6 +533,7 @@ extension DemoMessage {
                 author: DemoAuthor(id: "u3", name: "Yuki Tanaka", initials: "YT"),
                 text: "Still sending.",
                 replyContext: nil,
+                photo: nil,
                 attachments: [],
                 reactions: [],
                 delivery: .sending
