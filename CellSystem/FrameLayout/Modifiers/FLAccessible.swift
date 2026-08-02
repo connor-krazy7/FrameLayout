@@ -45,8 +45,8 @@ final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
-    func accessibilityLabel(_ label: String?) -> FLAccessible<Self> {
-        FLAccessible(label: label, wrapped: self)
+extension FLNodeProviding {
+    func accessibilityLabel(_ label: String?) -> FLAccessible<ProvidedNode> {
+        FLAccessible(label: label, wrapped: flNode)
     }
 }

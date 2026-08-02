@@ -314,7 +314,13 @@ protocol FLLayout: Sendable, Equatable {
     var size: CGSize { get }
 }
 
-protocol FLNode: Sendable, Hashable {
+protocol FLNodeProviding {
+    associatedtype ProvidedNode: FLNode
+
+    var flNode: ProvidedNode { get }
+}
+
+protocol FLNode: FLNodeProviding, Sendable, Hashable {
     associatedtype Layout: FLLayout
     associatedtype View: FLNodeView where View.Node == Self
 
@@ -327,6 +333,8 @@ protocol FLNode: Sendable, Hashable {
 
 extension FLNode {
     var isSpacer: Bool { false }
+
+    var flNode: Self { self }
 }
 
 @MainActor

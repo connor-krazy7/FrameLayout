@@ -4,7 +4,7 @@ import UIKit
 ///
 /// Deliberately does **not** refine `FLNode`: satisfying `FLNode`'s associated types through `Body`
 /// — itself an `FLNode` — is a circular reference the compiler rejects. `FLComposed` bridges the two.
-protocol FLView: Sendable, Hashable {
+protocol FLView: FLNodeProviding, Sendable, Hashable {
     associatedtype Body: FLNode
 
     @FLNodeBuilder var body: Body { get }
@@ -12,6 +12,8 @@ protocol FLView: Sendable, Hashable {
 
 extension FLView {
     var node: FLComposed<Self> { FLComposed(self) }
+
+    var flNode: FLComposed<Self> { node }
 
     func layout(in context: FLContext) -> Body.Layout {
         body.layout(in: context)

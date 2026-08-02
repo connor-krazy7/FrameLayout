@@ -120,19 +120,19 @@ final class FLFrameView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
+extension FLNodeProviding {
     func frame(
         width: CGFloat? = nil,
         height: CGFloat? = nil,
         alignment: FLAlignment = .center
-    ) -> FLFrame<Self> {
+    ) -> FLFrame<ProvidedNode> {
         FLFrame(
             minWidth: width,
             maxWidth: width,
             minHeight: height,
             maxHeight: height,
             alignment: alignment,
-            wrapped: self
+            wrapped: flNode
         )
     }
 
@@ -142,14 +142,14 @@ extension FLNode {
         minHeight: CGFloat? = nil,
         maxHeight: CGFloat? = nil,
         alignment: FLAlignment = .center
-    ) -> FLFrame<Self> {
+    ) -> FLFrame<ProvidedNode> {
         FLFrame(
             minWidth: minWidth,
             maxWidth: maxWidth,
             minHeight: minHeight,
             maxHeight: maxHeight,
             alignment: alignment,
-            wrapped: self
+            wrapped: flNode
         )
     }
 }

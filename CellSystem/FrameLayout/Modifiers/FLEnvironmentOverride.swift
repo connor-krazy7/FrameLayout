@@ -42,16 +42,16 @@ final class FLEnvironmentOverrideView<Wrapped: FLNode>: FLStructuralView, FLNode
     }
 }
 
-extension FLNode {
-    func environment(_ overrides: FLEnvironmentOverrides) -> FLEnvironmentOverride<Self> {
-        FLEnvironmentOverride(overrides: overrides, wrapped: self)
+extension FLNodeProviding {
+    func environment(_ overrides: FLEnvironmentOverrides) -> FLEnvironmentOverride<ProvidedNode> {
+        FLEnvironmentOverride(overrides: overrides, wrapped: flNode)
     }
 
-    func foregroundColor(_ color: UIColor?) -> FLEnvironmentOverride<Self> {
+    func foregroundColor(_ color: UIColor?) -> FLEnvironmentOverride<ProvidedNode> {
         environment(FLEnvironmentOverrides(foregroundColor: color))
     }
 
-    func font(_ font: UIFont?) -> FLEnvironmentOverride<Self> {
+    func font(_ font: UIFont?) -> FLEnvironmentOverride<ProvidedNode> {
         environment(FLEnvironmentOverrides(font: font))
     }
 }

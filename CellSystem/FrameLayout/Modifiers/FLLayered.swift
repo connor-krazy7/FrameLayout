@@ -124,18 +124,18 @@ final class FLOverlayView<Content: FLNode, Overlay: FLNode>: FLStructuralView, F
     }
 }
 
-extension FLNode {
+extension FLNodeProviding {
     func background<Background: FLNode>(
         _ background: Background,
         alignment: FLAlignment = .center
-    ) -> FLBackground<Self, Background> {
-        FLBackground(content: self, background: background, alignment: alignment)
+    ) -> FLBackground<ProvidedNode, Background> {
+        FLBackground(content: flNode, background: background, alignment: alignment)
     }
 
     func overlay<Overlay: FLNode>(
         _ overlay: Overlay,
         alignment: FLAlignment = .center
-    ) -> FLOverlay<Self, Overlay> {
-        FLOverlay(content: self, overlay: overlay, alignment: alignment)
+    ) -> FLOverlay<ProvidedNode, Overlay> {
+        FLOverlay(content: flNode, overlay: overlay, alignment: alignment)
     }
 }

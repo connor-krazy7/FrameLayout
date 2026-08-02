@@ -119,12 +119,12 @@ final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
-    func decoration(_ transform: (inout FLDecoration) -> Void) -> FLDecorated<Self> {
-        FLDecorated(decoration: FLDecoration().with(transform), wrapped: self)
+extension FLNodeProviding {
+    func decoration(_ transform: (inout FLDecoration) -> Void) -> FLDecorated<ProvidedNode> {
+        FLDecorated(decoration: FLDecoration().with(transform), wrapped: flNode)
     }
 
-    func background(_ color: UIColor) -> FLDecorated<Self> {
+    func background(_ color: UIColor) -> FLDecorated<ProvidedNode> {
         decoration { $0.backgroundColor = color }
     }
 
@@ -133,7 +133,7 @@ extension FLNode {
         in shape: FLShape,
         corners: FLCorners = .all,
         curve: FLCornerCurve = .circular
-    ) -> FLDecorated<Self> {
+    ) -> FLDecorated<ProvidedNode> {
         decoration {
             $0.backgroundColor = color
             $0.shape = shape
@@ -147,7 +147,7 @@ extension FLNode {
         _ shape: FLShape,
         corners: FLCorners = .all,
         curve: FLCornerCurve = .circular
-    ) -> FLDecorated<Self> {
+    ) -> FLDecorated<ProvidedNode> {
         decoration {
             $0.shape = shape
             $0.corners = corners
@@ -160,18 +160,18 @@ extension FLNode {
         _ radius: CGFloat,
         corners: FLCorners = .all,
         curve: FLCornerCurve = .circular
-    ) -> FLDecorated<Self> {
+    ) -> FLDecorated<ProvidedNode> {
         clipShape(.roundedRectangle(radius), corners: corners, curve: curve)
     }
 
-    func border(_ color: UIColor, width: CGFloat) -> FLDecorated<Self> {
+    func border(_ color: UIColor, width: CGFloat) -> FLDecorated<ProvidedNode> {
         decoration {
             $0.borderColor = color
             $0.borderWidth = width
         }
     }
 
-    func clipped(_ isClipped: Bool = true) -> FLDecorated<Self> {
+    func clipped(_ isClipped: Bool = true) -> FLDecorated<ProvidedNode> {
         decoration { $0.clipsToBounds = isClipped }
     }
 }

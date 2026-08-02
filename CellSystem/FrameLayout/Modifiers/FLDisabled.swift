@@ -45,8 +45,8 @@ final class FLDisabledView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
-    func disabled(_ isDisabled: Bool = true) -> FLDisabled<Self> {
-        FLDisabled(isDisabled: isDisabled, wrapped: self)
+extension FLNodeProviding {
+    func disabled(_ isDisabled: Bool = true) -> FLDisabled<ProvidedNode> {
+        FLDisabled(isDisabled: isDisabled, wrapped: flNode)
     }
 }

@@ -53,16 +53,16 @@ final class FLPaddedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
-    func padding(_ insets: FLEdgeInsets) -> FLPadded<Self> {
-        FLPadded(insets: insets, wrapped: self)
+extension FLNodeProviding {
+    func padding(_ insets: FLEdgeInsets) -> FLPadded<ProvidedNode> {
+        FLPadded(insets: insets, wrapped: flNode)
     }
 
-    func padding(_ inset: CGFloat) -> FLPadded<Self> {
+    func padding(_ inset: CGFloat) -> FLPadded<ProvidedNode> {
         padding(FLEdgeInsets.all(inset))
     }
 
-    func padding(_ edges: FLEdgeSet, _ inset: CGFloat) -> FLPadded<Self> {
+    func padding(_ edges: FLEdgeSet, _ inset: CGFloat) -> FLPadded<ProvidedNode> {
         padding(FLEdgeInsets.edges(edges, inset))
     }
 
@@ -71,7 +71,7 @@ extension FLNode {
         leading: CGFloat = 0,
         bottom: CGFloat = 0,
         trailing: CGFloat = 0
-    ) -> FLPadded<Self> {
+    ) -> FLPadded<ProvidedNode> {
         padding(FLEdgeInsets(top: top, leading: leading, bottom: bottom, trailing: trailing))
     }
 }

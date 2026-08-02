@@ -45,8 +45,8 @@ final class FLTaggedView<Wrapped: FLNode, Tag: Hashable & Sendable>: FLStructura
     }
 }
 
-extension FLNode {
-    func tag<Tag: Hashable & Sendable>(_ tag: Tag) -> FLTagged<Self, Tag> {
-        FLTagged(tag: tag, wrapped: self)
+extension FLNodeProviding {
+    func tag<Tag: Hashable & Sendable>(_ tag: Tag) -> FLTagged<ProvidedNode, Tag> {
+        FLTagged(tag: tag, wrapped: flNode)
     }
 }

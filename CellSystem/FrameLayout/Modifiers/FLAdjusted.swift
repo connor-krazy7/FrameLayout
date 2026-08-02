@@ -55,16 +55,16 @@ final class FLAdjustedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
-    func adjustments(_ transform: (inout FLAdjustments) -> Void) -> FLAdjusted<Self> {
-        FLAdjusted(adjustments: FLAdjustments().with(transform), wrapped: self)
+extension FLNodeProviding {
+    func adjustments(_ transform: (inout FLAdjustments) -> Void) -> FLAdjusted<ProvidedNode> {
+        FLAdjusted(adjustments: FLAdjustments().with(transform), wrapped: flNode)
     }
 
-    func opacity(_ opacity: CGFloat) -> FLAdjusted<Self> {
+    func opacity(_ opacity: CGFloat) -> FLAdjusted<ProvidedNode> {
         adjustments { $0.opacity = FLAdjustments.clamped(opacity) }
     }
 
-    func allowsHitTesting(_ allowsHitTesting: Bool) -> FLAdjusted<Self> {
+    func allowsHitTesting(_ allowsHitTesting: Bool) -> FLAdjusted<ProvidedNode> {
         adjustments { $0.allowsHitTesting = allowsHitTesting }
     }
 }

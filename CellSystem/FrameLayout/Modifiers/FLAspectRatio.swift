@@ -116,12 +116,12 @@ final class FLAspectRatioView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     }
 }
 
-extension FLNode {
+extension FLNodeProviding {
     func aspectRatio(
         _ ratio: CGFloat? = nil,
         contentMode: FLAspectContentMode = .fit,
         alignment: FLAlignment = .center
-    ) -> FLAspectRatio<Self> {
-        FLAspectRatio(ratio: ratio, contentMode: contentMode, alignment: alignment, wrapped: self)
+    ) -> FLAspectRatio<ProvidedNode> {
+        FLAspectRatio(ratio: ratio, contentMode: contentMode, alignment: alignment, wrapped: flNode)
     }
 }

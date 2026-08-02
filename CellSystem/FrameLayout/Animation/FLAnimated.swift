@@ -100,15 +100,15 @@ extension Optional {
     }
 }
 
-extension FLNode {
-    func animation(_ animation: FLAnimation?) -> FLAnimated<Self, FLAnimationAlways> {
-        FLAnimated(animation: animation, value: nil, wrapped: self)
+extension FLNodeProviding {
+    func animation(_ animation: FLAnimation?) -> FLAnimated<ProvidedNode, FLAnimationAlways> {
+        FLAnimated(animation: animation, value: nil, wrapped: flNode)
     }
 
     func animation<Value: Hashable & Sendable>(
         _ animation: FLAnimation?,
         value: Value
-    ) -> FLAnimated<Self, Value> {
-        FLAnimated(animation: animation, value: value, wrapped: self)
+    ) -> FLAnimated<ProvidedNode, Value> {
+        FLAnimated(animation: animation, value: value, wrapped: flNode)
     }
 }
