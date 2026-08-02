@@ -16,17 +16,17 @@ private struct Row: FLView {
         FLHStack(alignment: .top, spacing: 8) {
             FLColor(.systemGray4)
                 .frame(width: 32, height: 32)
-                .id(RowPart.avatar)
+                .tag(RowPart.avatar)
 
             FLVStack(alignment: .leading, spacing: 4) {
                 FLColor(.systemBlue)
                     .frame(width: 200, height: 40)
-                    .id(RowPart.bubble)
+                    .tag(RowPart.bubble)
 
                 if hasFailed {
                     FLColor(.systemRed)
                         .frame(width: 60, height: 20)
-                        .id(RowPart.retry)
+                        .tag(RowPart.retry)
                 }
             }
         }
@@ -34,8 +34,8 @@ private struct Row: FLView {
 }
 
 @MainActor
-@Suite("Identity")
-struct FLIdentityTests {
+@Suite("Tags")
+struct FLTagTests {
     private func hosted(_ row: Row, width: CGFloat = 300) -> FLHost<Row> {
         let host = FLHost<Row>()
         let node = row.node
@@ -48,16 +48,16 @@ struct FLIdentityTests {
         return host
     }
 
-    @Test("id does not change layout")
-    func identityIsLayoutNeutral() {
+    @Test("a tag does not change layout")
+    func taggingIsLayoutNeutral() {
         let plain = FLColor(.red).frame(width: 40, height: 20)
-        let identified = plain.id(RowPart.avatar)
+        let identified = plain.tag(RowPart.avatar)
         let context = FLContext(width: 300)
 
         #expect(identified.layout(in: context).size == plain.layout(in: context).size)
     }
 
-    @Test("the host registers every identified part")
+    @Test("the host registers every tagged part")
     func registryFindsParts() {
         let host = hosted(Row(hasFailed: true))
 
@@ -67,19 +67,19 @@ struct FLIdentityTests {
         #expect(host.registry.contains(RowPart.retry))
     }
 
-    @Test("an unknown id resolves to nothing")
-    func unknownIdentifier() {
+    @Test("an unknown tag resolves to nothing")
+    func unknownTag() {
         let host = hosted(Row(hasFailed: false))
 
-        #expect(host.registry.view(for: RowPart.retry) == nil)
-        #expect(host.registry.view(for: "avatar") == nil)
+        #expect(host.registry.view(withTag: RowPart.retry) == nil)
+        #expect(host.registry.view(withTag: "avatar") == nil)
     }
 
     @Test("a registered view sits where the layout put it")
     func registeredViewHasTheExpectedFrame() {
         let host = hosted(Row(hasFailed: false))
-        let avatar = host.registry.view(for: RowPart.avatar)
-        let bubble = host.registry.view(for: RowPart.bubble)
+        let avatar = host.registry.view(withTag: RowPart.avatar)
+        let bubble = host.registry.view(withTag: RowPart.bubble)
 
         #expect(avatar?.bounds.size == CGSize(width: 32, height: 32))
         #expect(bubble?.bounds.size == CGSize(width: 200, height: 40))
@@ -111,38 +111,38 @@ struct FLIdentityTests {
         #expect(host.registry.contains(RowPart.retry) == false)
     }
 
-    @Test("identity takes part in node equality")
-    func identityAffectsNodeIdentity() {
+    @Test("a tag takes part in node equality")
+    func tagAffectsNodeIdentity() {
         let base = FLColor(.red).frame(width: 10, height: 10)
 
-        #expect(base.id(RowPart.avatar) == base.id(RowPart.avatar))
-        #expect(base.id(RowPart.avatar) != base.id(RowPart.bubble))
+        #expect(base.tag(RowPart.avatar) == base.tag(RowPart.avatar))
+        #expect(base.tag(RowPart.avatar) != base.tag(RowPart.bubble))
     }
 
-    @Test("an identified part stays touch-transparent until something is attached")
-    func identityAloneDoesNotClaimTouches() {
+    @Test("a tagged part stays touch-transparent until something is attached")
+    func taggingAloneDoesNotClaimTouches() {
         let host = hosted(Row(hasFailed: false))
         let insideAvatar = CGPoint(x: 16, y: 16)
 
         #expect(host.hitTest(insideAvatar, with: nil) is FLColorView)
     }
 
-    @Test("a touch inside an identified part lands within its subtree, so an attached recogniser fires")
-    func identifiedPartIsInTheTouchChain() {
+    @Test("a touch inside a tagged part lands within its subtree, so an attached recogniser fires")
+    func taggedPartIsInTheTouchChain() {
         let host = hosted(Row(hasFailed: false))
-        let bubble = host.registry.view(for: RowPart.bubble)
+        let bubble = host.registry.view(withTag: RowPart.bubble)
         let hit = host.hitTest(CGPoint(x: 140, y: 20), with: nil)
 
         #expect(hit is FLColorView)
         #expect(hit?.isDescendant(of: bubble ?? host) == true)
     }
 
-    @Test("an identified part claims the touch itself once a recogniser is attached and nothing inside wants it")
+    @Test("a tagged part claims the touch itself once a recogniser is attached and nothing inside wants it")
     func attachedRecogniserClaimsTouches() {
         let node = FLSpacer()
             .frame(width: 100, height: 40)
-            .id(RowPart.bubble)
-        let host = FLHostView<FLIdentified<FLFrame<FLSpacer>, RowPart>>()
+            .tag(RowPart.bubble)
+        let host = FLHostView<FLTagged<FLFrame<FLSpacer>, RowPart>>()
         let layout = node.layout(in: FLContext(width: 100, height: 40))
 
         host.frame = CGRect(origin: .zero, size: layout.size)
@@ -150,7 +150,7 @@ struct FLIdentityTests {
         host.layoutIfNeeded()
 
         let inside = CGPoint(x: 50, y: 20)
-        let identified = host.registry.view(for: RowPart.bubble)
+        let identified = host.registry.view(withTag: RowPart.bubble)
 
         #expect(host.hitTest(inside, with: nil) === host)
 
@@ -159,13 +159,13 @@ struct FLIdentityTests {
         #expect(host.hitTest(inside, with: nil) === identified)
     }
 
-    @Test("wrappers around an identified part still pass touches through")
+    @Test("wrappers around a tagged part still pass touches through")
     func wrappersStayTransparent() {
         let node = FLColor(.red)
             .frame(width: 20, height: 20)
-            .id(RowPart.avatar)
+            .tag(RowPart.avatar)
             .padding(30)
-        let host = FLHostView<FLPadded<FLIdentified<FLFrame<FLColor>, RowPart>>>()
+        let host = FLHostView<FLPadded<FLTagged<FLFrame<FLColor>, RowPart>>>()
         let layout = node.layout(in: FLContext(width: 80, height: 80))
 
         host.frame = CGRect(origin: .zero, size: layout.size)

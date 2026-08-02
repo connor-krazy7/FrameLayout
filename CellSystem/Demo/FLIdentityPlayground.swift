@@ -27,7 +27,7 @@ struct DemoMessageRow: FLView {
             FLColor(.systemGray3)
                 .frame(width: 36, height: 36)
                 .clipShape(.capsule)
-                .id(DemoRowPart.avatar)
+                .tag(DemoRowPart.avatar)
 
             FLVStack(alignment: .leading, spacing: 6) {
                 if let replyingTo {
@@ -38,7 +38,7 @@ struct DemoMessageRow: FLView {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 5)
                         .background(.tertiarySystemFill, in: .roundedRectangle(8))
-                        .id(DemoRowPart.replyPreview)
+                        .tag(DemoRowPart.replyPreview)
                 }
 
                 FLText(text)
@@ -46,14 +46,14 @@ struct DemoMessageRow: FLView {
                     .foregroundColor(.white)
                     .padding(12)
                     .background(.systemBlue, in: .roundedRectangle(16))
-                    .id(DemoRowPart.bubble)
+                    .tag(DemoRowPart.bubble)
 
                 if hasFailed {
                     FLText("Tap to retry")
                         .font(.systemFont(ofSize: 12, weight: .semibold))
                         .foregroundColor(.systemRed)
                         .padding(.vertical, 4)
-                        .id(DemoRowPart.retry)
+                        .tag(DemoRowPart.retry)
                 }
             }
 
@@ -183,7 +183,7 @@ final class FLIdentityPlaygroundViewController: UIViewController {
     }
 
     private func attach(_ recognizer: UIGestureRecognizer, to part: DemoRowPart) {
-        guard let partView = host.registry.view(for: part) else { return }
+        guard let partView = host.registry.view(withTag: part) else { return }
 
         let isAlreadyAttached = partView.gestureRecognizers?.contains {
             type(of: $0) == type(of: recognizer) && $0.name == part.title
@@ -250,7 +250,7 @@ final class FLIdentityPlaygroundViewController: UIViewController {
         let point = recognizer.location(in: host)
         let hitView = host.hitTest(point, with: nil)
         let landedOnPart = DemoRowPart.allCases.contains { part in
-            guard let partView = host.registry.view(for: part) else { return false }
+            guard let partView = host.registry.view(withTag: part) else { return false }
 
             return hitView === partView || hitView?.isDescendant(of: partView) == true
         }

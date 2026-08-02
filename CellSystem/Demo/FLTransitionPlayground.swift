@@ -18,7 +18,7 @@ struct CollapsingDemoRow: FLView {
                 .foregroundColor(.white)
                 .padding(10)
                 .background(.systemBlue, in: .roundedRectangle(12))
-                .id(TransitionDemoPart.header)
+                .tag(TransitionDemoPart.header)
 
             FLText("Tap to retry")
                 .font(.systemFont(ofSize: 13, weight: .semibold))
@@ -28,12 +28,12 @@ struct CollapsingDemoRow: FLView {
                 .background(.systemRed, in: .roundedRectangle(8))
                 .clipped()
                 .opacity(showsRetry ? 1 : 0)
-                .id(TransitionDemoPart.retry)
+                .tag(TransitionDemoPart.retry)
 
             FLText("09:41")
                 .font(.systemFont(ofSize: 11))
                 .foregroundColor(.secondaryLabel)
-                .id(TransitionDemoPart.footer)
+                .tag(TransitionDemoPart.footer)
         }
         .animation(animation, value: showsRetry)
     }
@@ -49,7 +49,7 @@ struct ConditionalDemoRow: FLView {
                 .foregroundColor(.white)
                 .padding(10)
                 .background(.systemBlue, in: .roundedRectangle(12))
-                .id(TransitionDemoPart.header)
+                .tag(TransitionDemoPart.header)
 
             if showsRetry {
                 FLText("Tap to retry")
@@ -58,13 +58,13 @@ struct ConditionalDemoRow: FLView {
                     .padding(.horizontal, 10)
                     .frame(height: 26)
                     .background(.systemRed, in: .roundedRectangle(8))
-                    .id(TransitionDemoPart.retry)
+                    .tag(TransitionDemoPart.retry)
             }
 
             FLText("09:41")
                 .font(.systemFont(ofSize: 11))
                 .foregroundColor(.secondaryLabel)
-                .id(TransitionDemoPart.footer)
+                .tag(TransitionDemoPart.footer)
         }
     }
 }

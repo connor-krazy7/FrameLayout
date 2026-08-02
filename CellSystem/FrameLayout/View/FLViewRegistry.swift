@@ -2,24 +2,24 @@ import UIKit
 
 @MainActor
 final class FLViewRegistry {
-    private var identifierToView: [AnyHashable: UIView] = [:]
+    private var tagToView: [AnyHashable: UIView] = [:]
 
-    var count: Int { identifierToView.count }
-    var identifiers: Set<AnyHashable> { Set(identifierToView.keys) }
+    var count: Int { tagToView.count }
+    var tags: Set<AnyHashable> { Set(tagToView.keys) }
 
-    func view(for id: some Hashable) -> UIView? {
-        identifierToView[AnyHashable(id)]
+    func view(withTag tag: some Hashable) -> UIView? {
+        tagToView[AnyHashable(tag)]
     }
 
-    func contains(_ id: some Hashable) -> Bool {
-        identifierToView[AnyHashable(id)] != nil
+    func contains(_ tag: some Hashable) -> Bool {
+        tagToView[AnyHashable(tag)] != nil
     }
 
-    func register(_ view: UIView, as id: some Hashable) {
-        identifierToView[AnyHashable(id)] = view
+    func register(_ view: UIView, withTag tag: some Hashable) {
+        tagToView[AnyHashable(tag)] = view
     }
 
     func removeAll() {
-        identifierToView.removeAll(keepingCapacity: true)
+        tagToView.removeAll(keepingCapacity: true)
     }
 }

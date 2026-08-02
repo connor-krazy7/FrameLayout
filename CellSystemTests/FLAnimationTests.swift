@@ -16,11 +16,11 @@ private struct Row: FLView {
         FLVStack(alignment: .leading, spacing: 4) {
             FLColor(.systemGray4)
                 .frame(width: 100, height: height)
-                .id(Part.plain)
+                .tag(Part.plain)
 
             FLColor(.systemBlue)
                 .frame(width: 100, height: height)
-                .id(Part.animated)
+                .tag(Part.animated)
                 .animation(animation)
         }
     }
@@ -63,8 +63,8 @@ struct FLAnimationTests {
             self.apply(Row(height: 90, animation: .linear(0.2)), to: host)
         }
 
-        #expect(frameAnimationDuration(of: host.registry.view(for: Part.animated)) == 0.2)
-        #expect(frameAnimationDuration(of: host.registry.view(for: Part.plain)) == 1)
+        #expect(frameAnimationDuration(of: host.registry.view(withTag: Part.animated)) == 0.2)
+        #expect(frameAnimationDuration(of: host.registry.view(withTag: Part.plain)) == 1)
     }
 
     @Test("without a scope the subtree inherits the surrounding animation")
@@ -75,8 +75,8 @@ struct FLAnimationTests {
             self.apply(Row(height: 90, animation: nil), to: host)
         }
 
-        #expect(frameAnimationDuration(of: host.registry.view(for: Part.animated)) == 1)
-        #expect(frameAnimationDuration(of: host.registry.view(for: Part.plain)) == 1)
+        #expect(frameAnimationDuration(of: host.registry.view(withTag: Part.animated)) == 1)
+        #expect(frameAnimationDuration(of: host.registry.view(withTag: Part.plain)) == 1)
     }
 
     @Test("a scope animates on its own, with nothing animating around it")
@@ -85,8 +85,8 @@ struct FLAnimationTests {
 
         apply(Row(height: 90, animation: .linear(0.25)), to: host)
 
-        #expect(frameAnimationDuration(of: host.registry.view(for: Part.animated)) == 0.25)
-        #expect(frameAnimationDuration(of: host.registry.view(for: Part.plain)) == nil)
+        #expect(frameAnimationDuration(of: host.registry.view(withTag: Part.animated)) == 0.25)
+        #expect(frameAnimationDuration(of: host.registry.view(withTag: Part.plain)) == nil)
     }
 
     @Test("the first apply does not animate, so nothing flies in from zero")
@@ -100,8 +100,8 @@ struct FLAnimationTests {
             self.apply(Row(height: 40, animation: .linear(0.2)), to: host)
         }
 
-        #expect(host.registry.view(for: Part.animated)?.layer.animationKeys() == nil)
-        #expect(host.registry.view(for: Part.plain)?.layer.animationKeys() == nil)
+        #expect(host.registry.view(withTag: Part.animated)?.layer.animationKeys() == nil)
+        #expect(host.registry.view(withTag: Part.plain)?.layer.animationKeys() == nil)
     }
 
     @Test("an unchanged frame does not animate")
@@ -110,7 +110,7 @@ struct FLAnimationTests {
 
         apply(Row(height: 40, animation: .linear(0.2)), to: host)
 
-        #expect(host.registry.view(for: Part.animated)?.layer.animationKeys() == nil)
+        #expect(host.registry.view(withTag: Part.animated)?.layer.animationKeys() == nil)
     }
 
     @Test("animation does not change layout")
@@ -149,7 +149,7 @@ private struct ValueRow: FLView {
     var body: some FLNode {
         FLColor(.systemBlue)
             .frame(width: 100, height: height)
-            .id(Part.animated)
+            .tag(Part.animated)
             .animation(.linear(0.3), value: tracked)
     }
 }
@@ -178,7 +178,7 @@ struct FLAnimationValueTests {
     }
 
     private func animation(in host: FLHost<ValueRow>) -> CAAnimation? {
-        guard let view = host.registry.view(for: Part.animated),
+        guard let view = host.registry.view(withTag: Part.animated),
               let key = view.layer.animationKeys()?.first else { return nil }
 
         return view.layer.animation(forKey: key)
@@ -219,7 +219,7 @@ struct FLAnimationValueTests {
     }
 
     private func clearAnimations(in host: FLHost<ValueRow>) {
-        host.registry.view(for: Part.animated)?.layer.removeAllAnimations()
+        host.registry.view(withTag: Part.animated)?.layer.removeAllAnimations()
     }
 
     @Test("the tracked value takes part in node equality")
