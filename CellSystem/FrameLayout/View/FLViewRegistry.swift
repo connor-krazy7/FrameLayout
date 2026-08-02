@@ -11,6 +11,10 @@ final class FLViewRegistry {
         tagToView[AnyHashable(tag)]
     }
 
+    func button(withTag tag: some Hashable) -> UIControl? {
+        view(withTag: tag) as? UIControl
+    }
+
     func contains(_ tag: some Hashable) -> Bool {
         tagToView[AnyHashable(tag)] != nil
     }
