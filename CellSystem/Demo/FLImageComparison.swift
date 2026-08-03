@@ -23,6 +23,8 @@ enum FLImageSamples {
 private struct ComparisonRow<FLContent: FLNode, SwiftUIContent: View>: View {
     let title: String
     let node: FLContent
+    var proposedHeight: CGFloat?
+    var reservedHeight: CGFloat?
     @ViewBuilder let swiftUI: () -> SwiftUIContent
 
     var body: some View {
@@ -36,7 +38,7 @@ private struct ComparisonRow<FLContent: FLNode, SwiftUIContent: View>: View {
 
             HStack(alignment: .top, spacing: 16) {
                 labelled("FL") {
-                    FLNodePreview(node: node, layoutContext: FLContext(width: FLImageSamples.boxWidth))
+                    FLNodePreview(node: node, layoutContext: layoutContext)
                 }
 
                 labelled("SwiftUI") {
@@ -46,10 +48,20 @@ private struct ComparisonRow<FLContent: FLNode, SwiftUIContent: View>: View {
         }
     }
 
-    private var measured: String {
-        let size = node.layout(in: FLContext(width: FLImageSamples.boxWidth)).size
+    /// The FL column is measured with whatever this row proposes, so the SwiftUI column has to be asked
+    /// the same question. Without `fixedSize` it inherits a finite height proposal from the enclosing
+    /// scroll view, and a row about `maxHeight` then compares two different regimes.
+    private var layoutContext: FLContext {
+        proposedHeight
+            .map { FLContext(width: FLImageSamples.boxWidth, height: $0) }
+            .or(FLContext(width: FLImageSamples.boxWidth))
+    }
 
-        return "FL reserves \(Int(size.width)) × \(Int(size.height)) in a \(Int(FLImageSamples.boxWidth))pt box"
+    private var measured: String {
+        let size = node.layout(in: layoutContext).size
+        let proposal = proposedHeight.map { "\(Int($0))pt tall" }.or("unspecified height")
+
+        return "FL reserves \(Int(size.width)) × \(Int(size.height)) in \(Int(FLImageSamples.boxWidth))pt × \(proposal)"
     }
 
     private func labelled(_ name: String, @ViewBuilder content: () -> some View) -> some View {
@@ -59,9 +71,12 @@ private struct ComparisonRow<FLContent: FLNode, SwiftUIContent: View>: View {
                 .foregroundStyle(.tertiary)
 
             content()
+                .fixedSize(horizontal: false, vertical: proposedHeight == nil)
+                .frame(height: proposedHeight)
                 .border(.blue)
                 .frame(width: FLImageSamples.boxWidth, alignment: .leading)
                 .border(.red.opacity(0.6))
+                .frame(height: reservedHeight)
         }
     }
 }
@@ -203,7 +218,7 @@ private struct RatioCapCases: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             ComparisonRow(
-                title: "tall photo, fit + frame(maxHeight: 100) + clipped — the box shrinks, the photo is cropped",
+                title: "tall photo, fit + frame(maxHeight: 100) — the photo fits, but the box keeps the full width",
                 node: FLImage(FLImageSamples.portrait)
                     .resizable()
                     .aspectRatio(Self.portraitRatio, contentMode: .fit)
@@ -218,7 +233,7 @@ private struct RatioCapCases: View {
             }
 
             ComparisonRow(
-                title: "same cap expressed on the width — frame(maxWidth: 100 × ratio) — actually fits",
+                title: "the cap on the width — frame(maxWidth: 100 × ratio) — the box hugs the photo",
                 node: FLImage(FLImageSamples.portrait)
                     .resizable()
                     .aspectRatio(Self.portraitRatio, contentMode: .fit)
@@ -257,16 +272,31 @@ private struct RatioCapCases: View {
             }
 
             ComparisonRow(
-                title: "the same cap without clipping — both systems let the photo spill out of the box",
+                title: "the same chain with a 200pt height proposed — the same answer, reached in one pass",
                 node: FLImage(FLImageSamples.portrait)
                     .resizable()
                     .aspectRatio(Self.portraitRatio, contentMode: .fit)
-                    .frame(maxHeight: Self.cap)
+                    .frame(maxHeight: Self.cap),
+                proposedHeight: 200
             ) {
                 Image(uiImage: FLImageSamples.portrait)
                     .resizable()
                     .aspectRatio(Self.portraitRatio, contentMode: .fit)
                     .frame(maxHeight: Self.cap)
+            }
+
+            ComparisonRow(
+                title: "aspectRatio(.fill) + frame(height: 100) — a fill still spills, in both systems",
+                node: FLImage(FLImageSamples.portrait)
+                    .resizable()
+                    .aspectRatio(Self.portraitRatio, contentMode: .fill)
+                    .frame(height: Self.cap),
+                reservedHeight: 400
+            ) {
+                Image(uiImage: FLImageSamples.portrait)
+                    .resizable()
+                    .aspectRatio(Self.portraitRatio, contentMode: .fill)
+                    .frame(height: Self.cap)
             }
         }
     }

@@ -64,11 +64,41 @@ with, a **bounded** one does not. Row 4 shows the bound doing its actual job —
 was proposed. Row 5 is the one place FL deliberately differs: it has no equivalent of SwiftUI's 10×10
 default for a shape, so the parity test asserts "not inflated to the bound" rather than an exact match.
 
-## Capping a ratio-driven image
+## A bounded frame hands its resolved box to the child
 
-`frame(maxHeight:)` cannot cap a `aspectRatio` image's height when no height is proposed — the image
-answers from the width, and the bound only clips the box that is reserved for it. SwiftUI behaves the
-same way, so this is not a gap to fix. Express the cap on the axis that is actually being proposed:
+Bounding an axis resolves the frame's own size, and the child then lays out **in that box** rather than in
+whatever it answered while being measured. `FLFrame` measures twice for this: once against the incoming
+proposal, then again at `.exact(resolvedSize)` on any bounded axis whose bound actually clamped something.
+The reported size still comes from the first pass — SwiftUI reports 160 wide for a `maxHeight`-bounded fit
+image while placing a 50-wide child inside it, and FL matches.
+
+Without the second pass a bound could only ever *crop* an oversized child. With it, `frame(maxHeight: 100)`
+genuinely fits a ratio-driven image, which is what a reader expects it to mean.
+
+Two properties keep it safe: the pass is skipped whenever it would ask the same question (every unbounded
+axis, every bound that did not clamp), and it never iterates. `.fill` deliberately answers larger than any
+proposal, so re-proposing to it returns the same oversized answer — a fixed-point loop would never
+converge, and a deliberate `aspectRatio(.fill)` + `clipped()` crop still works.
+
+What it costs, Debug `-Onone`, so read the ratios and not the absolute numbers:
+
+| case | before | after |
+| --- | --- | --- |
+| bounded frame, bound clamps | 966 ns | 1 790 ns |
+| bounded frame, bound does not clamp | 964 ns | 1 012 ns |
+| unbounded frame | 524 ns | 523 ns |
+| three clamping frames inside a clamped stack | 12 518 ns | 45 373 ns |
+| the nested demo conversation row | 1 356 µs | 1 322 µs |
+
+A clamping frame roughly doubles, and nesting clamping frames compounds — four stacked clamps cost 3.6×.
+Realistic content is unaffected, because a frame only pays when its bound actually bites. Reach for the
+`aspectRatio` cap overloads over a bare `frame(maxHeight:)` inside deep trees and the pass never fires.
+
+## Reserving a box that hugs a ratio-driven image
+
+`frame(maxHeight:)` fits the image, but the reserved box keeps the full proposed width — the bound acts on
+the height, so nothing narrows the box to the photo. When the box itself should hug the content, express
+the cap on the width:
 
 ```swift
 FLImage(image)
@@ -78,7 +108,33 @@ FLImage(image)
 ```
 
 `maximumHeight * ratio` is the width at which the height reaches the cap. `min` with the photo's own
-width keeps a small image from being upscaled.
+width keeps a small image from being upscaled. `aspectRatio(_:contentMode:boundedBy:)` packages exactly
+this, and as a bonus the bound never clamps, so the placement pass is skipped.
+
+All three cap overloads — `maxWidth:`, `maxHeight:`, `boundedBy:` — bound **both** axes, deriving whichever
+limit they were not given, and every one routes through `boundedBy:`. The ratio ties the axes together, so
+a single cap is enough information to bound the other, and the three spellings reserve the same box:
+
+```swift
+aspectRatio(0.5, contentMode: mode, maxWidth: 50)
+aspectRatio(0.5, contentMode: mode, maxHeight: 100)
+aspectRatio(0.5, contentMode: mode, boundedBy: CGSize(width: 50, height: 900))
+```
+
+That is a stronger promise than the bare `frame(maxWidth:)` / `frame(maxHeight:)` spellings make, and it
+exists for `.fill`: a single cap leaves the derived axis unbounded, so `.fill` — which answers larger than
+any proposal — would reserve 50 × 300, a box that is not the shape it claims. Use the bare frame spelling
+when SwiftUI's behaviour is what is wanted; it stays available and is covered by its own parity test.
+
+`boundedBy:` takes a `CGSize` rather than two maxima because a ratio-shaped box cannot honour two limits
+independently: the tighter dimension decides, and separate `maxWidth`/`maxHeight` parameters read as a
+promise about each axis that neither of them makes.
+
+`min(W, H·r)` and `min(H, W/r)` cannot disagree about which dimension binds — `W ≤ H·r` and `W/r ≤ H` are
+the same inequality — so the derived pair is always exactly ratio-shaped. The **box** is ratio-shaped only
+when the limits are what bind: a finite proposal tighter than the derived limit still wins on that axis,
+per the bounded-axis rule above, and then the box takes the proposal while the child stays ratio-shaped
+inside it. In a cell that never happens on the height axis, because no height is proposed.
 
 ## Verifying against SwiftUI
 
@@ -95,7 +151,14 @@ If that returns 300 wide, oversizes are coming through and the numbers mean some
 holds the comparisons; add to it rather than writing a throwaway probe.
 
 An infinite proposed height stands in for `.unspecified`. A finite one is a real proposal and takes the
-`.exact` path, which is why rows 3 and 4 of the table differ.
+`.exact` path, which is why rows 3 and 4 of the table differ. In a preview, pin the SwiftUI column with
+`.fixedSize(horizontal: false, vertical: true)` or it inherits a finite height proposal from the enclosing
+scroll view and answers a different question than the FL column beside it.
+
+**`sizeThatFits` says nothing about where the child landed.** Outer sizes agreed for a whole session while
+the rendering diverged, because a frame that crops a 160×320 child and one that fits a 50×100 child both
+report 160×100. For any claim about placement, render and measure the drawn pixels — `FLSwiftUIParityTests`
+does it with `ImageRenderer` and a bounding-box scan.
 
 `print` from a test is not captured in `xcodebuild` output or in the result bundle. To get numbers out of
 an exploratory test, accumulate them and fail on purpose — `Issue.record(Comment(rawValue: report))`

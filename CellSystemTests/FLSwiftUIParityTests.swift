@@ -250,6 +250,24 @@ struct FLSwiftUIParityTests {
         #expect(fl.width < box)
     }
 
+    @Test("fixedSize pins SwiftUI to the unspecified-height regime FL measures in")
+    func fixedSizeMatchesTheUnspecifiedRegime() {
+        let tallRatio = portrait.size.width / portrait.size.height
+        let cap: CGFloat = 100
+        let chain = Image(uiImage: portrait).resizable()
+            .aspectRatio(tallRatio, contentMode: .fit)
+            .frame(maxHeight: cap)
+        let fl = FLImage(portrait).resizable().aspectRatio(tallRatio, contentMode: .fit).frame(maxHeight: cap)
+            .layout(in: FLContext(width: box)).size
+
+        let pinned = swiftUISize(chain.fixedSize(horizontal: false, vertical: true), proposedHeight: 200)
+        let unpinned = swiftUISize(chain, proposedHeight: 200)
+
+        expectSame(pinned, fl)
+        #expect(unpinned != pinned)
+        #expect(unpinned.width < box)
+    }
+
     /// Outer sizes agreed for a long time while the rendering did not, because `sizeThatFits` says nothing
     /// about where the child landed. This renders the SwiftUI chain and finds the photo's drawn extent, so
     /// child geometry is compared rather than inferred.
