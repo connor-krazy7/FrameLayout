@@ -29,6 +29,15 @@ enum FLProposal: Sendable, Hashable {
         guard case let .exact(value) = self else { return self }
         return .exact(Swift.max(0, value - amount))
     }
+
+    func resolved(ideal: CGFloat) -> CGFloat {
+        switch self {
+        case .unspecified: ideal
+        case .minimum: 0
+        case .maximum: .infinity
+        case let .exact(value): value
+        }
+    }
 }
 
 /// Values that flow down the tree rather than being proposed. Present in `FLContext` because some of

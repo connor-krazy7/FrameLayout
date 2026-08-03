@@ -17,18 +17,13 @@ struct FLColor: FLNode {
 
     func layout(in context: FLContext) -> FLColorLayout {
         FLColorLayout(
-            size: CGSize(width: Self.extent(context.width), height: Self.extent(context.height))
+            size: CGSize(
+                width: context.width.resolved(ideal: 0),
+                height: context.height.resolved(ideal: 0)
+            )
         )
     }
 
-    // A fill has no content of its own: its ideal and minimum are zero, its maximum unbounded.
-    private static func extent(_ proposal: FLProposal) -> CGFloat {
-        switch proposal {
-        case .unspecified, .minimum: 0
-        case .maximum: .infinity
-        case let .exact(value): value
-        }
-    }
 }
 
 final class FLColorView: UIView, FLNodeView {

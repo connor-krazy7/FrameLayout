@@ -60,23 +60,14 @@ struct FLImage: FLNode {
 
         return FLImageLayout(
             size: CGSize(
-                width: extent(context.width, ideal: intrinsicSize.width),
-                height: extent(context.height, ideal: intrinsicSize.height)
+                width: context.width.resolved(ideal: intrinsicSize.width),
+                height: context.height.resolved(ideal: intrinsicSize.height)
             )
         )
     }
 
     private var intrinsicSize: CGSize {
         (image?.size).or(.zero)
-    }
-
-    private func extent(_ proposal: FLProposal, ideal: CGFloat) -> CGFloat {
-        switch proposal {
-        case .unspecified: ideal
-        case .minimum: 0
-        case .maximum: .infinity
-        case let .exact(value): value
-        }
     }
 }
 
