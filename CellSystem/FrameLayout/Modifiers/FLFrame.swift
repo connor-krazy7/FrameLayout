@@ -19,39 +19,67 @@ struct FLFrame<Wrapped: FLNode>: FLNode {
     let wrapped: Wrapped
 
     func layout(in context: FLContext) -> FLFrameLayout<Wrapped.Layout> {
-        let wrappedLayout = wrapped.layout(
-            in: context.proposing(
-                width: Self.childProposal(context.width, min: minWidth, max: maxWidth),
-                height: Self.childProposal(context.height, min: minHeight, max: maxHeight)
-            )
-        )
+        let measuringWidth = Self.childProposal(context.width, min: minWidth, max: maxWidth)
+        let measuringHeight = Self.childProposal(context.height, min: minHeight, max: maxHeight)
+        let measured = wrapped.layout(in: context.proposing(width: measuringWidth, height: measuringHeight))
         let size = CGSize(
             width: Self.resolvedSize(
                 proposal: context.width,
-                childSize: wrappedLayout.size.width,
+                childSize: measured.size.width,
                 min: minWidth,
                 max: maxWidth
             ),
             height: Self.resolvedSize(
                 proposal: context.height,
-                childSize: wrappedLayout.size.height,
+                childSize: measured.size.height,
                 min: minHeight,
                 max: maxHeight
             )
         )
+        let placementWidth = Self.placementProposal(
+            measuringWidth,
+            resolved: size.width,
+            measured: measured.size.width,
+            isBounded: minWidth != nil || maxWidth != nil
+        )
+        let placementHeight = Self.placementProposal(
+            measuringHeight,
+            resolved: size.height,
+            measured: measured.size.height,
+            isBounded: minHeight != nil || maxHeight != nil
+        )
+        let placed = placementWidth == measuringWidth && placementHeight == measuringHeight
+            ? measured
+            : wrapped.layout(in: context.proposing(width: placementWidth, height: placementHeight))
 
         return FLFrameLayout(
-            wrapped: wrappedLayout,
+            wrapped: placed,
             wrappedFrame: CGRect(
                 origin: alignment.origin(
-                    childSize: wrappedLayout.size,
+                    childSize: placed.size,
                     containerSize: size,
                     direction: context.layoutDirection
                 ),
-                size: wrappedLayout.size
+                size: placed.size
             ),
             size: size
         )
+    }
+
+    /// A bound resolves the frame's own size, and the child then lays out in *that* box rather than in
+    /// whatever it answered while being measured — otherwise a bound could only ever crop an oversized
+    /// child instead of giving it a smaller box to fit into. Measuring twice is the price; the second
+    /// pass is skipped whenever it would ask the same question, which is every unbounded axis and every
+    /// bound that did not actually clamp.
+    private static func placementProposal(
+        _ proposal: FLProposal,
+        resolved: CGFloat,
+        measured: CGFloat,
+        isBounded: Bool
+    ) -> FLProposal {
+        guard isBounded, resolved != measured else { return proposal }
+
+        return .exact(resolved)
     }
 
     private static func childProposal(

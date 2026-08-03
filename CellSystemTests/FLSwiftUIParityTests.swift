@@ -230,6 +230,148 @@ struct FLSwiftUIParityTests {
         #expect(abs(capped.width / capped.height - tallRatio) < 0.02)
     }
 
+    @Test("a tall photo fits rather than spills once a height is proposed, in both systems")
+    func tallPhotoFitsUnderAProposedHeight() {
+        let tallRatio = portrait.size.width / portrait.size.height
+        let cap: CGFloat = 100
+        let fl = FLImage(portrait).resizable().aspectRatio(tallRatio, contentMode: .fit).frame(maxHeight: cap)
+            .layout(in: FLContext(width: box, height: 800)).size
+        let swiftUI = swiftUISize(
+            Image(uiImage: portrait).resizable().aspectRatio(tallRatio, contentMode: .fit).frame(maxHeight: cap),
+            proposedHeight: 800
+        )
+
+        expectSame(fl, swiftUI)
+        #expect(fl.height == cap)
+        #expect(fl.width < box)
+    }
+
+    /// Outer sizes agreed for a long time while the rendering did not, because `sizeThatFits` says nothing
+    /// about where the child landed. This renders the SwiftUI chain and finds the photo's drawn extent, so
+    /// child geometry is compared rather than inferred.
+    private func drawnBounds(of view: some View, canvasWidth: CGFloat) -> CGRect? {
+        let renderer = ImageRenderer(content: view.frame(width: canvasWidth))
+
+        renderer.scale = 1
+
+        guard let rendered = renderer.cgImage else { return nil }
+
+        let width = rendered.width
+        let height = rendered.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let context = pixels.withUnsafeMutableBytes { bytes in
+            CGContext(
+                data: bytes.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        }
+
+        context?.draw(rendered, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var minX = width
+        var minY = height
+        var maxX = -1
+        var maxY = -1
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = (y * width + x) * 4
+                let isRed = pixels[offset] > 128 && pixels[offset + 1] < 100 && pixels[offset + 3] > 128
+
+                guard isRed else { continue }
+
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+
+        guard maxX >= 0 else { return nil }
+
+        return CGRect(x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1)
+    }
+
+    private func solidRed(size: CGSize) -> UIImage {
+        UIGraphicsImageRenderer(size: size).image { context in
+            UIColor.red.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+    }
+
+    @Test("a bounded frame hands its resolved box to the child, in both systems")
+    func childGeometryMatches() {
+        let image = solidRed(size: CGSize(width: 60, height: 120))
+        let chain = Image(uiImage: image)
+            .resizable()
+            .aspectRatio(0.5, contentMode: .fit)
+            .frame(maxHeight: 100)
+            .fixedSize(horizontal: false, vertical: true)
+        let fl = FLImage(image).resizable().aspectRatio(0.5, contentMode: .fit).frame(maxHeight: 100)
+            .layout(in: FLContext(width: box))
+        let drawn = drawnBounds(of: chain, canvasWidth: box)
+
+        #expect(fl.size == CGSize(width: box, height: 100))
+        #expect(fl.wrappedFrame.size == CGSize(width: 50, height: 100))
+        #expect(drawn?.width == 50)
+        #expect(drawn?.height == 100)
+        #expect(abs((drawn?.midX).or(0) - box / 2) <= 1)
+        #expect(abs(fl.wrappedFrame.midX - box / 2) <= 1)
+    }
+
+    @Test("a fill still overflows the box it is given, in both systems")
+    func fillStillOverflows() {
+        let image = solidRed(size: CGSize(width: 60, height: 120))
+        let chain = Image(uiImage: image)
+            .resizable()
+            .aspectRatio(0.5, contentMode: .fill)
+            .frame(height: 100)
+            .fixedSize(horizontal: false, vertical: true)
+        let fl = FLImage(image).resizable().aspectRatio(0.5, contentMode: .fill).frame(height: 100)
+            .layout(in: FLContext(width: box))
+
+        #expect(fl.size.height == 100)
+        #expect(fl.wrappedFrame.height > 100)
+        #expect(swiftUISize(chain).height == 100)
+    }
+
+    @Test("an unbounded axis follows the child rather than filling the proposal")
+    func unboundedAxisFollowsTheChild() {
+        let text = FLText("hi").font(.systemFont(ofSize: 12)).frame(maxHeight: 100)
+            .layout(in: FLContext(width: box)).size
+        let textSwiftUI = swiftUISize(Text("hi").font(.system(size: 12)).frame(maxHeight: 100))
+        let image = FLImage(portrait).frame(maxHeight: 100).layout(in: FLContext(width: box)).size
+        let imageSwiftUI = swiftUISize(Image(uiImage: portrait).frame(maxHeight: 100))
+
+        expectSame(text, textSwiftUI, tolerance: 1)
+        expectSame(image, imageSwiftUI)
+        #expect(text.width < 20)
+        #expect(image.width == portrait.size.width)
+    }
+
+    @Test("a bounded axis follows the clamped proposal, which is what maxWidth infinity relies on")
+    func boundedAxisFollowsTheProposal() {
+        let filled = FLText("hi").font(.systemFont(ofSize: 12)).frame(maxWidth: .infinity)
+            .layout(in: FLContext(width: box)).size
+        let filledSwiftUI = swiftUISize(Text("hi").font(.system(size: 12)).frame(maxWidth: .infinity))
+        let capped = FLText("hi").font(.systemFont(ofSize: 12)).frame(maxHeight: 100)
+            .layout(in: FLContext(width: box, height: 400)).size
+        let cappedSwiftUI = UIHostingController(
+            rootView: Text("hi").font(.system(size: 12)).frame(maxHeight: 100)
+        )
+        .sizeThatFits(in: CGSize(width: box, height: 400))
+
+        expectSame(filled, filledSwiftUI, tolerance: 1)
+        expectSame(capped, cappedSwiftUI, tolerance: 1)
+        #expect(filled.width == box)
+        #expect(capped.height == 100)
+    }
+
     @Test("padding shrinks the proposal the child sees, in both systems")
     func paddingShrinksTheProposal() {
         expectSame(
