@@ -192,13 +192,17 @@ struct FLSwiftUIParityTests {
         #expect(fl.height == cap)
     }
 
-    @Test("the maxHeight overload matches the maxHeight-times-ratio spelling it replaces")
+    @Test("the boundedBy overload matches the maxHeight-times-ratio spelling it replaces")
     func maxHeightOverloadMatchesTheArithmetic() {
         for sample in FlexiblePhotoSample.samples {
             let cap = FlexiblePhotoSample.maximumHeight
             let fl = FLImage(sample.image)
                 .resizable()
-                .aspectRatio(sample.ratio, contentMode: .fit, maxWidth: sample.pixelSize.width, maxHeight: cap)
+                .aspectRatio(
+                    sample.ratio,
+                    contentMode: .fit,
+                    boundedBy: CGSize(width: sample.pixelSize.width, height: cap)
+                )
                 .layout(in: FLContext(width: box))
                 .size
             let swiftUI = swiftUISize(
@@ -340,6 +344,85 @@ struct FLSwiftUIParityTests {
         #expect(swiftUISize(chain).height == 100)
     }
 
+    @Test("the cap overloads bound the reserved box for fill as well as fit")
+    func capOverloadsBoundBothContentModes() {
+        let cap: CGFloat = 100
+        let fit = FLImage(portrait).resizable()
+            .aspectRatio(0.5, contentMode: .fit, maxHeight: cap)
+            .layout(in: FLContext(width: box, height: 300)).size
+        let fill = FLImage(portrait).resizable()
+            .aspectRatio(0.5, contentMode: .fill, maxHeight: cap)
+            .layout(in: FLContext(width: box, height: 300)).size
+
+        #expect(fit.height <= cap)
+        #expect(fill.height <= cap)
+    }
+
+    @Test("the bare frame spelling stays SwiftUI-shaped for both content modes")
+    func bareWidthCapMatchesSwiftUI() {
+        let cap: CGFloat = 50
+        let fitFL = FLImage(portrait).resizable().aspectRatio(0.5, contentMode: .fit).frame(maxWidth: cap)
+            .layout(in: FLContext(width: box, height: 300)).size
+        let fitSwiftUI = swiftUISize(
+            Image(uiImage: portrait).resizable().aspectRatio(0.5, contentMode: .fit).frame(maxWidth: cap),
+            proposedHeight: 300
+        )
+        let fillFL = FLImage(portrait).resizable().aspectRatio(0.5, contentMode: .fill).frame(maxWidth: cap)
+            .layout(in: FLContext(width: box, height: 300)).size
+        let fillSwiftUI = swiftUISize(
+            Image(uiImage: portrait).resizable().aspectRatio(0.5, contentMode: .fill).frame(maxWidth: cap),
+            proposedHeight: 300
+        )
+
+        expectSame(fitFL, fitSwiftUI)
+        expectSame(fillFL, fillSwiftUI)
+        #expect(fillFL.height == 300)
+    }
+
+    @Test("every cap overload reserves a ratio-shaped box, whichever limit was given")
+    func capOverloadsReserveARatioShapedBox() {
+        let ratio: CGFloat = 0.5
+        let cap: CGFloat = 50
+        let context = FLContext(width: box, height: 300)
+
+        for mode in [FLAspectContentMode.fit, .fill] {
+            let fromWidth = FLImage(portrait).resizable()
+                .aspectRatio(ratio, contentMode: mode, maxWidth: cap)
+                .layout(in: context).size
+            let fromHeight = FLImage(portrait).resizable()
+                .aspectRatio(ratio, contentMode: mode, maxHeight: cap / ratio)
+                .layout(in: context).size
+            let fromBox = FLImage(portrait).resizable()
+                .aspectRatio(ratio, contentMode: mode, boundedBy: CGSize(width: cap, height: 900))
+                .layout(in: context).size
+
+            #expect(abs(fromWidth.width / fromWidth.height - ratio) < 0.02)
+            #expect(fromWidth == fromHeight)
+            #expect(fromWidth == fromBox)
+            #expect(fromWidth.width <= cap)
+        }
+    }
+
+    @Test("both spellings fit the photo, but only the cap overload makes the reserved box hug it")
+    func hugVersusFullWidthBox() {
+        let ratio: CGFloat = 0.5625
+        let cap: CGFloat = 220
+        let offered: CGFloat = 300
+        let hugging = FLImage(portrait).resizable()
+            .aspectRatio(ratio, contentMode: .fit, maxHeight: cap)
+            .layout(in: FLContext(width: offered))
+        let fullWidth = FLImage(portrait).resizable()
+            .aspectRatio(ratio, contentMode: .fit)
+            .frame(maxHeight: cap)
+            .layout(in: FLContext(width: offered))
+
+        #expect(hugging.size.height == cap)
+        #expect(fullWidth.size.height == cap)
+        #expect(abs(hugging.size.width - cap * ratio) <= 1)
+        #expect(fullWidth.size.width == offered)
+        #expect(abs(fullWidth.wrappedFrame.width - cap * ratio) <= 1)
+    }
+
     @Test("an unbounded axis follows the child rather than filling the proposal")
     func unboundedAxisFollowsTheChild() {
         let text = FLText("hi").font(.systemFont(ofSize: 12)).frame(maxHeight: 100)
@@ -370,6 +453,48 @@ struct FLSwiftUIParityTests {
         expectSame(capped, cappedSwiftUI, tolerance: 1)
         #expect(filled.width == box)
         #expect(capped.height == 100)
+    }
+
+    /// `min(W, H·r)` and `min(H, W/r)` look like two independent choices, but `W ≤ H·r` and `W/r ≤ H` are the
+    /// same inequality, so both pick from the same binding dimension and the derived pair is always exactly
+    /// ratio-shaped. What the reserved box does with that pair still depends on the proposal.
+    @Test("the derived limits never split, so the reserved box keeps the ratio when nothing tighter is proposed")
+    func derivedLimitsNeverSplit() {
+        let ratios: [CGFloat] = [0.25, 0.5625, 1, 1.5, 4]
+        let limits = [
+            CGSize(width: 60, height: 900),
+            CGSize(width: 900, height: 60),
+            CGSize(width: 120, height: 120),
+            CGSize(width: CGFloat.infinity, height: 140),
+            CGSize(width: 260, height: CGFloat.infinity),
+        ]
+
+        for ratio in ratios {
+            for limit in limits {
+                let size = FLColor(.systemRed)
+                    .aspectRatio(ratio, contentMode: .fit, boundedBy: limit)
+                    .layout(in: FLContext(width: 320))
+                    .size
+                let tolerance = ratio * 0.03 + 0.05
+
+                #expect(size.width <= limit.width + 1)
+                #expect(size.height <= limit.height + 1)
+                #expect(size.height > 0)
+                #expect(abs(size.width / size.height - ratio) < tolerance)
+            }
+        }
+    }
+
+    @Test("a proposal tighter than the limits shapes the box, and the child stays ratio-shaped inside it")
+    func aTighterProposalShapesTheBox() {
+        let ratio: CGFloat = 0.25
+        let layout = FLColor(.systemRed)
+            .aspectRatio(ratio, contentMode: .fit, boundedBy: CGSize(width: 260, height: CGFloat.infinity))
+            .layout(in: FLContext(width: 320, height: 480))
+
+        #expect(layout.size == CGSize(width: 260, height: 480))
+        #expect(abs(layout.wrappedFrame.width / layout.wrappedFrame.height - ratio) < 0.05)
+        #expect(layout.wrappedFrame.width < layout.size.width)
     }
 
     @Test("padding shrinks the proposal the child sees, in both systems")

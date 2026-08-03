@@ -126,10 +126,12 @@ extension FLNodeProviding {
     }
 }
 
-// A ratio-driven node answers from the width it was proposed and never learns about a height bound, so
-// `frame(maxHeight:)` shrinks the box while the content keeps overflowing it. These bound the width
-// instead — `maxHeight * ratio` is the width at which the height reaches the cap — which is the only
-// axis a bound can act on. SwiftUI behaves the same way; see the layout-proposals rule.
+// A cap on a ratio-driven node bounds both axes, because the ratio ties them together: staying inside a
+// height limit already bounds the width, and vice versa. Each overload derives the limit it was not given
+// — `maxHeight * ratio` is the width at which the height reaches its cap — so all three reserve the largest
+// ratio-shaped box inside the limits, and `.fill`, which answers larger than any proposal, cannot leave a
+// box that is the wrong shape. That is a stronger promise than the bare `frame(maxWidth:)` / `frame(maxHeight:)`
+// spellings make; reach for those when the SwiftUI behaviour is what is wanted.
 extension FLNodeProviding {
     func aspectRatio(
         _ ratio: CGFloat,
@@ -137,8 +139,12 @@ extension FLNodeProviding {
         maxWidth: CGFloat,
         alignment: FLAlignment = .center
     ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
-        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
-            .frame(maxWidth: maxWidth)
+        aspectRatio(
+            ratio,
+            contentMode: contentMode,
+            boundedBy: CGSize(width: maxWidth, height: maxWidth / ratio),
+            alignment: alignment
+        )
     }
 
     func aspectRatio(
@@ -147,18 +153,26 @@ extension FLNodeProviding {
         maxHeight: CGFloat,
         alignment: FLAlignment = .center
     ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
-        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
-            .frame(maxWidth: maxHeight * ratio)
+        aspectRatio(
+            ratio,
+            contentMode: contentMode,
+            boundedBy: CGSize(width: maxHeight * ratio, height: maxHeight),
+            alignment: alignment
+        )
     }
 
+    /// The largest box with this ratio that stays inside `limit` on both axes. Either dimension may be the
+    /// binding one, so the tighter of `limit.width` and `limit.height * ratio` decides.
     func aspectRatio(
         _ ratio: CGFloat,
         contentMode: FLAspectContentMode = .fit,
-        maxWidth: CGFloat,
-        maxHeight: CGFloat,
+        boundedBy limit: CGSize,
         alignment: FLAlignment = .center
     ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
         aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
-            .frame(maxWidth: min(maxWidth, maxHeight * ratio))
+            .frame(
+                maxWidth: min(limit.width, limit.height * ratio),
+                maxHeight: min(limit.height, limit.width / ratio)
+            )
     }
 }

@@ -71,8 +71,7 @@ struct DemoConversationPhoto: FLView {
             .aspectRatio(
                 photo.ratio,
                 contentMode: .fit,
-                maxWidth: photo.pixelSize.width,
-                maxHeight: Self.maximumHeight
+                boundedBy: CGSize(width: photo.pixelSize.width, height: Self.maximumHeight)
             )
             .background(.white.withAlphaComponent(0.15), in: .roundedRectangle(12))
             .clipped()

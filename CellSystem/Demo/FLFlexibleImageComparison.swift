@@ -3,7 +3,7 @@ import UIKit
 
 /// The conversation-photo case: pixel dimensions are known from the model before anything loads, so the
 /// box can be reserved up front. Each row runs the same chain through FL and SwiftUI at the same offered
-/// width, using `aspectRatio(_:contentMode:maxWidth:maxHeight:)` on the FL side and the `maxHeight × ratio`
+/// width, using `aspectRatio(_:contentMode:boundedBy:)` on the FL side and the `maxHeight × ratio`
 /// arithmetic it replaces on the SwiftUI side.
 struct FlexiblePhotoSample: Identifiable, Sendable {
     static var maximumHeight: CGFloat { 140 }
@@ -70,8 +70,10 @@ private struct FlexibleRow: View {
             .aspectRatio(
                 sample.ratio,
                 contentMode: .fit,
-                maxWidth: sample.pixelSize.width,
-                maxHeight: FlexiblePhotoSample.maximumHeight
+                boundedBy: CGSize(
+                    width: sample.pixelSize.width,
+                    height: FlexiblePhotoSample.maximumHeight
+                )
             )
             .background(.tertiarySystemFill, in: .roundedRectangle(12))
             .clipped()
@@ -100,6 +102,7 @@ private struct FlexibleRow: View {
                 .foregroundStyle(.tertiary)
 
             content()
+                .fixedSize(horizontal: false, vertical: true)
                 .border(.blue)
                 .frame(width: boxWidth, alignment: .leading)
                 .border(.red.opacity(0.6))
@@ -133,8 +136,10 @@ private struct UnloadedRow: View {
             .aspectRatio(
                 sample.ratio,
                 contentMode: .fit,
-                maxWidth: sample.pixelSize.width,
-                maxHeight: FlexiblePhotoSample.maximumHeight
+                boundedBy: CGSize(
+                    width: sample.pixelSize.width,
+                    height: FlexiblePhotoSample.maximumHeight
+                )
             )
             .background(.tertiarySystemFill, in: .roundedRectangle(12))
     }
