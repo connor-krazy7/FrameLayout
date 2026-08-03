@@ -164,7 +164,7 @@ extension FLNodeProviding {
         clipShape(.roundedRectangle(radius), corners: corners, curve: curve)
     }
 
-    func border(_ color: UIColor, width: CGFloat) -> FLDecorated<ProvidedNode> {
+    func border(_ color: UIColor, width: CGFloat = 1) -> FLDecorated<ProvidedNode> {
         decoration {
             $0.borderColor = color
             $0.borderWidth = width
