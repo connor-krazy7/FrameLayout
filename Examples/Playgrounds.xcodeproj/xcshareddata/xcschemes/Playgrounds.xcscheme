@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1D9F140C301CE0B100D71552"
-               BuildableName = "CellSystem.app"
-               BlueprintName = "CellSystem"
-               ReferencedContainer = "container:CellSystem.xcodeproj">
+               BuildableName = "Playgrounds.app"
+               BlueprintName = "Playgrounds"
+               ReferencedContainer = "container:Playgrounds.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1D9F14C9301D755600D71552"
-            BuildableName = "CellSystemTests.xctest"
-            BlueprintName = "CellSystemTests"
-            ReferencedContainer = "container:CellSystem.xcodeproj">
+            BuildableName = "PlaygroundsTests.xctest"
+            BlueprintName = "PlaygroundsTests"
+            ReferencedContainer = "container:Playgrounds.xcodeproj">
          </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1D9F140C301CE0B100D71552"
-            BuildableName = "CellSystem.app"
-            BlueprintName = "CellSystem"
-            ReferencedContainer = "container:CellSystem.xcodeproj">
+            BuildableName = "Playgrounds.app"
+            BlueprintName = "Playgrounds"
+            ReferencedContainer = "container:Playgrounds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "1D9F140C301CE0B100D71552"
-            BuildableName = "CellSystem.app"
-            BlueprintName = "CellSystem"
-            ReferencedContainer = "container:CellSystem.xcodeproj">
+            BuildableName = "Playgrounds.app"
+            BlueprintName = "Playgrounds"
+            ReferencedContainer = "container:Playgrounds.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

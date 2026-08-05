@@ -17,24 +17,24 @@
 			containerPortal = 1D9F1405301CE0B100D71552 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 1D9F140C301CE0B100D71552;
-			remoteInfo = CellSystem;
+			remoteInfo = Playgrounds;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1D9F140D301CE0B100D71552 /* CellSystem.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CellSystem.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1D9F14CA301D755600D71552 /* CellSystemTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CellSystemTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D9F140D301CE0B100D71552 /* Playgrounds.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Playgrounds.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D9F14CA301D755600D71552 /* PlaygroundsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlaygroundsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		1D9F140F301CE0B100D71552 /* CellSystem */ = {
+		1D9F140F301CE0B100D71552 /* Playgrounds */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CellSystem;
+			path = Playgrounds;
 			sourceTree = "<group>";
 		};
-		1D9F14CB301D755600D71552 /* CellSystemTests */ = {
+		1D9F14CB301D755600D71552 /* PlaygroundsTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CellSystemTests;
+			path = PlaygroundsTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -62,8 +62,8 @@
 		1D9F1404301CE0B100D71552 = {
 			isa = PBXGroup;
 			children = (
-				1D9F140F301CE0B100D71552 /* CellSystem */,
-				1D9F14CB301D755600D71552 /* CellSystemTests */,
+				1D9F140F301CE0B100D71552 /* Playgrounds */,
+				1D9F14CB301D755600D71552 /* PlaygroundsTests */,
 				1D9F140E301CE0B100D71552 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -71,8 +71,8 @@
 		1D9F140E301CE0B100D71552 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1D9F140D301CE0B100D71552 /* CellSystem.app */,
-				1D9F14CA301D755600D71552 /* CellSystemTests.xctest */,
+				1D9F140D301CE0B100D71552 /* Playgrounds.app */,
+				1D9F14CA301D755600D71552 /* PlaygroundsTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,9 +80,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1D9F140C301CE0B100D71552 /* CellSystem */ = {
+		1D9F140C301CE0B100D71552 /* Playgrounds */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1D9F1418301CE0B200D71552 /* Build configuration list for PBXNativeTarget "CellSystem" */;
+			buildConfigurationList = 1D9F1418301CE0B200D71552 /* Build configuration list for PBXNativeTarget "Playgrounds" */;
 			buildPhases = (
 				1D9F1409301CE0B100D71552 /* Sources */,
 				1D9F140A301CE0B100D71552 /* Frameworks */,
@@ -93,19 +93,19 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				1D9F140F301CE0B100D71552 /* CellSystem */,
+				1D9F140F301CE0B100D71552 /* Playgrounds */,
 			);
-			name = CellSystem;
+			name = Playgrounds;
 			packageProductDependencies = (
 				FL00000000000000000002 /* FrameLayout */,
 			);
-			productName = CellSystem;
-			productReference = 1D9F140D301CE0B100D71552 /* CellSystem.app */;
+			productName = Playgrounds;
+			productReference = 1D9F140D301CE0B100D71552 /* Playgrounds.app */;
 			productType = "com.apple.product-type.application";
 		};
-		1D9F14C9301D755600D71552 /* CellSystemTests */ = {
+		1D9F14C9301D755600D71552 /* PlaygroundsTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1D9F14D0301D755600D71552 /* Build configuration list for PBXNativeTarget "CellSystemTests" */;
+			buildConfigurationList = 1D9F14D0301D755600D71552 /* Build configuration list for PBXNativeTarget "PlaygroundsTests" */;
 			buildPhases = (
 				1D9F14C6301D755600D71552 /* Sources */,
 				1D9F14C7301D755600D71552 /* Frameworks */,
@@ -117,14 +117,14 @@
 				1D9F14CF301D755600D71552 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				1D9F14CB301D755600D71552 /* CellSystemTests */,
+				1D9F14CB301D755600D71552 /* PlaygroundsTests */,
 			);
-			name = CellSystemTests;
+			name = PlaygroundsTests;
 			packageProductDependencies = (
 				FL00000000000000000003 /* FrameLayout */,
 			);
-			productName = CellSystemTests;
-			productReference = 1D9F14CA301D755600D71552 /* CellSystemTests.xctest */;
+			productName = PlaygroundsTests;
+			productReference = 1D9F14CA301D755600D71552 /* PlaygroundsTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -146,7 +146,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1D9F1408301CE0B100D71552 /* Build configuration list for PBXProject "CellSystem" */;
+			buildConfigurationList = 1D9F1408301CE0B100D71552 /* Build configuration list for PBXProject "Playgrounds" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -163,8 +163,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1D9F140C301CE0B100D71552 /* CellSystem */,
-				1D9F14C9301D755600D71552 /* CellSystemTests */,
+				1D9F140C301CE0B100D71552 /* Playgrounds */,
+				1D9F14C9301D755600D71552 /* PlaygroundsTests */,
 			);
 		};
 /* End PBXProject section */
@@ -206,7 +206,7 @@
 /* Begin PBXTargetDependency section */
 		1D9F14CF301D755600D71552 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 1D9F140C301CE0B100D71552 /* CellSystem */;
+			target = 1D9F140C301CE0B100D71552 /* Playgrounds */;
 			targetProxy = 1D9F14CE301D755600D71552 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -350,7 +350,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = experiment.CellSystem;
+				PRODUCT_BUNDLE_IDENTIFIER = experiment.Playgrounds;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -381,7 +381,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = experiment.CellSystem;
+				PRODUCT_BUNDLE_IDENTIFIER = experiment.Playgrounds;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -402,7 +402,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = experiment.CellSystemTests;
+				PRODUCT_BUNDLE_IDENTIFIER = experiment.PlaygroundsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -411,7 +411,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CellSystem.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CellSystem";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Playgrounds.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Playgrounds";
 			};
 			name = Debug;
 		};
@@ -424,7 +424,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = experiment.CellSystemTests;
+				PRODUCT_BUNDLE_IDENTIFIER = experiment.PlaygroundsTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -433,14 +433,14 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CellSystem.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CellSystem";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Playgrounds.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Playgrounds";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1D9F1408301CE0B100D71552 /* Build configuration list for PBXProject "CellSystem" */ = {
+		1D9F1408301CE0B100D71552 /* Build configuration list for PBXProject "Playgrounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D9F1416301CE0B200D71552 /* Debug */,
@@ -449,7 +449,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1D9F1418301CE0B200D71552 /* Build configuration list for PBXNativeTarget "CellSystem" */ = {
+		1D9F1418301CE0B200D71552 /* Build configuration list for PBXNativeTarget "Playgrounds" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D9F1419301CE0B200D71552 /* Debug */,
@@ -458,7 +458,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1D9F14D0301D755600D71552 /* Build configuration list for PBXNativeTarget "CellSystemTests" */ = {
+		1D9F14D0301D755600D71552 /* Build configuration list for PBXNativeTarget "PlaygroundsTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D9F14D1301D755600D71552 /* Debug */,

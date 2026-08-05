@@ -1,7 +1,7 @@
 import Testing
 import UIKit
 
-@testable import CellSystem
+@testable import Playgrounds
 @testable import FrameLayout
 
 @MainActor

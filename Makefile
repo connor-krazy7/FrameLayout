@@ -14,7 +14,7 @@ test-package:
 test-examples:
 	xcodebuild test \
 		-workspace FrameLayout.xcworkspace \
-		-scheme CellSystem \
+		-scheme Playgrounds \
 		-destination platform="$(PLATFORM_IOS)"
 
 build-package:

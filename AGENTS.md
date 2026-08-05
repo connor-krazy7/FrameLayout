@@ -12,8 +12,8 @@ The package is the repository root, the demo app is an example of consuming it:
 | --- | --- |
 | `Package.swift`, `Sources/FrameLayout/` | the framework |
 | `Tests/FrameLayoutTests/` | the framework's own tests, benchmarks, and `Fixtures/` |
-| `Examples/CellSystem.xcodeproj`, `Examples/CellSystem/` | the demo app: playgrounds, previews, demo models |
-| `Examples/CellSystemTests/` | tests that are *about the demo* — playground rows, the conversation cell |
+| `Examples/Playgrounds.xcodeproj`, `Examples/Playgrounds/` | the demo app: playgrounds, previews, demo models |
+| `Examples/PlaygroundsTests/` | tests that are *about the demo* — playground rows, the conversation cell |
 
 The example app links the root package by relative path, so it compiles against `public` API only —
 that is what proves the surface is complete. Both test targets use `@testable import FrameLayout`,
@@ -24,10 +24,10 @@ Which target a test belongs in follows from what it is *about*. Framework behavi
 `Tests/FrameLayoutTests/` and depends only on `Fixtures/` — a small item model, a four-level composite
 row, a swatch generator, and two injected UIKit views, one laying out by frames and one by constraints.
 A test that asserts something about a playground or the demo conversation cell stays in
-`Examples/CellSystemTests/`. If a framework test needs a demo type, the fixture is missing something;
+`Examples/PlaygroundsTests/`. If a framework test needs a demo type, the fixture is missing something;
 add to `Fixtures/` rather than reaching across.
 
-Neither side needs project edits when files are added — `Examples/CellSystem/` is a file-system
+Neither side needs project edits when files are added — `Examples/Playgrounds/` is a file-system
 synchronised group and SwiftPM discovers package sources by path.
 
 Access control notes that cost a build cycle each: a `public extension` block makes its members public,
@@ -78,7 +78,7 @@ must never hold closures, handlers, or view references.
 - `SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated`. With `MainActor` defaults, `FLNode.layout(in:)`
   becomes main-actor isolated and off-main measurement stops compiling.
 - `SWIFT_VERSION = 6`, `IPHONEOS_DEPLOYMENT_TARGET = 17.0`.
-- The Xcode project uses a file-system-synchronised group, so new files under `CellSystem/` are
+- The Xcode project uses a file-system-synchronised group, so new files under `Playgrounds/` are
   picked up without editing the project file.
 
 ## Verifying changes
@@ -89,7 +89,7 @@ id is baked into a command:
 ```sh
 make test              # both suites
 make test-package      # Tests/FrameLayoutTests
-make test-examples     # Examples/CellSystemTests
+make test-examples     # Examples/PlaygroundsTests
 make build-package     # fastest loop: no app, no simulator boot
 make test SIMULATOR="iPhone 16 Pro"
 ```
@@ -134,7 +134,7 @@ To read the concrete type of a modifier chain, force a mismatch and let the comp
 func probe() { let chain = FLBox(width: 40, height: 40).background(.systemBlue); let _: Never = chain }
 ```
 
-Benchmarks live in `CellSystemTests/Benchmarks/` — same target as the tests, so they are runnable from
+Benchmarks live in `PlaygroundsTests/Benchmarks/` — same target as the tests, so they are runnable from
 the test diamond and inspectable in the navigator, and they get the simulator runtime (UIKit types are
 measurable there). They assert on semantics only and print timings; a Debug test build is `-Onone` and
 inflates every figure, so switch the test action to Release before trusting absolute numbers. Each

@@ -92,7 +92,7 @@ A few consequences worth knowing before using it:
 | --- | --- |
 | `Sources/FrameLayout/` | the framework |
 | `Tests/FrameLayoutTests/` | its tests, benchmarks, and fixtures |
-| `Examples/CellSystem.xcodeproj` | a demo app of playgrounds and SwiftUI-comparison previews |
+| `Examples/Playgrounds.xcodeproj` | a demo app of playgrounds and SwiftUI-comparison previews |
 
 `FrameLayout.xcworkspace` opens both together.
 

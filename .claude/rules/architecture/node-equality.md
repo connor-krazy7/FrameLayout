@@ -53,7 +53,7 @@ length mismatch is rejected without reading content. `hash(into:)` on the same s
 bucketing is cheap and only the final confirming `==` walks content.
 
 Reproduce with the `Benchmark: NSAttributedString equality` suite in
-`CellSystemTests/Benchmarks/`, which carries the full table and both readings as documentation. It
+`PlaygroundsTests/Benchmarks/`, which carries the full table and both readings as documentation. It
 lives in the test target so it runs on the simulator and is one click away, at the cost of a Debug
 build inflating the numbers — set the test action to Release in the scheme when the absolute figures
 matter. The suite asserts only on semantics, never on a timing.
