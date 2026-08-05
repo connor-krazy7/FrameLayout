@@ -138,4 +138,18 @@ public extension FLNodeProviding {
     ) -> FLOverlay<ProvidedNode, Overlay> {
         FLOverlay(content: flNode, overlay: overlay, alignment: alignment)
     }
+
+    func background<Background: FLNode>(
+        alignment: FLAlignment = .center,
+        @FLNodeBuilder content: () -> Background
+    ) -> FLBackground<ProvidedNode, Background> {
+        FLBackground(content: flNode, background: content(), alignment: alignment)
+    }
+
+    func overlay<Overlay: FLNode>(
+        alignment: FLAlignment = .center,
+        @FLNodeBuilder content: () -> Overlay
+    ) -> FLOverlay<ProvidedNode, Overlay> {
+        FLOverlay(content: flNode, overlay: content(), alignment: alignment)
+    }
 }
