@@ -15,6 +15,13 @@ let package = Package(
                 .enableUpcomingFeature("MemberImportVisibility"),
             ]
         ),
+        .testTarget(
+            name: "FrameLayoutTests",
+            dependencies: ["FrameLayout"],
+            swiftSettings: [
+                .enableUpcomingFeature("MemberImportVisibility"),
+            ]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )
