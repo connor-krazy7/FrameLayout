@@ -4,6 +4,38 @@ Prototype of **FrameLayout** (`FL*`) — a declarative, SwiftUI-shaped content s
 layout is precomputed off the main thread. Explores whether the AI-conversation cells in `ios-app`
 can be described as composition instead of hand-nested initialisers.
 
+## Where things live
+
+The package is the repository root, the demo app is an example of consuming it:
+
+| path | contents |
+| --- | --- |
+| `Package.swift`, `Sources/FrameLayout/` | the framework |
+| `Tests/FrameLayoutTests/` | the framework's own tests, benchmarks, and `Fixtures/` |
+| `Examples/CellSystem.xcodeproj`, `Examples/CellSystem/` | the demo app: playgrounds, previews, demo models |
+| `Examples/CellSystemTests/` | tests that are *about the demo* — playground rows, the conversation cell |
+
+The example app links the root package by relative path, so it compiles against `public` API only —
+that is what proves the surface is complete. Both test targets use `@testable import FrameLayout`,
+since they assert on internals: child frames inside layout structs, registry bookkeeping,
+`FLText.resolvedText`.
+
+Which target a test belongs in follows from what it is *about*. Framework behaviour goes in
+`Tests/FrameLayoutTests/` and depends only on `Fixtures/` — a small item model, a four-level composite
+row, a swatch generator, and two injected UIKit views, one laying out by frames and one by constraints.
+A test that asserts something about a playground or the demo conversation cell stays in
+`Examples/CellSystemTests/`. If a framework test needs a demo type, the fixture is missing something;
+add to `Fixtures/` rather than reaching across.
+
+Neither side needs project edits when files are added — `Examples/CellSystem/` is a file-system
+synchronised group and SwiftPM discovers package sources by path.
+
+Access control notes that cost a build cycle each: a `public extension` block makes its members public,
+but a **nested** type needs its own `public`, and a struct that consumers construct needs an explicit
+`public init` because the synthesised memberwise one stays internal. `FLStructuralView` is `public`, not
+`open`, so a leaf defined outside the package cannot subclass it — that is what `FLUIViewRepresentable`
+is for.
+
 ## Project rules
 
 The authoritative project rules live in `.claude/rules/` and are shared across all agents.
@@ -51,49 +83,50 @@ must never hold closures, handlers, or view references.
 
 ## Verifying changes
 
-Do not run `xcodebuild`. Typecheck and codegen from the command line, matching the project settings:
+Everything goes through the `Makefile`, which derives the simulator UDID by name so no machine-specific
+id is baked into a command:
+
+```sh
+make test              # both suites
+make test-package      # Tests/FrameLayoutTests
+make test-examples     # Examples/CellSystemTests
+make build-package     # fastest loop: no app, no simulator boot
+make test SIMULATOR="iPhone 16 Pro"
+```
+
+`make build-package` catches everything inside the framework, including access-control mistakes. It
+does **not** catch a public surface missing something the example needs, which is what building the app
+does — so run `make test` before believing a change is done.
+
+`FrameLayout.xcworkspace` holds the package and the example project, so one Xcode window covers both
+and ⌘U runs whichever scheme is selected. Both schemes are committed under `xcshareddata`; the
+package's auto-generated scheme has no test action when driven through a workspace, which is why the
+workspace ships its own.
+
+The package suite runs **unhosted** — no host app — and window-dependent behaviour still works there:
+`UIWindow`, hit-testing, `didMoveToWindow` teardown, and `ImageRenderer` were all verified under it.
+
+`print` from a test reaches neither the log nor the result bundle; use `Issue.record` to get numbers
+out. A codegen check is still worth running when parameter packs change:
 
 ```sh
 SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
-FILES=$(find CellSystem -name '*.swift' | sort)
 
-xcrun swiftc -typecheck -swift-version 6 -default-isolation nonisolated \
-  -enable-upcoming-feature MemberImportVisibility \
-  -sdk "$SDK" -target arm64-apple-ios17.0-simulator $FILES
-
-xcrun swiftc -emit-object -wmo -swift-version 6 -default-isolation nonisolated \
-  -enable-upcoming-feature MemberImportVisibility -O -module-name CellSystem \
-  -sdk "$SDK" -target arm64-apple-ios17.0-simulator -o /tmp/cs.o $FILES
+xcrun swiftc -emit-object -wmo -swift-version 6 \
+  -enable-upcoming-feature MemberImportVisibility -O -module-name FrameLayout \
+  -sdk "$SDK" -target arm64-apple-ios17.0-simulator -o /tmp/fl.o \
+  $(find Sources -name '*.swift' | sort)
 ```
 
 Typecheck alone is not sufficient: parameter packs have hit SILGen crashes that only appear at
 codegen. Storing a pack expansion in a returned struct crashes Swift 6.2.1, which is why
 `FLTupleLayout` holds `[FLAnyLayout]` rather than `(repeat (each Child).Layout)`.
 
-Check the test target in **two steps**, against a real module. Do not throw the app and test sources
-into one `swiftc` invocation: that merges both into a single module, so a test file missing its
-`@testable import CellSystem` still resolves internal symbols and passes — a check that cannot fail on
-the mistake it exists to catch.
+The package boundary now enforces what a hand-rolled two-step `swiftc` check used to: app and test
+sources cannot silently merge into one module with the framework, so a missing import is a real error
+rather than something that resolves by accident.
 
-```sh
-common=(-swift-version 6 -default-isolation nonisolated \
-  -enable-upcoming-feature MemberImportVisibility \
-  -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" -target arm64-apple-ios17.0-simulator)
-frameworks=(-F "$(xcode-select -p)/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks" \
-  -plugin-path "$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing")
-
-xcrun swiftc -emit-module -wmo -enable-testing -module-name CellSystem "${common[@]}" \
-  -emit-module-path /tmp/cs_mod/CellSystem.swiftmodule $(find CellSystem -name '*.swift' | sort)
-
-xcrun swiftc -typecheck "${common[@]}" -I /tmp/cs_mod "${frameworks[@]}" \
-  $(find CellSystemTests -name '*.swift' | sort)
-```
-
-Note `"${common[@]}"`, not `$common` — zsh does not word-split an unquoted parameter, so the flags
-arrive as one bogus argument.
-
-Neither command runs the tests. Report timings and pass/fail from an actual ⌘U run, never from a
-clean typecheck.
+Report timings and pass/fail from an actual test run, never from a clean build.
 
 To read the concrete type of a modifier chain, force a mismatch and let the compiler print it:
 
