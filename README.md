@@ -51,7 +51,7 @@ host.apply(node: node, layout: layout)
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/<owner>/FrameLayout", from: "0.1.0"),
+    .package(url: "https://github.com/connor-krazy7/FrameLayout", from: "0.1.0"),
 ]
 ```
 
