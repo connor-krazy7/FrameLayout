@@ -14,7 +14,7 @@ public enum FLScrollIndicatorVisibility: Sendable, Hashable {
     case hidden
 }
 
-/// A type-erased, `Sendable` box for the reset token: `AnyHashable` is not `Sendable`, and a node must be.
+/// A type-erased, `Sendable` box for the content token: `AnyHashable` is not `Sendable`, and a node must be.
 public struct FLScrollIdentity: Sendable, Hashable {
     private let token: any Hashable & Sendable
 
@@ -32,7 +32,8 @@ public struct FLScrollIdentity: Sendable, Hashable {
 }
 
 public struct FLScrollConfiguration: Sendable, Hashable, WithCustomisable {
-    public var resetToken: FLScrollIdentity?
+    public var contentToken: FLScrollIdentity?
+    public var initialContentOffset: CGPoint = .zero
     public var indicators: FLScrollIndicatorVisibility = .automatic
     public var contentInsets: FLEdgeInsets = .zero
     public var isScrollDisabled = false
@@ -96,10 +97,24 @@ public struct FLScroll<Content: FLNode>: FLNode {
 }
 
 public extension FLScroll {
-    /// Resets the offset when the token changes, which keeps a reused view from inheriting the previous
-    /// item's position. Nodes hold no state, so the identity has to arrive as a value.
-    func resetting(_ token: some Hashable & Sendable) -> FLScroll {
-        configured { $0.resetToken = FLScrollIdentity(token) }
+    /// Applied on this view's first apply and never again. "Initial" is scoped to the view, which is only
+    /// safe where the host is not recycled — a sheet or a detail screen. In a reused cell use the
+    /// `forContent:` form, or a recycled view keeps whatever position the previous item left behind.
+    func initialContentOffset(_ offset: CGPoint) -> FLScroll {
+        configured { $0.initialContentOffset = offset }
+    }
+
+    /// Applied whenever the content changes, so each content gets its own initial position: the top by
+    /// default, or a stored one, which is how a gallery comes back where it was left. Within one content it
+    /// is applied exactly once, so dragging survives a re-apply that only changed data.
+    func initialContentOffset(
+        _ offset: CGPoint = .zero,
+        forContent content: some Hashable & Sendable
+    ) -> FLScroll {
+        configured {
+            $0.initialContentOffset = offset
+            $0.contentToken = FLScrollIdentity(content)
+        }
     }
 
     func scrollIndicators(_ visibility: FLScrollIndicatorVisibility) -> FLScroll {
@@ -165,11 +180,15 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
 
     public func update(node: Node, layout: FLScrollLayout<Content.Layout>, context: FLRenderContext) {
         apply(configuration: node.configuration, axis: node.axis)
-        resetOffsetIfNeeded(for: node.configuration.resetToken)
 
         contentSize = layout.contentSize
         contentView.flSetFrame(CGRect(origin: .zero, size: layout.contentSize), in: context)
         contentView.update(node: node.content, layout: layout.wrapped, context: context)
+
+        applyInitialOffsetIfContentChanged(
+            token: node.configuration.contentToken,
+            offset: node.configuration.initialContentOffset
+        )
     }
 
     private func apply(configuration: FLScrollConfiguration, axis: FLScrollAxis) {
@@ -192,14 +211,16 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
         )
     }
 
-    private func resetOffsetIfNeeded(for token: FLScrollIdentity?) {
+    /// After `contentSize`, never before: `UIScrollView` clamps an offset to the content it knows about, so
+    /// a position set while the content is still empty is silently lost.
+    private func applyInitialOffsetIfContentChanged(token: FLScrollIdentity?, offset: CGPoint) {
         defer {
             appliedToken = token
             hasApplied = true
         }
 
-        guard hasApplied, token != appliedToken else { return }
+        guard !hasApplied || token != appliedToken else { return }
 
-        setContentOffset(.zero, animated: false)
+        setContentOffset(offset, animated: false)
     }
 }

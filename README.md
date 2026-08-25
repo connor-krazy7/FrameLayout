@@ -91,7 +91,16 @@ A few consequences worth knowing before using it:
   axis and takes the extent it was offered, so `frame(maxHeight:)` is what turns it into a viewport;
   offered nothing, it collapses to its content and does not scroll. Every child view is built on apply, so
   it suits a chip row or a sheet body — a feed still wants a `UICollectionView` with an `FLHostView` per
-  cell.
+  cell. Scroll position is view state, so a gallery in a reused cell declares where each content starts:
+
+  ```swift
+  FLScroll(.horizontal) { … }
+      .initialContentOffset(offsets[album.id] ?? .zero, forContent: album.id)
+  ```
+
+  Applied once per content — a new album starts where you say, dragging survives a re-apply that only
+  changed data, and returning to an album restores it. Without `forContent:` it is applied once for the
+  view, which is only safe where the host is not recycled.
 
 ## Layout of the repository
 

@@ -15,7 +15,7 @@ private struct ScrollableRow: FLView {
                 }
             }
         }
-        .resetting(id)
+        .initialContentOffset(forContent: id)
         .frame(maxHeight: 90)
         .tag("region")
     }
