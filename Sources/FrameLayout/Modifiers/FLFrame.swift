@@ -1,9 +1,37 @@
 import UIKit
 
-public struct FLFrameLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-    public let wrappedFrame: CGRect
-    public let size: CGSize
+public extension FLNodeProviding {
+    func frame(
+        width: CGFloat? = nil,
+        height: CGFloat? = nil,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<ProvidedNode> {
+        FLFrame(
+            minWidth: width,
+            maxWidth: width,
+            minHeight: height,
+            maxHeight: height,
+            alignment: alignment,
+            wrapped: flNode
+        )
+    }
+
+    func frame(
+        minWidth: CGFloat? = nil,
+        maxWidth: CGFloat? = nil,
+        minHeight: CGFloat? = nil,
+        maxHeight: CGFloat? = nil,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<ProvidedNode> {
+        FLFrame(
+            minWidth: minWidth,
+            maxWidth: maxWidth,
+            minHeight: minHeight,
+            maxHeight: maxHeight,
+            alignment: alignment,
+            wrapped: flNode
+        )
+    }
 }
 
 public struct FLFrame<Wrapped: FLNode>: FLNode {
@@ -130,6 +158,12 @@ public struct FLFrame<Wrapped: FLNode>: FLNode {
     }
 }
 
+public struct FLFrameLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+    public let wrappedFrame: CGRect
+    public let size: CGSize
+}
+
 public final class FLFrameView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLFrame<Wrapped>
 
@@ -149,39 +183,5 @@ public final class FLFrameView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public func update(node: FLFrame<Wrapped>, layout: FLFrameLayout<Wrapped.Layout>, context: FLRenderContext) {
         wrappedView.flSetFrame(layout.wrappedFrame, in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
-    }
-}
-
-public extension FLNodeProviding {
-    func frame(
-        width: CGFloat? = nil,
-        height: CGFloat? = nil,
-        alignment: FLAlignment = .center
-    ) -> FLFrame<ProvidedNode> {
-        FLFrame(
-            minWidth: width,
-            maxWidth: width,
-            minHeight: height,
-            maxHeight: height,
-            alignment: alignment,
-            wrapped: flNode
-        )
-    }
-
-    func frame(
-        minWidth: CGFloat? = nil,
-        maxWidth: CGFloat? = nil,
-        minHeight: CGFloat? = nil,
-        maxHeight: CGFloat? = nil,
-        alignment: FLAlignment = .center
-    ) -> FLFrame<ProvidedNode> {
-        FLFrame(
-            minWidth: minWidth,
-            maxWidth: maxWidth,
-            minHeight: minHeight,
-            maxHeight: maxHeight,
-            alignment: alignment,
-            wrapped: flNode
-        )
     }
 }

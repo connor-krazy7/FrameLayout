@@ -44,9 +44,46 @@ The same argument covers three other groupings, and no others:
 `FLAnimationAlways` is a two-line marker type with no meaning apart from `FLAnimated`, and stays with
 it. That is the whole exception list; a new one needs the same argument, not a size argument.
 
+## A file leads with its entry point
+
+Whatever a caller reaches for first goes at the top. That resolves differently for the two kinds of
+node, and the difference is not cosmetic.
+
+**In `Modifiers/`, the verb leads.** You never name `FLPadded` — `.padding(8)` is the only way in, so
+the `FLNodeProviding` extension *is* the file's entry point, and the collapsing overload goes with it
+because collapsing is a fact about the verb:
+
+```
+public extension FLNodeProviding { padding(_:) … }   // what you type
+public extension FLPadded        { padding(_:) … }   // that it collapses rather than wraps
+public struct FLPadded           { … }               // what the verb builds
+public struct FLPaddedLayout     { … }               // what it measures to
+public final class FLPaddedView  { … }               // what renders it
+```
+
+**Everywhere else, the type leads.** You write `FLImage(photo)`, `FLText("hi")`,
+`FLScroll(.horizontal) { … }` — the initialiser is the entry point, and `resizable()`, `lineLimit(_:)`
+and `bounces(_:)` refine a value you already hold. They follow the struct:
+
+```
+public struct FLImage      { … }        // what you construct
+public extension FLImage   { resizable() … }   // how you refine it
+public extension FLImage   { == , hash }
+public struct FLImageLayout { … }
+public final class FLImageView { … }
+```
+
+Hoisting those above the struct inverts the order you actually read them in. They still belong in an
+extension rather than interleaved with `layout(in:)` inside the struct — that was the real problem
+with `FLImage`, not their position.
+
+**A type's own declarations stay contiguous.** Its extensions sit against the type and the `Layout`
+goes after all of them, never between the struct and an extension of it. `FLImage` and `FLGrid` each
+have an extension after the struct, so their `Layout` sits immediately before the view.
+
 ## A modifier's entry point lives with the node it builds
 
-`padding(_:)` is in `FLPadded.swift`, at the bottom, after the view:
+`padding(_:)` is in `FLPadded.swift`:
 
 ```swift
 public extension FLNodeProviding {
@@ -69,18 +106,40 @@ things in two of them. Whatever closes it — a documented table, or a single fa
 scatter the entry points themselves into a folder of their own, which would separate a modifier from
 the merge rule that defines it.
 
+## A node with companion types gets a folder, named without the prefix
+
+A folder holds one thing and its vocabulary, so opening it shows *things* rather than their parts:
+
+```
+Containers/
+  Axes/     FLStackAxis FLGridAxis FLVerticalAxis FLHorizontalAxis FLZAxis
+  Grid/     FLGrid FLGridItem FLGridTracks FLGridTrack FLGridResolution
+  Scroll/   FLScroll FLScrollAxis FLScrollConfiguration FLScrollIdentity FLScrollIndicatorVisibility
+  Stack/    FLStack FLStackChildren FLStackGeometry FLStackAllocation
+```
+
+Flat, that folder was nineteen files of which three were containers; the rest were grid and stack
+vocabulary sitting at the same level as the nodes that own them.
+
+A node with **no** companion types stays a plain file — `Modifiers/FLPadded.swift`, not
+`Modifiers/Padded/FLPadded.swift`. A folder holding one file is ceremony.
+
+**Folder names carry no `FL` prefix.** The prefix exists because Swift has no namespaces and a *type*
+must be globally unique; a folder is already namespaced by its path, so `Modifiers/FLDecorated/FLDecorated.swift`
+stutters without adding information. Every folder is a plain concept noun, which is what `Axes/`,
+`Builders/` and `Geometry/` already were.
+
 ## What a folder means
 
 | folder | contents |
 | --- | --- |
-| `Core/` | the vocabulary: the four contract protocols, `FLProposal`, `FLContext`, and the geometry value types |
+| `Core/` | the vocabulary: the four contract protocols, `FLProposal`, `FLContext`, `FLEnvironment`, and `Geometry/` |
 | `Leaves/` | nodes that draw: `FLColor`, `FLText`, `FLImage`, `FLSpacer`, `FLRepresentableNode` |
 | `Containers/` | nodes that arrange children, and the axis and resolution types they arrange by |
-| `Modifiers/` | nodes that wrap one child, and the value types they carry |
+| `Modifiers/` | nodes that wrap one child, and the value types they carry. `FLAnimated` lives here — `animation(_:)` is an `FLNodeProviding` verb like every other, and a top-level `Animation/` was the one that sat outside |
 | `Controls/` | nodes that take input |
-| `Group/` | the builder machinery: `FLGroup`, the two result builders, and every group and conditional they produce |
-| `Animation/` | `FLAnimated` and `FLAnimation` |
-| `View/` | `FLView` and `FLComposed` — composition as a consumer writes it |
+| `Group/` | the builder machinery: `FLGroup` and its children at the root, then `Builders/`, `Conditionals/` and `ForEach/` |
+| `Composition/` | `FLView` and `FLComposed` — composition as a consumer writes it. Named for what it holds; `View/` read as the home of `FLNodeView`, which lives in `Core/` |
 | `Runtime/` | what drives the description: hosting, measurement, caching, the registry, frame application |
 | `Support/` | extensions on non-FL types |
 

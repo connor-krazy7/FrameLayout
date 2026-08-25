@@ -1,17 +1,5 @@
 import UIKit
 
-public enum FLEitherLayout<First: FLLayout, Second: FLLayout>: FLLayout {
-    case first(First)
-    case second(Second)
-
-    public var size: CGSize {
-        switch self {
-        case let .first(layout): layout.size
-        case let .second(layout): layout.size
-        }
-    }
-}
-
 public enum FLEither<First: FLNode, Second: FLNode>: FLNode {
     public typealias Layout = FLEitherLayout<First.Layout, Second.Layout>
     public typealias View = FLEitherView<First, Second>
@@ -34,6 +22,18 @@ public enum FLEither<First: FLNode, Second: FLNode>: FLNode {
         switch self {
         case let .first(node): .first(node.layout(in: context))
         case let .second(node): .second(node.layout(in: context))
+        }
+    }
+}
+
+public enum FLEitherLayout<First: FLLayout, Second: FLLayout>: FLLayout {
+    case first(First)
+    case second(Second)
+
+    public var size: CGSize {
+        switch self {
+        case let .first(layout): layout.size
+        case let .second(layout): layout.size
         }
     }
 }

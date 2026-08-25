@@ -1,9 +1,5 @@
 import UIKit
 
-public struct FLColorLayout: FLLayout {
-    public let size: CGSize
-}
-
 public struct FLColor: FLNode {
     public typealias View = FLColorView
 
@@ -24,6 +20,10 @@ public struct FLColor: FLNode {
         )
     }
 
+}
+
+public struct FLColorLayout: FLLayout {
+    public let size: CGSize
 }
 
 public final class FLColorView: UIView, FLNodeView {

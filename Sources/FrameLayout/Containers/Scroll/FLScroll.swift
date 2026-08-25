@@ -1,11 +1,5 @@
 import UIKit
 
-public struct FLScrollLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-    public let contentSize: CGSize
-    public let size: CGSize
-}
-
 /// A scrolling region inside a tree. The content is always measured unbounded along the scroll axis, so it
 /// reports its natural extent as the content size, while the region takes the extent it was offered — or
 /// collapses to its content when nothing was offered, which is how a scroll view behaves in a self-sizing
@@ -107,6 +101,12 @@ public extension FLScroll {
     private func configured(_ transform: (inout FLScrollConfiguration) -> Void) -> FLScroll {
         FLScroll(axis: axis, configuration: configuration.with(transform), content: content)
     }
+}
+
+public struct FLScrollLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+    public let contentSize: CGSize
+    public let size: CGSize
 }
 
 public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {

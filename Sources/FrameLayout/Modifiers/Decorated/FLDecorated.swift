@@ -1,61 +1,5 @@
 import UIKit
 
-public struct FLDecoratedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-    public let cornerMask: CACornerMask
-
-    public var size: CGSize { wrapped.size }
-}
-
-public struct FLDecorated<Wrapped: FLNode>: FLNode {
-    public typealias View = FLDecoratedView<Wrapped>
-
-    public static var typeIdentifier: String { "decorated(\(Wrapped.typeIdentifier))" }
-
-    public let decoration: FLDecoration
-    public let wrapped: Wrapped
-
-    public func layout(in context: FLContext) -> FLDecoratedLayout<Wrapped.Layout> {
-        FLDecoratedLayout(
-            wrapped: wrapped.layout(in: context),
-            cornerMask: decoration.corners.cornerMask(in: context.layoutDirection)
-        )
-    }
-}
-
-public final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
-    public typealias Node = FLDecorated<Wrapped>
-
-    private let wrappedView = Wrapped.View()
-
-    public override init(frame: CGRect) {
-        super.init(frame: frame)
-
-        addSubview(wrappedView)
-    }
-
-    @available(*, unavailable)
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) is not supported")
-    }
-
-    public func update(node: FLDecorated<Wrapped>, layout: FLDecoratedLayout<Wrapped.Layout>, context: FLRenderContext) {
-        let decoration = node.decoration
-
-        backgroundColor = decoration.backgroundColor
-        layer.cornerRadius = decoration.shape.cornerRadius(in: layout.size)
-        layer.cornerCurve = decoration.cornerCurve.layerCornerCurve
-        layer.maskedCorners = layout.cornerMask
-        layer.borderColor = decoration.borderColor.cgColor
-        layer.borderWidth = decoration.borderWidth
-        clipsToBounds = decoration.clipsToBounds
-        drawsContent = decoration.backgroundColor.cgColor.alpha > 0 || decoration.borderWidth > 0
-
-        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.wrapped.size), in: context)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
-    }
-}
-
 public extension FLNodeProviding {
     func decoration(_ transform: (inout FLDecoration) -> Void) -> FLDecorated<ProvidedNode> {
         FLDecorated(decoration: FLDecoration().with(transform), wrapped: flNode)
@@ -140,5 +84,61 @@ public extension FLDecorated {
 
     func clipped(_ isClipped: Bool = true) -> FLDecorated<Wrapped> {
         FLDecorated(decoration: decoration.with { $0.clipsToBounds = isClipped }, wrapped: wrapped)
+    }
+}
+
+public struct FLDecorated<Wrapped: FLNode>: FLNode {
+    public typealias View = FLDecoratedView<Wrapped>
+
+    public static var typeIdentifier: String { "decorated(\(Wrapped.typeIdentifier))" }
+
+    public let decoration: FLDecoration
+    public let wrapped: Wrapped
+
+    public func layout(in context: FLContext) -> FLDecoratedLayout<Wrapped.Layout> {
+        FLDecoratedLayout(
+            wrapped: wrapped.layout(in: context),
+            cornerMask: decoration.corners.cornerMask(in: context.layoutDirection)
+        )
+    }
+}
+
+public struct FLDecoratedLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+    public let cornerMask: CACornerMask
+
+    public var size: CGSize { wrapped.size }
+}
+
+public final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
+    public typealias Node = FLDecorated<Wrapped>
+
+    private let wrappedView = Wrapped.View()
+
+    public override init(frame: CGRect) {
+        super.init(frame: frame)
+
+        addSubview(wrappedView)
+    }
+
+    @available(*, unavailable)
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not supported")
+    }
+
+    public func update(node: FLDecorated<Wrapped>, layout: FLDecoratedLayout<Wrapped.Layout>, context: FLRenderContext) {
+        let decoration = node.decoration
+
+        backgroundColor = decoration.backgroundColor
+        layer.cornerRadius = decoration.shape.cornerRadius(in: layout.size)
+        layer.cornerCurve = decoration.cornerCurve.layerCornerCurve
+        layer.maskedCorners = layout.cornerMask
+        layer.borderColor = decoration.borderColor.cgColor
+        layer.borderWidth = decoration.borderWidth
+        clipsToBounds = decoration.clipsToBounds
+        drawsContent = decoration.backgroundColor.cgColor.alpha > 0 || decoration.borderWidth > 0
+
+        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.wrapped.size), in: context)
+        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
     }
 }

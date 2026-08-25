@@ -1,11 +1,5 @@
 import UIKit
 
-public struct FLStackLayout: FLLayout {
-    public let children: FLGroupChildren
-    public let childFrames: [CGRect]
-    public let size: CGSize
-}
-
 public struct FLStack<Axis: FLStackAxis, Group: FLGroup>: FLNode {
     public typealias View = FLStackView<Axis, Group>
 
@@ -74,6 +68,12 @@ public struct FLStack<Axis: FLStackAxis, Group: FLGroup>: FLNode {
             childContexts: extents.map { Axis.childContext(context, extent: .exact($0)) }[...]
         )
     }
+}
+
+public struct FLStackLayout: FLLayout {
+    public let children: FLGroupChildren
+    public let childFrames: [CGRect]
+    public let size: CGSize
 }
 
 public typealias FLVStack<Group: FLGroup> = FLStack<FLVerticalAxis, Group>

@@ -1,9 +1,9 @@
 import UIKit
 
-public struct FLAccessibleLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
+public extension FLNodeProviding {
+    func accessibilityLabel(_ label: String?) -> FLAccessible<ProvidedNode> {
+        FLAccessible(label: label, wrapped: flNode)
+    }
 }
 
 public struct FLAccessible<Wrapped: FLNode>: FLNode {
@@ -19,6 +19,12 @@ public struct FLAccessible<Wrapped: FLNode>: FLNode {
     public func layout(in context: FLContext) -> FLAccessibleLayout<Wrapped.Layout> {
         FLAccessibleLayout(wrapped: wrapped.layout(in: context))
     }
+}
+
+public struct FLAccessibleLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
 }
 
 public final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
@@ -42,11 +48,5 @@ public final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeVi
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
-    }
-}
-
-public extension FLNodeProviding {
-    func accessibilityLabel(_ label: String?) -> FLAccessible<ProvidedNode> {
-        FLAccessible(label: label, wrapped: flNode)
     }
 }

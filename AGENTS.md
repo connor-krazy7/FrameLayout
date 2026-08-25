@@ -17,8 +17,11 @@ The package is the repository root, the demo app is an example of consuming it:
 
 Inside `Sources/FrameLayout/`, a file is named after the type in it and holds nothing else — except a
 node, whose `Layout` and `View` share its file because the three are one mutually recursive
-declaration. `Core/` is the vocabulary, `Leaves/` `Containers/` `Modifiers/` `Controls/` are the nodes,
-`Group/` is the builder machinery, `View/` is `FLView` and `FLComposed`, and `Runtime/` is everything
+declaration. A node with companion types gets a folder named after it without the `FL` prefix
+(`Containers/Grid/`, `Modifiers/Decorated/`); one without stays a plain file. Inside a file the entry
+point comes first — the `FLNodeProviding` verb in `Modifiers/`, the type itself everywhere else — then
+the node with its extensions, then the layout, then the view. `Core/` is the vocabulary, `Leaves/` `Containers/` `Modifiers/` `Controls/` are the nodes,
+`Group/` is the builder machinery, `Composition/` is `FLView` and `FLComposed`, and `Runtime/` is everything
 that drives a description: hosting, measurement, caching, the registry, frame application. The
 file-organisation rule below is authoritative.
 

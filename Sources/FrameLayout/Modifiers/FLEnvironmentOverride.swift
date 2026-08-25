@@ -1,5 +1,34 @@
 import UIKit
 
+public extension FLNodeProviding {
+    func environment(_ overrides: FLEnvironmentOverrides) -> FLEnvironmentOverride<ProvidedNode> {
+        FLEnvironmentOverride(overrides: overrides, wrapped: flNode)
+    }
+
+    func foregroundColor(_ color: UIColor?) -> FLEnvironmentOverride<ProvidedNode> {
+        environment(FLEnvironmentOverrides(foregroundColor: color))
+    }
+
+    func font(_ font: UIFont?) -> FLEnvironmentOverride<ProvidedNode> {
+        environment(FLEnvironmentOverrides(font: font))
+    }
+}
+
+public extension FLEnvironmentOverride {
+    // Chained overrides collapse into one node, the same way padding and decoration do.
+    func environment(_ other: FLEnvironmentOverrides) -> FLEnvironmentOverride<Wrapped> {
+        FLEnvironmentOverride(overrides: overrides.merging(other), wrapped: wrapped)
+    }
+
+    func foregroundColor(_ color: UIColor?) -> FLEnvironmentOverride<Wrapped> {
+        environment(FLEnvironmentOverrides(foregroundColor: color))
+    }
+
+    func font(_ font: UIFont?) -> FLEnvironmentOverride<Wrapped> {
+        environment(FLEnvironmentOverrides(font: font))
+    }
+}
+
 /// Substitutes environment values for a subtree. Carries values rather than a transform so the node
 /// stays `Sendable` and `Hashable`, and so the layout cache can key on it.
 public struct FLEnvironmentOverride<Wrapped: FLNode>: FLNode {
@@ -39,34 +68,5 @@ public final class FLEnvironmentOverrideView<Wrapped: FLNode>: FLStructuralView,
             layout: layout,
             context: context.applying(node.overrides)
         )
-    }
-}
-
-public extension FLNodeProviding {
-    func environment(_ overrides: FLEnvironmentOverrides) -> FLEnvironmentOverride<ProvidedNode> {
-        FLEnvironmentOverride(overrides: overrides, wrapped: flNode)
-    }
-
-    func foregroundColor(_ color: UIColor?) -> FLEnvironmentOverride<ProvidedNode> {
-        environment(FLEnvironmentOverrides(foregroundColor: color))
-    }
-
-    func font(_ font: UIFont?) -> FLEnvironmentOverride<ProvidedNode> {
-        environment(FLEnvironmentOverrides(font: font))
-    }
-}
-
-public extension FLEnvironmentOverride {
-    // Chained overrides collapse into one node, the same way padding and decoration do.
-    func environment(_ other: FLEnvironmentOverrides) -> FLEnvironmentOverride<Wrapped> {
-        FLEnvironmentOverride(overrides: overrides.merging(other), wrapped: wrapped)
-    }
-
-    func foregroundColor(_ color: UIColor?) -> FLEnvironmentOverride<Wrapped> {
-        environment(FLEnvironmentOverrides(foregroundColor: color))
-    }
-
-    func font(_ font: UIFont?) -> FLEnvironmentOverride<Wrapped> {
-        environment(FLEnvironmentOverrides(font: font))
     }
 }

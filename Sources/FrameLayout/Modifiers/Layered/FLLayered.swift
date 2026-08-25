@@ -1,13 +1,5 @@
 import UIKit
 
-public struct FLLayeredLayout<PrimaryLayout: FLLayout, SecondaryLayout: FLLayout>: FLLayout {
-    public let primary: PrimaryLayout
-    public let secondary: SecondaryLayout
-    public let secondaryFrame: CGRect
-
-    public var size: CGSize { primary.size }
-}
-
 public enum FLLayered {
     public static func layout<Primary: FLNode, Secondary: FLNode>(
         primary: Primary,
@@ -36,4 +28,12 @@ public enum FLLayered {
             )
         )
     }
+}
+
+public struct FLLayeredLayout<PrimaryLayout: FLLayout, SecondaryLayout: FLLayout>: FLLayout {
+    public let primary: PrimaryLayout
+    public let secondary: SecondaryLayout
+    public let secondaryFrame: CGRect
+
+    public var size: CGSize { primary.size }
 }

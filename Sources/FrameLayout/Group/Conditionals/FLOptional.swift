@@ -1,11 +1,5 @@
 import UIKit
 
-public struct FLOptionalLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout?
-
-    public var size: CGSize { wrapped.map(\.size).or(.zero) }
-}
-
 public struct FLOptional<Wrapped: FLNode>: FLNode {
     public typealias View = FLOptionalView<Wrapped>
 
@@ -18,6 +12,12 @@ public struct FLOptional<Wrapped: FLNode>: FLNode {
     public func layout(in context: FLContext) -> FLOptionalLayout<Wrapped.Layout> {
         FLOptionalLayout(wrapped: wrapped.map { $0.layout(in: context) })
     }
+}
+
+public struct FLOptionalLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout?
+
+    public var size: CGSize { wrapped.map(\.size).or(.zero) }
 }
 
 public final class FLOptionalView<Wrapped: FLNode>: FLStructuralView, FLNodeView {

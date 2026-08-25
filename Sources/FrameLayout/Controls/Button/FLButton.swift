@@ -1,11 +1,5 @@
 import UIKit
 
-public struct FLButtonLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
-}
-
 public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public typealias View = FLButtonView<Wrapped, Tag>
 
@@ -24,6 +18,12 @@ public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public func layout(in context: FLContext) -> FLButtonLayout<Wrapped.Layout> {
         FLButtonLayout(wrapped: wrapped.layout(in: context))
     }
+}
+
+public struct FLButtonLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
 }
 
 public final class FLButtonView<Wrapped: FLNode, Tag: Hashable & Sendable>: UIControl, FLNodeView {

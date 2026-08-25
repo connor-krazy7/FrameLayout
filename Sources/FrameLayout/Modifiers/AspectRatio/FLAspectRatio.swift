@@ -1,9 +1,64 @@
 import UIKit
 
-public struct FLAspectRatioLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-    public let wrappedFrame: CGRect
-    public let size: CGSize
+public extension FLNodeProviding {
+    func aspectRatio(
+        _ ratio: CGFloat? = nil,
+        contentMode: FLAspectContentMode = .fit,
+        alignment: FLAlignment = .center
+    ) -> FLAspectRatio<ProvidedNode> {
+        FLAspectRatio(ratio: ratio, contentMode: contentMode, alignment: alignment, wrapped: flNode)
+    }
+}
+
+// A cap on a ratio-driven node bounds both axes, because the ratio ties them together: staying inside a
+// height limit already bounds the width, and vice versa. Each overload derives the limit it was not given
+// — `maxHeight * ratio` is the width at which the height reaches its cap — so all three reserve the largest
+// ratio-shaped box inside the limits, and `.fill`, which answers larger than any proposal, cannot leave a
+// box that is the wrong shape. That is a stronger promise than the bare `frame(maxWidth:)` / `frame(maxHeight:)`
+// spellings make; reach for those when the SwiftUI behaviour is what is wanted.
+public extension FLNodeProviding {
+    func aspectRatio(
+        _ ratio: CGFloat,
+        contentMode: FLAspectContentMode = .fit,
+        maxWidth: CGFloat,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
+        aspectRatio(
+            ratio,
+            contentMode: contentMode,
+            boundedBy: CGSize(width: maxWidth, height: maxWidth / ratio),
+            alignment: alignment
+        )
+    }
+
+    func aspectRatio(
+        _ ratio: CGFloat,
+        contentMode: FLAspectContentMode = .fit,
+        maxHeight: CGFloat,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
+        aspectRatio(
+            ratio,
+            contentMode: contentMode,
+            boundedBy: CGSize(width: maxHeight * ratio, height: maxHeight),
+            alignment: alignment
+        )
+    }
+
+    /// The largest box with this ratio that stays inside `limit` on both axes. Either dimension may be the
+    /// binding one, so the tighter of `limit.width` and `limit.height * ratio` decides.
+    func aspectRatio(
+        _ ratio: CGFloat,
+        contentMode: FLAspectContentMode = .fit,
+        boundedBy limit: CGSize,
+        alignment: FLAlignment = .center
+    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
+        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
+            .frame(
+                maxWidth: min(limit.width, limit.height * ratio),
+                maxHeight: min(limit.height, limit.width / ratio)
+            )
+    }
 }
 
 public struct FLAspectRatio<Wrapped: FLNode>: FLNode {
@@ -87,6 +142,12 @@ public struct FLAspectRatio<Wrapped: FLNode>: FLNode {
     }
 }
 
+public struct FLAspectRatioLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+    public let wrappedFrame: CGRect
+    public let size: CGSize
+}
+
 public final class FLAspectRatioView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLAspectRatio<Wrapped>
 
@@ -106,66 +167,5 @@ public final class FLAspectRatioView<Wrapped: FLNode>: FLStructuralView, FLNodeV
     public func update(node: FLAspectRatio<Wrapped>, layout: FLAspectRatioLayout<Wrapped.Layout>, context: FLRenderContext) {
         wrappedView.flSetFrame(layout.wrappedFrame, in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
-    }
-}
-
-public extension FLNodeProviding {
-    func aspectRatio(
-        _ ratio: CGFloat? = nil,
-        contentMode: FLAspectContentMode = .fit,
-        alignment: FLAlignment = .center
-    ) -> FLAspectRatio<ProvidedNode> {
-        FLAspectRatio(ratio: ratio, contentMode: contentMode, alignment: alignment, wrapped: flNode)
-    }
-}
-
-// A cap on a ratio-driven node bounds both axes, because the ratio ties them together: staying inside a
-// height limit already bounds the width, and vice versa. Each overload derives the limit it was not given
-// — `maxHeight * ratio` is the width at which the height reaches its cap — so all three reserve the largest
-// ratio-shaped box inside the limits, and `.fill`, which answers larger than any proposal, cannot leave a
-// box that is the wrong shape. That is a stronger promise than the bare `frame(maxWidth:)` / `frame(maxHeight:)`
-// spellings make; reach for those when the SwiftUI behaviour is what is wanted.
-public extension FLNodeProviding {
-    func aspectRatio(
-        _ ratio: CGFloat,
-        contentMode: FLAspectContentMode = .fit,
-        maxWidth: CGFloat,
-        alignment: FLAlignment = .center
-    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
-        aspectRatio(
-            ratio,
-            contentMode: contentMode,
-            boundedBy: CGSize(width: maxWidth, height: maxWidth / ratio),
-            alignment: alignment
-        )
-    }
-
-    func aspectRatio(
-        _ ratio: CGFloat,
-        contentMode: FLAspectContentMode = .fit,
-        maxHeight: CGFloat,
-        alignment: FLAlignment = .center
-    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
-        aspectRatio(
-            ratio,
-            contentMode: contentMode,
-            boundedBy: CGSize(width: maxHeight * ratio, height: maxHeight),
-            alignment: alignment
-        )
-    }
-
-    /// The largest box with this ratio that stays inside `limit` on both axes. Either dimension may be the
-    /// binding one, so the tighter of `limit.width` and `limit.height * ratio` decides.
-    func aspectRatio(
-        _ ratio: CGFloat,
-        contentMode: FLAspectContentMode = .fit,
-        boundedBy limit: CGSize,
-        alignment: FLAlignment = .center
-    ) -> FLFrame<FLAspectRatio<ProvidedNode>> {
-        aspectRatio(ratio, contentMode: contentMode, alignment: alignment)
-            .frame(
-                maxWidth: min(limit.width, limit.height * ratio),
-                maxHeight: min(limit.height, limit.width / ratio)
-            )
     }
 }

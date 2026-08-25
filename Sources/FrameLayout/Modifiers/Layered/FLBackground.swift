@@ -1,5 +1,21 @@
 import UIKit
 
+public extension FLNodeProviding {
+    func background<Background: FLNode>(
+        _ background: Background,
+        alignment: FLAlignment = .center
+    ) -> FLBackground<ProvidedNode, Background> {
+        FLBackground(content: flNode, background: background, alignment: alignment)
+    }
+
+    func background<Background: FLNode>(
+        alignment: FLAlignment = .center,
+        @FLNodeBuilder content: () -> Background
+    ) -> FLBackground<ProvidedNode, Background> {
+        FLBackground(content: flNode, background: content(), alignment: alignment)
+    }
+}
+
 public struct FLBackground<Content: FLNode, Background: FLNode>: FLNode {
     public typealias View = FLBackgroundView<Content, Background>
 
@@ -40,21 +56,5 @@ public final class FLBackgroundView<Content: FLNode, Background: FLNode>: FLStru
 
         contentView.flSetFrame(CGRect(origin: .zero, size: layout.primary.size), in: context)
         contentView.update(node: node.content, layout: layout.primary, context: context)
-    }
-}
-
-public extension FLNodeProviding {
-    func background<Background: FLNode>(
-        _ background: Background,
-        alignment: FLAlignment = .center
-    ) -> FLBackground<ProvidedNode, Background> {
-        FLBackground(content: flNode, background: background, alignment: alignment)
-    }
-
-    func background<Background: FLNode>(
-        alignment: FLAlignment = .center,
-        @FLNodeBuilder content: () -> Background
-    ) -> FLBackground<ProvidedNode, Background> {
-        FLBackground(content: flNode, background: content(), alignment: alignment)
     }
 }

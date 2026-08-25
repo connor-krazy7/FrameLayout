@@ -1,9 +1,9 @@
 import UIKit
 
-public struct FLDisabledLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
+public extension FLNodeProviding {
+    func disabled(_ isDisabled: Bool = true) -> FLDisabled<ProvidedNode> {
+        FLDisabled(isDisabled: isDisabled, wrapped: flNode)
+    }
 }
 
 public struct FLDisabled<Wrapped: FLNode>: FLNode {
@@ -19,6 +19,12 @@ public struct FLDisabled<Wrapped: FLNode>: FLNode {
     public func layout(in context: FLContext) -> FLDisabledLayout<Wrapped.Layout> {
         FLDisabledLayout(wrapped: wrapped.layout(in: context))
     }
+}
+
+public struct FLDisabledLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
 }
 
 public final class FLDisabledView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
@@ -42,11 +48,5 @@ public final class FLDisabledView<Wrapped: FLNode>: FLStructuralView, FLNodeView
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
-    }
-}
-
-public extension FLNodeProviding {
-    func disabled(_ isDisabled: Bool = true) -> FLDisabled<ProvidedNode> {
-        FLDisabled(isDisabled: isDisabled, wrapped: flNode)
     }
 }

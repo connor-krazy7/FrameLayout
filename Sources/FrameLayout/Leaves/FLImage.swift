@@ -1,9 +1,5 @@
 import UIKit
 
-public struct FLImageLayout: FLLayout {
-    public let size: CGSize
-}
-
 /// Reports the image's own point size, like a non-resizable SwiftUI `Image`. Call `resizable()` to
 /// let it accept a proposal instead; every other sizing behaviour comes from modifiers.
 public struct FLImage: FLNode {
@@ -32,29 +28,6 @@ public struct FLImage: FLNode {
         self.isResizable = isResizable
     }
 
-    /// Only the image knows it can be resampled, so willingness to take a proposal has to live here
-    /// rather than in a modifier.
-    public func resizable() -> FLImage {
-        FLImage(image, contentMode: contentMode, overrides: overrides, isResizable: true)
-    }
-
-    public func contentMode(_ contentMode: UIView.ContentMode) -> FLImage {
-        FLImage(image, contentMode: contentMode, overrides: overrides, isResizable: isResizable)
-    }
-    
-    public func foregroundColor(_ color: UIColor?) -> FLImage {
-        environment(FLEnvironmentOverrides(foregroundColor: color))
-    }
-
-    public func environment(_ other: FLEnvironmentOverrides) -> FLImage {
-        FLImage(
-            image,
-            contentMode: contentMode,
-            overrides: overrides.merging(other),
-            isResizable: isResizable
-        )
-    }
-
     public func layout(in context: FLContext) -> FLImageLayout {
         guard isResizable else { return FLImageLayout(size: intrinsicSize) }
 
@@ -68,6 +41,31 @@ public struct FLImage: FLNode {
 
     private var intrinsicSize: CGSize {
         (image?.size).or(.zero)
+    }
+}
+
+public extension FLImage {
+    /// Only the image knows it can be resampled, so willingness to take a proposal has to live here
+    /// rather than in a modifier.
+    func resizable() -> FLImage {
+        FLImage(image, contentMode: contentMode, overrides: overrides, isResizable: true)
+    }
+
+    func contentMode(_ contentMode: UIView.ContentMode) -> FLImage {
+        FLImage(image, contentMode: contentMode, overrides: overrides, isResizable: isResizable)
+    }
+
+    func foregroundColor(_ color: UIColor?) -> FLImage {
+        environment(FLEnvironmentOverrides(foregroundColor: color))
+    }
+
+    func environment(_ other: FLEnvironmentOverrides) -> FLImage {
+        FLImage(
+            image,
+            contentMode: contentMode,
+            overrides: overrides.merging(other),
+            isResizable: isResizable
+        )
     }
 }
 
@@ -86,6 +84,10 @@ public extension FLImage {
         hasher.combine(image?.size.width)
         hasher.combine(image?.size.height)
     }
+}
+
+public struct FLImageLayout: FLLayout {
+    public let size: CGSize
 }
 
 // A plain UIView wrapping a UIImageView, rather than a UIImageView subclass. Every other leaf view

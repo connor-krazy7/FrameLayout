@@ -1,5 +1,21 @@
 import UIKit
 
+public extension FLNodeProviding {
+    func overlay<Overlay: FLNode>(
+        _ overlay: Overlay,
+        alignment: FLAlignment = .center
+    ) -> FLOverlay<ProvidedNode, Overlay> {
+        FLOverlay(content: flNode, overlay: overlay, alignment: alignment)
+    }
+
+    func overlay<Overlay: FLNode>(
+        alignment: FLAlignment = .center,
+        @FLNodeBuilder content: () -> Overlay
+    ) -> FLOverlay<ProvidedNode, Overlay> {
+        FLOverlay(content: flNode, overlay: content(), alignment: alignment)
+    }
+}
+
 public struct FLOverlay<Content: FLNode, Overlay: FLNode>: FLNode {
     public typealias View = FLOverlayView<Content, Overlay>
 
@@ -40,21 +56,5 @@ public final class FLOverlayView<Content: FLNode, Overlay: FLNode>: FLStructural
 
         overlayView.flSetFrame(layout.secondaryFrame, in: context)
         overlayView.update(node: node.overlay, layout: layout.secondary, context: context)
-    }
-}
-
-public extension FLNodeProviding {
-    func overlay<Overlay: FLNode>(
-        _ overlay: Overlay,
-        alignment: FLAlignment = .center
-    ) -> FLOverlay<ProvidedNode, Overlay> {
-        FLOverlay(content: flNode, overlay: overlay, alignment: alignment)
-    }
-
-    func overlay<Overlay: FLNode>(
-        alignment: FLAlignment = .center,
-        @FLNodeBuilder content: () -> Overlay
-    ) -> FLOverlay<ProvidedNode, Overlay> {
-        FLOverlay(content: flNode, overlay: content(), alignment: alignment)
     }
 }

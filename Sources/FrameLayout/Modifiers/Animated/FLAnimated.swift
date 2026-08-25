@@ -1,9 +1,16 @@
 import UIKit
 
-public struct FLAnimatedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
+public extension FLNodeProviding {
+    func animation(_ animation: FLAnimation?) -> FLAnimated<ProvidedNode, FLAnimationAlways> {
+        FLAnimated(animation: animation, value: nil, wrapped: flNode)
+    }
 
-    public var size: CGSize { wrapped.size }
+    func animation<Value: Hashable & Sendable>(
+        _ animation: FLAnimation?,
+        value: Value
+    ) -> FLAnimated<ProvidedNode, Value> {
+        FLAnimated(animation: animation, value: value, wrapped: flNode)
+    }
 }
 
 public struct FLAnimationAlways: Hashable, Sendable {}
@@ -22,6 +29,12 @@ public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
     public func layout(in context: FLContext) -> FLAnimatedLayout<Wrapped.Layout> {
         FLAnimatedLayout(wrapped: wrapped.layout(in: context))
     }
+}
+
+public struct FLAnimatedLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
 }
 
 public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: FLStructuralView, FLNodeView, FLFrameApplying {
@@ -72,19 +85,6 @@ public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: 
         guard let previous else { return false }
 
         return previous != value
-    }
-}
-
-public extension FLNodeProviding {
-    func animation(_ animation: FLAnimation?) -> FLAnimated<ProvidedNode, FLAnimationAlways> {
-        FLAnimated(animation: animation, value: nil, wrapped: flNode)
-    }
-
-    func animation<Value: Hashable & Sendable>(
-        _ animation: FLAnimation?,
-        value: Value
-    ) -> FLAnimated<ProvidedNode, Value> {
-        FLAnimated(animation: animation, value: value, wrapped: flNode)
     }
 }
 
