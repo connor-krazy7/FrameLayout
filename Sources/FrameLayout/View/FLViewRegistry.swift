@@ -13,13 +13,13 @@ public final class FLViewRegistry {
     }
 
     public func button<Tag: Hashable>(withTag tag: Tag) -> UIControl? {
-        view(withTag: tag) as? UIControl
+        view(withTag: tag, as: UIControl.self)
     }
 
     public func view<Tag: Hashable, Kind: UIView>(withTag tag: Tag, as kind: Kind.Type) -> Kind? {
         guard let tagged = view(withTag: tag) else { return nil }
 
-        return tagged as? Kind ?? Self.firstDescendant(of: kind, in: tagged)
+        return Self.resolve(tagged, as: kind)
     }
 
     public func imageView<Tag: Hashable>(withTag tag: Tag) -> UIImageView? {
@@ -49,15 +49,39 @@ public final class FLViewRegistry {
         bind(tag: AnyHashable(tag), bindingKey: AnyHashable(bindingKey), configure: configure)
     }
 
+    /// Binds to whatever view of `kind` the tagged region holds, matching at the top or searching into it —
+    /// the same resolution `view(withTag:as:)` performs. A tagged region is often a structural wrapper, so
+    /// the view worth configuring is rarely the one registered under the tag.
+    public func bindView<Tag: Hashable, Kind: UIView>(
+        withTag tag: Tag,
+        as kind: Kind.Type,
+        _ configure: @escaping @MainActor (Kind) -> Void
+    ) {
+        bindView(withTag: tag) { view in
+            guard let resolved = Self.resolve(view, as: kind) else { return }
+
+            configure(resolved)
+        }
+    }
+
+    public func bindView<Tag: Hashable, Key: Hashable, Kind: UIView>(
+        withTag tag: Tag,
+        bindingKey: Key,
+        as kind: Kind.Type,
+        _ configure: @escaping @MainActor (Kind) -> Void
+    ) {
+        bindView(withTag: tag, bindingKey: bindingKey) { view in
+            guard let resolved = Self.resolve(view, as: kind) else { return }
+
+            configure(resolved)
+        }
+    }
+
     public func bindButton<Tag: Hashable>(
         withTag tag: Tag,
         _ configure: @escaping @MainActor (UIControl) -> Void
     ) {
-        bindView(withTag: tag) { view in
-            guard let control = view as? UIControl else { return }
-
-            configure(control)
-        }
+        bindView(withTag: tag, as: UIControl.self, configure)
     }
 
     public func bindButton<Tag: Hashable, Key: Hashable>(
@@ -65,11 +89,7 @@ public final class FLViewRegistry {
         bindingKey: Key,
         _ configure: @escaping @MainActor (UIControl) -> Void
     ) {
-        bindView(withTag: tag, bindingKey: bindingKey) { view in
-            guard let control = view as? UIControl else { return }
-
-            configure(control)
-        }
+        bindView(withTag: tag, bindingKey: bindingKey, as: UIControl.self, configure)
     }
 
     public func bindAction<Tag: Hashable>(
@@ -195,6 +215,10 @@ private extension FLViewRegistry {
         guard let button = tagToView[tag] as? UIControl else { return }
 
         Self.removeActions(identifiedBy: actionIdentifier, fromControl: button)
+    }
+
+    static func resolve<Kind: UIView>(_ view: UIView, as kind: Kind.Type) -> Kind? {
+        view as? Kind ?? firstDescendant(of: kind, in: view)
     }
 
     static func firstDescendant<Kind: UIView>(of kind: Kind.Type, in view: UIView) -> Kind? {
