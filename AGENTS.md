@@ -107,7 +107,12 @@ The package suite runs **unhosted** — no host app — and window-dependent beh
 `UIWindow`, hit-testing, `didMoveToWindow` teardown, and `ImageRenderer` were all verified under it.
 
 `print` from a test reaches neither the log nor the result bundle; use `Issue.record` to get numbers
-out. A codegen check is still worth running when parameter packs change:
+out.
+
+Two `#expect` traps that look like real failures and are not. Arithmetic over more than one literal
+infers `Int`, so `#expect(width == 8 * 60 + 7 * 4)` fails as `508.0 == 508` — swift-testing compares the
+captured values as `Any`, and the dynamic types differ. The same happens when a `CGFloat` meets a
+`Double` produced by literal division. Wrap the expression in `CGFloat(...)` or annotate the binding. A codegen check is still worth running when parameter packs change:
 
 ```sh
 SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
