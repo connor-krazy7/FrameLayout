@@ -1,10 +1,5 @@
 import UIKit
 
-public struct FLForEachItem<ID: Hashable & Sendable, Item: FLNode>: Sendable, Hashable {
-    public let id: ID
-    public let node: Item
-}
-
 public struct FLForEach<ID: Hashable & Sendable, Item: FLNode>: FLGroup {
     public typealias Views = FLForEachViews<ID, Item>
 

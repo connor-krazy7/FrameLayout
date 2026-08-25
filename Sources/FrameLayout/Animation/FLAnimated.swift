@@ -1,22 +1,5 @@
 import UIKit
 
-@MainActor
-public protocol FLFrameApplying: UIView {
-    func applyFrame(_ frame: CGRect)
-}
-
-public extension UIView {
-    func flSetFrame(_ frame: CGRect, in context: FLRenderContext) {
-        guard let applying = self as? any FLFrameApplying else {
-            context.perform { self.frame = frame }
-
-            return
-        }
-
-        applying.applyFrame(frame)
-    }
-}
-
 public struct FLAnimatedLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
 
@@ -92,14 +75,6 @@ public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: 
     }
 }
 
-public extension Optional {
-    fileprivate func filter(_ isIncluded: (Wrapped) -> Bool) -> Wrapped? {
-        guard let self, isIncluded(self) else { return nil }
-
-        return self
-    }
-}
-
 public extension FLNodeProviding {
     func animation(_ animation: FLAnimation?) -> FLAnimated<ProvidedNode, FLAnimationAlways> {
         FLAnimated(animation: animation, value: nil, wrapped: flNode)
@@ -110,5 +85,13 @@ public extension FLNodeProviding {
         value: Value
     ) -> FLAnimated<ProvidedNode, Value> {
         FLAnimated(animation: animation, value: value, wrapped: flNode)
+    }
+}
+
+public extension Optional {
+    fileprivate func filter(_ isIncluded: (Wrapped) -> Bool) -> Wrapped? {
+        guard let self, isIncluded(self) else { return nil }
+
+        return self
     }
 }
