@@ -15,6 +15,13 @@ The package is the repository root, the demo app is an example of consuming it:
 | `Examples/Playgrounds.xcodeproj`, `Examples/Playgrounds/` | the demo app: playgrounds, previews, demo models |
 | `Examples/PlaygroundsTests/` | tests that are *about the demo* — playground rows, the conversation cell |
 
+Inside `Sources/FrameLayout/`, a file is named after the type in it and holds nothing else — except a
+node, whose `Layout` and `View` share its file because the three are one mutually recursive
+declaration. `Core/` is the vocabulary, `Leaves/` `Containers/` `Modifiers/` `Controls/` are the nodes,
+`Group/` is the builder machinery, `View/` is `FLView` and `FLComposed`, and `Runtime/` is everything
+that drives a description: hosting, measurement, caching, the registry, frame application. The
+file-organisation rule below is authoritative.
+
 The example app links the root package by relative path, so it compiles against `public` API only —
 that is what proves the surface is complete. Both test targets use `@testable import FrameLayout`,
 since they assert on internals: child frames inside layout structs, registry bookkeeping,
@@ -43,6 +50,7 @@ Claude Code loads that directory directly; other agents should read the files li
 
 - `.claude/rules/style/value-expressions.md` — producing values at declaration, and keeping expressions short enough to infer
 - `.claude/rules/style/commit-messages.md` — a manifest of what changed first, the reasoning after
+- `.claude/rules/architecture/file-organisation.md` — one file per nameable thing, why a node's Layout/Node/View triple is the exception, and what each folder means
 - `.claude/rules/architecture/leaf-views.md` — wrap UIKit controls rather than subclassing them; picking `FLStructuralView` vs `UIView` and how hit-test pass-through works
 - `.claude/rules/architecture/node-equality.md` — let `Hashable` synthesis produce a node's `==`/`hash`, and why no identity fast path
 - `.claude/rules/architecture/layout-proposals.md` — a proposal is a question, not a constraint; only a pinned frame hands a size down, and how to measure parity against real SwiftUI
@@ -63,12 +71,16 @@ must never hold closures, handlers, or view references.
 
 - `FLContext` carries an `FLProposal` per axis (`width`/`height`) plus the environment. The cases are
   `.unspecified` / `.minimum` / `.maximum` / `.exact`; there is no sentinel value and no optional.
-- Containers take a group (`FLGroup`); `FLTuple` is a parameter-pack group, so a stack's children are
+- Containers take a group (`FLGroup`); `FLConcat` is a parameter-pack group, so a stack's children are
   statically typed at any arity.
 - Modifiers wrap by default. Only `cornerRadius` / `clipped` merge into an existing `FLDecorated`,
   and `opacity` / `allowsHitTesting` into an existing `FLAdjusted` — clips compose and adjustments are
   layout-neutral. `background` and `border` must wrap so translucent colours composite and fills escape
   an outer clip.
+- `FLLayoutCache` is unbounded and generic over one concrete `Node`, so a screen with several cell
+  kinds needs one cache each and a data reload has to call `removeAll()`. Both limits are documented on
+  the type. `FLLayoutComputer` is a convenience over `Task.detached`, not a requirement — a caller with
+  its own queue measures directly.
 - `if` / `if let` / `else if` in a builder produce `FLEither` and `FLOptional`, so both branches stay
   statically typed. Groups flatten: a group contributes *N* children to its parent, so an absent branch
   contributes none and the stack never spends spacing on it. `FLForEach` is the same mechanism at
@@ -126,7 +138,7 @@ xcrun swiftc -emit-object -wmo -swift-version 6 \
 
 Typecheck alone is not sufficient: parameter packs have hit SILGen crashes that only appear at
 codegen. Storing a pack expansion in a returned struct crashes Swift 6.2.1, which is why
-`FLTupleLayout` holds `[FLAnyLayout]` rather than `(repeat (each Child).Layout)`.
+`FLGroupChildren` holds `[FLAnyLayout]` rather than `(repeat (each Child).Layout)`.
 
 The package boundary now enforces what a hand-rolled two-step `swiftc` check used to: app and test
 sources cannot silently merge into one module with the framework, so a missing import is a real error
