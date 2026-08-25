@@ -79,12 +79,19 @@ A few consequences worth knowing before using it:
   resolved box back to the child to lay out in.
 - **Behaviour is wired by identity, not by closures.** `tag(_:)` names a region, and `FLViewRegistry`
   binds to it — `bindView`, `bindButton`, `bindAction` — so a binding declared once survives a subtree
-  disappearing and coming back.
+  disappearing and coming back. A tag names a *region*, so reach the view you want by kind:
+  `view(withTag: "filters", as: UIScrollView.self)` to read, `bindView(withTag: "filters", as:)` to
+  configure on every apply. What a node declares wins over a binding that fights it.
 - **Composites are values.** `FLView` returns a `body`, takes modifiers, and composes in builders; there
   is no view-model layer and no reactive graph.
 - **Any UIKit view can be a leaf.** Conform to `FLUIViewRepresentable` with four members. The contract is
   the mirror image of `UIViewRepresentable`: SwiftUI asks the view for its size on the main actor, while
   this asks the *node*, because measurement happens off it.
+- **A scroll region is eager and needs bounding.** `FLScroll` measures its content unbounded along the
+  axis and takes the extent it was offered, so `frame(maxHeight:)` is what turns it into a viewport;
+  offered nothing, it collapses to its content and does not scroll. Every child view is built on apply, so
+  it suits a chip row or a sheet body — a feed still wants a `UICollectionView` with an `FLHostView` per
+  cell.
 
 ## Layout of the repository
 
