@@ -87,6 +87,11 @@ A few consequences worth knowing before using it:
 - **Any UIKit view can be a leaf.** Conform to `FLUIViewRepresentable` with four members. The contract is
   the mirror image of `UIViewRepresentable`: SwiftUI asks the view for its size on the main actor, while
   this asks the *node*, because measurement happens off it.
+- **Grids declare one dimension and flow the other.** `FLVGrid(columns:)` breaks rows for you and
+  `FLHGrid(rows:)` accumulates columns; a cell is proposed its track's exact extent and nothing along the
+  flow, so `aspectRatio(1)` gives squares without dividing widths by hand. Tracks are values —
+  `columns: 3`, `.adaptive(minimum: 96)`, `[.fixed(96), .flexible()]` — and each can override the grid's
+  gap. Eager, like everything else here.
 - **A scroll region is eager and needs bounding.** `FLScroll` measures its content unbounded along the
   axis and takes the extent it was offered, so `frame(maxHeight:)` is what turns it into a viewport;
   offered nothing, it collapses to its content and does not scroll. Every child view is built on apply, so
