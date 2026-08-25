@@ -222,6 +222,13 @@ public struct FLEdgeInsets: Sendable, Hashable, WithCustomisable {
     public var bottom: CGFloat = 0
     public var trailing: CGFloat = 0
 
+    public init(top: CGFloat = 0, leading: CGFloat = 0, bottom: CGFloat = 0, trailing: CGFloat = 0) {
+        self.top = top
+        self.leading = leading
+        self.bottom = bottom
+        self.trailing = trailing
+    }
+
     public static var zero: FLEdgeInsets { FLEdgeInsets() }
 
     public static func all(_ inset: CGFloat) -> FLEdgeInsets {

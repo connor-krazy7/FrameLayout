@@ -520,6 +520,32 @@ struct FLSwiftUIParityTests {
         #expect(layout.wrappedFrame.width < layout.size.width)
     }
 
+    @Test("a scroll region collapses to its content when no extent is offered, in both systems")
+    func scrollCollapsesWithoutAnOfferedExtent() {
+        let fl = FLScroll { FLColor(.systemBlue).frame(width: 100, height: 400) }
+            .layout(in: FLContext(width: box)).size
+        let swiftUI = swiftUISize(
+            ScrollView { Color.blue.frame(width: 100, height: 400) }
+                .fixedSize(horizontal: false, vertical: true)
+        )
+
+        expectSame(fl, swiftUI)
+        #expect(fl.height == 400)
+    }
+
+    @Test("an offered extent becomes the viewport, in both systems")
+    func scrollTakesTheOfferedExtent() {
+        let fl = FLScroll { FLColor(.systemBlue).frame(width: 100, height: 400) }
+            .layout(in: FLContext(width: box, height: 150)).size
+        let swiftUI = swiftUISize(
+            ScrollView { Color.blue.frame(width: 100, height: 400) },
+            proposedHeight: 150
+        )
+
+        expectSame(fl, swiftUI)
+        #expect(fl.height == 150)
+    }
+
     @Test("padding shrinks the proposal the child sees, in both systems")
     func paddingShrinksTheProposal() {
         expectSame(
