@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Group
+
 public struct FLForEach<ID: Hashable & Sendable, Item: FLNode>: FLGroup {
     public typealias Views = FLForEachViews<ID, Item>
 
@@ -52,6 +54,8 @@ public struct FLForEach<ID: Hashable & Sendable, Item: FLNode>: FLGroup {
         return children
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public final class FLForEachViews<ID: Hashable & Sendable, Item: FLNode>: FLGroupViews {

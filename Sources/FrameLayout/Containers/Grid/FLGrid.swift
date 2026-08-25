@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public struct FLGrid<Axis: FLGridAxis, Group: FLGroup>: FLNode {
     public typealias View = FLGridView<Axis, Group>
 
@@ -114,6 +116,8 @@ public struct FLGrid<Axis: FLGridAxis, Group: FLGroup>: FLNode {
 public typealias FLVGrid<Group: FLGroup> = FLGrid<FLVerticalAxis, Group>
 public typealias FLHGrid<Group: FLGroup> = FLGrid<FLHorizontalAxis, Group>
 
+// MARK: - Initialisers
+
 public extension FLGrid where Axis == FLVerticalAxis {
     init(
         columns: FLGridTracks,
@@ -180,11 +184,15 @@ public extension FLGrid where Axis == FLHorizontalAxis {
     }
 }
 
+// MARK: - Layout
+
 public struct FLGridLayout: FLLayout {
     public let children: FLGroupChildren
     public let childFrames: [CGRect]
     public let size: CGSize
 }
+
+// MARK: - View
 
 public final class FLGridView<Axis: FLGridAxis, Group: FLGroup>: FLStructuralView, FLNodeView {
     public typealias Node = FLGrid<Axis, Group>

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Group
+
 public struct FLOptionalGroup<Wrapped: FLGroup>: FLGroup {
     public typealias Views = FLOptionalGroupViews<Wrapped>
 
@@ -17,6 +19,8 @@ public struct FLOptionalGroup<Wrapped: FLGroup>: FLGroup {
         wrapped?.layout(childContexts: childContexts) ?? .empty
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public final class FLOptionalGroupViews<Wrapped: FLGroup>: FLGroupViews {

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - FLGroup
+
 public protocol FLGroup: Sendable, Hashable {
     associatedtype Views: FLGroupViews where Views.Group == Self
 
@@ -12,6 +14,8 @@ public protocol FLGroup: Sendable, Hashable {
     func layout(childContexts: ArraySlice<FLContext>) -> FLGroupChildren
 }
 
+// MARK: - Helpers
+
 public extension FLGroup {
     func childContext(_ contexts: ArraySlice<FLContext>, at offset: Int) -> FLContext {
         let index = contexts.startIndex + offset
@@ -19,6 +23,8 @@ public extension FLGroup {
         return index < contexts.endIndex ? contexts[index] : .unspecified
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public protocol FLGroupViews: AnyObject {

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 /// Reports the image's own point size, like a non-resizable SwiftUI `Image`. Call `resizable()` to
 /// let it accept a proposal instead; every other sizing behaviour comes from modifiers.
 public struct FLImage: FLNode {
@@ -44,6 +46,8 @@ public struct FLImage: FLNode {
     }
 }
 
+// MARK: - Modifiers
+
 public extension FLImage {
     /// Only the image knows it can be resampled, so willingness to take a proposal has to live here
     /// rather than in a modifier.
@@ -69,6 +73,8 @@ public extension FLImage {
     }
 }
 
+// MARK: - Hashable
+
 public extension FLImage {
     static func == (lhs: FLImage, rhs: FLImage) -> Bool {
         lhs.contentMode == rhs.contentMode
@@ -86,6 +92,8 @@ public extension FLImage {
     }
 }
 
+// MARK: - Layout
+
 public struct FLImageLayout: FLLayout {
     public let size: CGSize
 }
@@ -93,6 +101,8 @@ public struct FLImageLayout: FLLayout {
 // A plain UIView wrapping a UIImageView, rather than a UIImageView subclass. Every other leaf view
 // is a UIView subclass and inherits `init()`; UIImageView declares its own designated initialisers,
 // which made this the one leaf needing a hand-written `init()` witness.
+// MARK: - View
+
 public final class FLImageView: UIView, FLNodeView {
     public typealias Node = FLImage
 

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public typealias View = FLButtonView<Wrapped, Tag>
 
@@ -20,11 +22,15 @@ public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLButtonLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
 
     public var size: CGSize { wrapped.size }
 }
+
+// MARK: - View
 
 public final class FLButtonView<Wrapped: FLNode, Tag: Hashable & Sendable>: UIControl, FLNodeView {
     public typealias Node = FLButton<Wrapped, Tag>

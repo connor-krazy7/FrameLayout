@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public struct FLText: FLNode {
     public typealias View = FLTextView
 
@@ -134,6 +136,8 @@ public struct FLText: FLNode {
     }
 }
 
+// MARK: - Modifiers
+
 public extension FLText {
     func lineLimit(_ limit: Int) -> FLText {
         FLText(
@@ -200,11 +204,7 @@ public extension FLText {
     }
 }
 
-// MARK: - Layout
-
-public struct FLTextLayout: FLLayout {
-    public let size: CGSize
-}
+// MARK: - Helpers
 
 private extension FLText {
     func measurementWidth(for proposal: FLProposal, attributedText: NSAttributedString) -> CGFloat {
@@ -253,6 +253,14 @@ private extension FLText {
         return widest
     }
 }
+
+// MARK: - Layout
+
+public struct FLTextLayout: FLLayout {
+    public let size: CGSize
+}
+
+// MARK: - View
 
 public final class FLTextView: UILabel, FLNodeView {
     public typealias Node = FLText

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func overlay<Overlay: FLNode>(
         _ overlay: Overlay,
@@ -16,6 +18,8 @@ public extension FLNodeProviding {
     }
 }
 
+// MARK: - Node
+
 public struct FLOverlay<Content: FLNode, Overlay: FLNode>: FLNode {
     public typealias View = FLOverlayView<Content, Overlay>
 
@@ -31,6 +35,8 @@ public struct FLOverlay<Content: FLNode, Overlay: FLNode>: FLNode {
         FLLayered.layout(primary: content, secondary: overlay, alignment: alignment, in: context)
     }
 }
+
+// MARK: - View
 
 public final class FLOverlayView<Content: FLNode, Overlay: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLOverlay<Content, Overlay>

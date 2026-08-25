@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public struct FLColor: FLNode {
     public typealias View = FLColorView
 
@@ -22,9 +24,13 @@ public struct FLColor: FLNode {
 
 }
 
+// MARK: - Layout
+
 public struct FLColorLayout: FLLayout {
     public let size: CGSize
 }
+
+// MARK: - View
 
 public final class FLColorView: UIView, FLNodeView {
     public typealias Node = FLColor

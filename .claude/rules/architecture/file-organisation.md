@@ -77,9 +77,33 @@ Hoisting those above the struct inverts the order you actually read them in. The
 extension rather than interleaved with `layout(in:)` inside the struct — that was the real problem
 with `FLImage`, not their position.
 
+## Each section carries a `// MARK:`
+
+A node file's sections are marked by role, so the jump bar reads as a table of contents and a section
+landing in the wrong place is visible without reading the code:
+
+```swift
+// MARK: - Modifiers     the FLNodeProviding verb and the collapsing overload
+// MARK: - Node
+// MARK: - Layout
+// MARK: - View
+```
+
+The labels are roles, not type names: `Node`, `Group`, `Layout`, `View`, `Views`, `Modifiers`,
+`Hashable`, `Initialisers`, `Helpers` for a private extension, and a conformance's own name where an
+extension adds one (`// MARK: - FLGridAxis` over `extension FLVerticalAxis: FLGridAxis`). A type that
+is only itself keeps its own name.
+
+Only files with a `<Base>View` or `<Base>Views` are marked. A file holding one type does not need a
+contents list, and `Core/FLNode.swift` is four protocols that are one contract.
+
 **A type's own declarations stay contiguous.** Its extensions sit against the type and the `Layout`
 goes after all of them, never between the struct and an extension of it. `FLImage` and `FLGrid` each
 have an extension after the struct, so their `Layout` sits immediately before the view.
+
+This includes **private** extensions. `FLText`'s measurement helpers sat below `FLTextLayout`, which
+split `FLText` in two — the marks make that kind of break visible at a glance, which is most of why
+they are worth adding.
 
 ## A modifier's entry point lives with the node it builds
 

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func environment(_ overrides: FLEnvironmentOverrides) -> FLEnvironmentOverride<ProvidedNode> {
         FLEnvironmentOverride(overrides: overrides, wrapped: flNode)
@@ -29,6 +31,8 @@ public extension FLEnvironmentOverride {
     }
 }
 
+// MARK: - Node
+
 /// Substitutes environment values for a subtree. Carries values rather than a transform so the node
 /// stays `Sendable` and `Hashable`, and so the layout cache can key on it.
 public struct FLEnvironmentOverride<Wrapped: FLNode>: FLNode {
@@ -44,6 +48,8 @@ public struct FLEnvironmentOverride<Wrapped: FLNode>: FLNode {
         wrapped.layout(in: context.applying(overrides))
     }
 }
+
+// MARK: - View
 
 public final class FLEnvironmentOverrideView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLEnvironmentOverride<Wrapped>

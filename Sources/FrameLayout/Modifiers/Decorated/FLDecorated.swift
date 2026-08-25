@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func decoration(_ transform: (inout FLDecoration) -> Void) -> FLDecorated<ProvidedNode> {
         FLDecorated(decoration: FLDecoration().with(transform), wrapped: flNode)
@@ -87,6 +89,8 @@ public extension FLDecorated {
     }
 }
 
+// MARK: - Node
+
 public struct FLDecorated<Wrapped: FLNode>: FLNode {
     public typealias View = FLDecoratedView<Wrapped>
 
@@ -103,12 +107,16 @@ public struct FLDecorated<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLDecoratedLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
     public let cornerMask: CACornerMask
 
     public var size: CGSize { wrapped.size }
 }
+
+// MARK: - View
 
 public final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLDecorated<Wrapped>

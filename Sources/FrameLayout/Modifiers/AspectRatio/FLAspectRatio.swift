@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func aspectRatio(
         _ ratio: CGFloat? = nil,
@@ -60,6 +62,8 @@ public extension FLNodeProviding {
             )
     }
 }
+
+// MARK: - Node
 
 public struct FLAspectRatio<Wrapped: FLNode>: FLNode {
     public typealias View = FLAspectRatioView<Wrapped>
@@ -142,11 +146,15 @@ public struct FLAspectRatio<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLAspectRatioLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
     public let wrappedFrame: CGRect
     public let size: CGSize
 }
+
+// MARK: - View
 
 public final class FLAspectRatioView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLAspectRatio<Wrapped>

@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Group
+
 public enum FLEitherGroup<First: FLGroup, Second: FLGroup>: FLGroup {
     public typealias Views = FLEitherGroupViews<First, Second>
 
@@ -31,6 +33,8 @@ public enum FLEitherGroup<First: FLGroup, Second: FLGroup>: FLGroup {
         }
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public final class FLEitherGroupViews<First: FLGroup, Second: FLGroup>: FLGroupViews {

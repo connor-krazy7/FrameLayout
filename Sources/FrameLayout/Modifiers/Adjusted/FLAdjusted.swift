@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func adjustments(_ transform: (inout FLAdjustments) -> Void) -> FLAdjusted<ProvidedNode> {
         FLAdjusted(adjustments: FLAdjustments().with(transform), wrapped: flNode)
@@ -32,6 +34,8 @@ public extension FLAdjusted {
     }
 }
 
+// MARK: - Node
+
 public struct FLAdjusted<Wrapped: FLNode>: FLNode {
     public typealias View = FLAdjustedView<Wrapped>
 
@@ -47,11 +51,15 @@ public struct FLAdjusted<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLAdjustedLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
 
     public var size: CGSize { wrapped.size }
 }
+
+// MARK: - View
 
 public final class FLAdjustedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLAdjusted<Wrapped>

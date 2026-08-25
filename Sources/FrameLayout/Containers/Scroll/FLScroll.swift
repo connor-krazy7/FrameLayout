@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 /// A scrolling region inside a tree. The content is always measured unbounded along the scroll axis, so it
 /// reports its natural extent as the content size, while the region takes the extent it was offered — or
 /// collapses to its content when nothing was offered, which is how a scroll view behaves in a self-sizing
@@ -46,6 +48,8 @@ public struct FLScroll<Content: FLNode>: FLNode {
         return FLScrollLayout(wrapped: contentLayout, contentSize: contentLayout.size, size: size)
     }
 }
+
+// MARK: - Modifiers
 
 public extension FLScroll {
     /// Applied on this view's first apply and never again. "Initial" is scoped to the view, which is only
@@ -103,11 +107,15 @@ public extension FLScroll {
     }
 }
 
+// MARK: - Layout
+
 public struct FLScrollLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
     public let contentSize: CGSize
     public let size: CGSize
 }
+
+// MARK: - View
 
 public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
     public typealias Node = FLScroll<Content>

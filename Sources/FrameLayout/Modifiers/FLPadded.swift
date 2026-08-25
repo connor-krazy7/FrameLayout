@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func padding(_ insets: FLEdgeInsets) -> FLPadded<ProvidedNode> {
         FLPadded(insets: insets, wrapped: flNode)
@@ -46,6 +48,8 @@ public extension FLPadded {
     }
 }
 
+// MARK: - Node
+
 public struct FLPadded<Wrapped: FLNode>: FLNode {
     public typealias View = FLPaddedView<Wrapped>
 
@@ -71,11 +75,15 @@ public struct FLPadded<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLPaddedLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
     public let wrappedFrame: CGRect
     public let size: CGSize
 }
+
+// MARK: - View
 
 public final class FLPaddedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLPadded<Wrapped>

@@ -1,10 +1,14 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func accessibilityLabel(_ label: String?) -> FLAccessible<ProvidedNode> {
         FLAccessible(label: label, wrapped: flNode)
     }
 }
+
+// MARK: - Node
 
 public struct FLAccessible<Wrapped: FLNode>: FLNode {
     public typealias View = FLAccessibleView<Wrapped>
@@ -21,11 +25,15 @@ public struct FLAccessible<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLAccessibleLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
 
     public var size: CGSize { wrapped.size }
 }
+
+// MARK: - View
 
 public final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLAccessible<Wrapped>

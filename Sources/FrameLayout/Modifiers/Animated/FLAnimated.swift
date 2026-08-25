@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func animation(_ animation: FLAnimation?) -> FLAnimated<ProvidedNode, FLAnimationAlways> {
         FLAnimated(animation: animation, value: nil, wrapped: flNode)
@@ -13,7 +15,11 @@ public extension FLNodeProviding {
     }
 }
 
+// MARK: - FLAnimationAlways
+
 public struct FLAnimationAlways: Hashable, Sendable {}
+
+// MARK: - Node
 
 public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
     public typealias View = FLAnimatedView<Wrapped, Value>
@@ -31,11 +37,15 @@ public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLAnimatedLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
 
     public var size: CGSize { wrapped.size }
 }
+
+// MARK: - View
 
 public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: FLStructuralView, FLNodeView, FLFrameApplying {
     public typealias Node = FLAnimated<Wrapped, Value>
@@ -87,6 +97,8 @@ public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: 
         return previous != value
     }
 }
+
+// MARK: - Optional
 
 public extension Optional {
     fileprivate func filter(_ isIncluded: (Wrapped) -> Bool) -> Wrapped? {

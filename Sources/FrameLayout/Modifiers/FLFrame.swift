@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func frame(
         width: CGFloat? = nil,
@@ -33,6 +35,8 @@ public extension FLNodeProviding {
         )
     }
 }
+
+// MARK: - Node
 
 public struct FLFrame<Wrapped: FLNode>: FLNode {
     public typealias View = FLFrameView<Wrapped>
@@ -158,11 +162,15 @@ public struct FLFrame<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLFrameLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
     public let wrappedFrame: CGRect
     public let size: CGSize
 }
+
+// MARK: - View
 
 public final class FLFrameView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLFrame<Wrapped>

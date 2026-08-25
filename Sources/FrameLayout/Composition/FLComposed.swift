@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public struct FLComposed<Composite: FLView>: FLNode {
     public typealias Layout = Composite.Body.Layout
     public typealias View = FLComposedView<Composite>
@@ -23,6 +25,8 @@ public struct FLComposed<Composite: FLView>: FLNode {
     }
 }
 
+// MARK: - Hashable
+
 public extension FLComposed {
     // `body` is a pure function of `composite`, so comparing it would be redundant work. This also
     // keeps the layout-cache key down to the composite's own stored properties.
@@ -34,6 +38,8 @@ public extension FLComposed {
         hasher.combine(composite)
     }
 }
+
+// MARK: - View
 
 public final class FLComposedView<Composite: FLView>: FLStructuralView, FLNodeView {
     public typealias Node = FLComposed<Composite>

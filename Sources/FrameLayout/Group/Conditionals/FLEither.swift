@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public enum FLEither<First: FLNode, Second: FLNode>: FLNode {
     public typealias Layout = FLEitherLayout<First.Layout, Second.Layout>
     public typealias View = FLEitherView<First, Second>
@@ -26,6 +28,8 @@ public enum FLEither<First: FLNode, Second: FLNode>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public enum FLEitherLayout<First: FLLayout, Second: FLLayout>: FLLayout {
     case first(First)
     case second(Second)
@@ -37,6 +41,8 @@ public enum FLEitherLayout<First: FLLayout, Second: FLLayout>: FLLayout {
         }
     }
 }
+
+// MARK: - View
 
 public final class FLEitherView<First: FLNode, Second: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLEither<First, Second>

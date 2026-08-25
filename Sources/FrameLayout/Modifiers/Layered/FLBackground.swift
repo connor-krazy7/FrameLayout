@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Modifiers
+
 public extension FLNodeProviding {
     func background<Background: FLNode>(
         _ background: Background,
@@ -16,6 +18,8 @@ public extension FLNodeProviding {
     }
 }
 
+// MARK: - Node
+
 public struct FLBackground<Content: FLNode, Background: FLNode>: FLNode {
     public typealias View = FLBackgroundView<Content, Background>
 
@@ -31,6 +35,8 @@ public struct FLBackground<Content: FLNode, Background: FLNode>: FLNode {
         FLLayered.layout(primary: content, secondary: background, alignment: alignment, in: context)
     }
 }
+
+// MARK: - View
 
 public final class FLBackgroundView<Content: FLNode, Background: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLBackground<Content, Background>

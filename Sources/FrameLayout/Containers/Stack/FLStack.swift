@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Node
+
 public struct FLStack<Axis: FLStackAxis, Group: FLGroup>: FLNode {
     public typealias View = FLStackView<Axis, Group>
 
@@ -70,6 +72,8 @@ public struct FLStack<Axis: FLStackAxis, Group: FLGroup>: FLNode {
     }
 }
 
+// MARK: - Layout
+
 public struct FLStackLayout: FLLayout {
     public let children: FLGroupChildren
     public let childFrames: [CGRect]
@@ -79,6 +83,8 @@ public struct FLStackLayout: FLLayout {
 public typealias FLVStack<Group: FLGroup> = FLStack<FLVerticalAxis, Group>
 public typealias FLHStack<Group: FLGroup> = FLStack<FLHorizontalAxis, Group>
 public typealias FLZStack<Group: FLGroup> = FLStack<FLZAxis, Group>
+
+// MARK: - View
 
 public final class FLStackView<Axis: FLStackAxis, Group: FLGroup>: FLStructuralView, FLNodeView {
     public typealias Node = FLStack<Axis, Group>
