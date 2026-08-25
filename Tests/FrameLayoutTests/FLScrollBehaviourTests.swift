@@ -17,7 +17,7 @@ private struct ChipRow: FLView {
                 }
             }
         }
-        .initialContentOffset(forContent: id)
+        .initialContentOffset(contentID: id)
         .scrollIndicators(.hidden)
         .tag("scroll")
     }

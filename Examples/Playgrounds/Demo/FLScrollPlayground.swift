@@ -43,7 +43,7 @@ struct DemoChipRow: FLView {
                 }
             }
         }
-        .initialContentOffset(forContent: messageID)
+        .initialContentOffset(contentID: messageID)
         .scrollIndicators(showsIndicators ? .automatic : .hidden)
         .contentInsets(FLEdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
         .tag(DemoScrollPart.chips(messageID))
@@ -64,7 +64,7 @@ struct DemoScrollableBody: FLView {
                 }
             }
         }
-        .initialContentOffset(forContent: id)
+        .initialContentOffset(contentID: id)
         .contentInsets(FLEdgeInsets.all(10))
         .frame(maxHeight: maximumHeight)
         .background(.secondarySystemBackground, in: .roundedRectangle(12))

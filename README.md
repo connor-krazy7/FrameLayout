@@ -95,11 +95,11 @@ A few consequences worth knowing before using it:
 
   ```swift
   FLScroll(.horizontal) { … }
-      .initialContentOffset(offsets[album.id] ?? .zero, forContent: album.id)
+      .initialContentOffset(offsets[album.id] ?? .zero, contentID: album.id)
   ```
 
   Applied once per content — a new album starts where you say, dragging survives a re-apply that only
-  changed data, and returning to an album restores it. Without `forContent:` it is applied once for the
+  changed data, and returning to an album restores it. Without a `contentID:` it is applied once for the
   view, which is only safe where the host is not recycled.
 
 ## Layout of the repository

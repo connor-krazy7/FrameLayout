@@ -14,7 +14,7 @@ public enum FLScrollIndicatorVisibility: Sendable, Hashable {
     case hidden
 }
 
-/// A type-erased, `Sendable` box for the content token: `AnyHashable` is not `Sendable`, and a node must be.
+/// A type-erased, `Sendable` box for the content id: `AnyHashable` is not `Sendable`, and a node must be.
 public struct FLScrollIdentity: Sendable, Hashable {
     private let token: any Hashable & Sendable
 
@@ -32,7 +32,7 @@ public struct FLScrollIdentity: Sendable, Hashable {
 }
 
 public struct FLScrollConfiguration: Sendable, Hashable, WithCustomisable {
-    public var contentToken: FLScrollIdentity?
+    public var contentID: FLScrollIdentity?
     public var initialContentOffset: CGPoint = .zero
     public var indicators: FLScrollIndicatorVisibility = .automatic
     public var contentInsets: FLEdgeInsets = .zero
@@ -98,22 +98,22 @@ public struct FLScroll<Content: FLNode>: FLNode {
 
 public extension FLScroll {
     /// Applied on this view's first apply and never again. "Initial" is scoped to the view, which is only
-    /// safe where the host is not recycled — a sheet or a detail screen. In a reused cell use the
-    /// `forContent:` form, or a recycled view keeps whatever position the previous item left behind.
+    /// safe where the host is not recycled — a sheet or a detail screen. In a reused cell pass a
+    /// `contentID:`, or a recycled view keeps whatever position the previous item left behind.
     func initialContentOffset(_ offset: CGPoint) -> FLScroll {
         configured { $0.initialContentOffset = offset }
     }
 
-    /// Applied whenever the content changes, so each content gets its own initial position: the top by
+    /// Applied whenever `contentID` changes, so each content gets its own initial position: the top by
     /// default, or a stored one, which is how a gallery comes back where it was left. Within one content it
     /// is applied exactly once, so dragging survives a re-apply that only changed data.
     func initialContentOffset(
         _ offset: CGPoint = .zero,
-        forContent content: some Hashable & Sendable
+        contentID: some Hashable & Sendable
     ) -> FLScroll {
         configured {
             $0.initialContentOffset = offset
-            $0.contentToken = FLScrollIdentity(content)
+            $0.contentID = FLScrollIdentity(contentID)
         }
     }
 
@@ -186,7 +186,7 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
         contentView.update(node: node.content, layout: layout.wrapped, context: context)
 
         applyInitialOffsetIfContentChanged(
-            token: node.configuration.contentToken,
+            token: node.configuration.contentID,
             offset: node.configuration.initialContentOffset
         )
     }

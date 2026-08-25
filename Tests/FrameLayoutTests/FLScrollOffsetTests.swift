@@ -16,7 +16,7 @@ private struct Gallery: FLView {
                 }
             }
         }
-        .initialContentOffset(restored, forContent: album)
+        .initialContentOffset(restored, contentID: album)
         .tag("gallery")
     }
 }
