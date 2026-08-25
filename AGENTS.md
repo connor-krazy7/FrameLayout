@@ -30,6 +30,10 @@ that is what proves the surface is complete. Both test targets use `@testable im
 since they assert on internals: child frames inside layout structs, registry bookkeeping,
 `FLText.resolvedText`.
 
+Inside `Tests/FrameLayoutTests/` the folders mirror `Sources/FrameLayout/`, plus `Parity/` and
+`Benchmarks/`, which correspond to no source folder. A suite named `FL*TestsFixtures.swift` sits beside
+the suites it backs; `Fixtures/` is the cross-cutting set.
+
 Which target a test belongs in follows from what it is *about*. Framework behaviour goes in
 `Tests/FrameLayoutTests/` and depends only on `Fixtures/` — a small item model, a four-level composite
 row, a swatch generator, and two injected UIKit views, one laying out by frames and one by constraints.

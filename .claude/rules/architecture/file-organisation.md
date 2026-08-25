@@ -175,6 +175,30 @@ after the type. Splitting the conformances into the two container files is what 
 signal that it slipped is a primitive every node view depends on living somewhere else — `flSetFrame`
 sat in `Animation/` and made the animation file a dependency of the entire renderer.
 
+## The test target mirrors the source tree
+
+`Tests/FrameLayoutTests/` carries the same folders as `Sources/FrameLayout/`, and a suite goes in the
+one holding what it is about — `FLStackTests` in `Containers/`, `FLShapeTests` in `Modifiers/`,
+`FLAlignmentTests` in `Core/` because it exercises nothing but `FLHorizontalAlignment` and
+`FLVerticalAlignment`. Two folders exist that have no source counterpart: `Parity/` for
+`FLSwiftUIParityTests`, which is about the boundary rather than any one type, and `Benchmarks/`.
+
+Do not classify a suite by which types it mentions most. Nearly every test builds its scaffolding out
+of `FLText`, `FLColor` and `FLContext`, so a frequency count finds the scaffolding and not the
+subject; the filename is the reliable signal.
+
+Grouping makes a shape visible that forty-nine flat files hid: eight of the suites — a fifth of the
+target — are about `FLViewRegistry`, and now sit together in `Runtime/`.
+
+**A fixture lives with the suites it serves.** The six `FL*TestsFixtures.swift` files each back one
+area, so they sit in that folder beside it, including `FLBindingTestsFixtures`, whose five consumers
+are all `Runtime/` suites. `Fixtures/` stays what `AGENTS.md` describes — the cross-cutting set every
+area may draw on — and nothing was moved into or out of it.
+
+A fixture is named after the suite that uses it. `FLNestedCompositeTestsFixtures` was named after a
+suite in `Examples/PlaygroundsTests` that never touched it, while its real consumer was
+`FLCompositeModifierTests`; it now carries that name.
+
 ## Where this bites
 
 Splitting a file **widens access**. Swift's only implementation-detail scope is the file, so a
