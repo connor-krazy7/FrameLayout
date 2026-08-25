@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Group
+
 public struct FLConcat<each Child: FLGroup>: FLGroup {
     public typealias Views = FLConcatViews<repeat each Child>
 
@@ -68,6 +70,8 @@ public struct FLConcat<each Child: FLGroup>: FLGroup {
         }
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public final class FLConcatViews<each Child: FLGroup>: FLGroupViews {

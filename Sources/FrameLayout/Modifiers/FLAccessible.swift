@@ -1,10 +1,14 @@
 import UIKit
 
-public struct FLAccessibleLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
+// MARK: - Modifiers
 
-    public var size: CGSize { wrapped.size }
+public extension FLNodeProviding {
+    func accessibilityLabel(_ label: String?) -> FLAccessible<ProvidedNode> {
+        FLAccessible(label: label, wrapped: flNode)
+    }
 }
+
+// MARK: - Node
 
 public struct FLAccessible<Wrapped: FLNode>: FLNode {
     public typealias View = FLAccessibleView<Wrapped>
@@ -20,6 +24,16 @@ public struct FLAccessible<Wrapped: FLNode>: FLNode {
         FLAccessibleLayout(wrapped: wrapped.layout(in: context))
     }
 }
+
+// MARK: - Layout
+
+public struct FLAccessibleLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
+}
+
+// MARK: - View
 
 public final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLAccessible<Wrapped>
@@ -42,11 +56,5 @@ public final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeVi
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
-    }
-}
-
-public extension FLNodeProviding {
-    func accessibilityLabel(_ label: String?) -> FLAccessible<ProvidedNode> {
-        FLAccessible(label: label, wrapped: flNode)
     }
 }

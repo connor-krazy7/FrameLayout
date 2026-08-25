@@ -1,10 +1,14 @@
 import UIKit
 
-public struct FLTaggedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
+// MARK: - Modifiers
 
-    public var size: CGSize { wrapped.size }
+public extension FLNodeProviding {
+    func tag<Tag: Hashable & Sendable>(_ tag: Tag) -> FLTagged<ProvidedNode, Tag> {
+        FLTagged(tag: tag, wrapped: flNode)
+    }
 }
+
+// MARK: - Node
 
 public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public typealias View = FLTaggedView<Wrapped, Tag>
@@ -20,6 +24,16 @@ public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
         FLTaggedLayout(wrapped: wrapped.layout(in: context))
     }
 }
+
+// MARK: - Layout
+
+public struct FLTaggedLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
+}
+
+// MARK: - View
 
 public final class FLTaggedView<Wrapped: FLNode, Tag: Hashable & Sendable>: FLStructuralView, FLNodeView {
     public typealias Node = FLTagged<Wrapped, Tag>
@@ -42,11 +56,5 @@ public final class FLTaggedView<Wrapped: FLNode, Tag: Hashable & Sendable>: FLSt
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
-    }
-}
-
-public extension FLNodeProviding {
-    func tag<Tag: Hashable & Sendable>(_ tag: Tag) -> FLTagged<ProvidedNode, Tag> {
-        FLTagged(tag: tag, wrapped: flNode)
     }
 }

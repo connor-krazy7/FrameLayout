@@ -1,36 +1,6 @@
 import UIKit
 
-public struct FLGroupChildren: Sendable, Equatable {
-    public var layouts: [FLAnyLayout]
-    public var sizes: [CGSize]
-    public var isSpacer: [Bool]
-
-    public static var empty: FLGroupChildren {
-        FLGroupChildren(layouts: [], sizes: [], isSpacer: [])
-    }
-
-    public var count: Int { sizes.count }
-
-    public static func single(_ layout: some FLLayout, isSpacer: Bool) -> FLGroupChildren {
-        FLGroupChildren(layouts: [FLAnyLayout(layout)], sizes: [layout.size], isSpacer: [isSpacer])
-    }
-
-    public static func + (lhs: FLGroupChildren, rhs: FLGroupChildren) -> FLGroupChildren {
-        FLGroupChildren(
-            layouts: lhs.layouts + rhs.layouts,
-            sizes: lhs.sizes + rhs.sizes,
-            isSpacer: lhs.isSpacer + rhs.isSpacer
-        )
-    }
-
-    public func slice(_ range: Range<Int>) -> FLGroupChildren {
-        FLGroupChildren(
-            layouts: Array(layouts[range]),
-            sizes: Array(sizes[range]),
-            isSpacer: Array(isSpacer[range])
-        )
-    }
-}
+// MARK: - FLGroup
 
 public protocol FLGroup: Sendable, Hashable {
     associatedtype Views: FLGroupViews where Views.Group == Self
@@ -44,6 +14,8 @@ public protocol FLGroup: Sendable, Hashable {
     func layout(childContexts: ArraySlice<FLContext>) -> FLGroupChildren
 }
 
+// MARK: - Helpers
+
 public extension FLGroup {
     func childContext(_ contexts: ArraySlice<FLContext>, at offset: Int) -> FLContext {
         let index = contexts.startIndex + offset
@@ -51,6 +23,8 @@ public extension FLGroup {
         return index < contexts.endIndex ? contexts[index] : .unspecified
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public protocol FLGroupViews: AnyObject {

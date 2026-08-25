@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - Group
+
 public struct FLSingle<Node: FLNode>: FLGroup {
     public typealias Views = FLSingleViews<Node>
 
@@ -17,6 +19,8 @@ public struct FLSingle<Node: FLNode>: FLGroup {
         layout(in: childContext(childContexts, at: 0))
     }
 }
+
+// MARK: - Views
 
 @MainActor
 public final class FLSingleViews<Node: FLNode>: FLGroupViews {

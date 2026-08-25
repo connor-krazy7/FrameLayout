@@ -1,10 +1,14 @@
 import UIKit
 
-public struct FLDisabledLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
+// MARK: - Modifiers
 
-    public var size: CGSize { wrapped.size }
+public extension FLNodeProviding {
+    func disabled(_ isDisabled: Bool = true) -> FLDisabled<ProvidedNode> {
+        FLDisabled(isDisabled: isDisabled, wrapped: flNode)
+    }
 }
+
+// MARK: - Node
 
 public struct FLDisabled<Wrapped: FLNode>: FLNode {
     public typealias View = FLDisabledView<Wrapped>
@@ -20,6 +24,16 @@ public struct FLDisabled<Wrapped: FLNode>: FLNode {
         FLDisabledLayout(wrapped: wrapped.layout(in: context))
     }
 }
+
+// MARK: - Layout
+
+public struct FLDisabledLayout<WrappedLayout: FLLayout>: FLLayout {
+    public let wrapped: WrappedLayout
+
+    public var size: CGSize { wrapped.size }
+}
+
+// MARK: - View
 
 public final class FLDisabledView<Wrapped: FLNode>: FLStructuralView, FLNodeView {
     public typealias Node = FLDisabled<Wrapped>
@@ -42,11 +56,5 @@ public final class FLDisabledView<Wrapped: FLNode>: FLStructuralView, FLNodeView
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
         wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
-    }
-}
-
-public extension FLNodeProviding {
-    func disabled(_ isDisabled: Bool = true) -> FLDisabled<ProvidedNode> {
-        FLDisabled(isDisabled: isDisabled, wrapped: flNode)
     }
 }

@@ -1,8 +1,6 @@
 import UIKit
 
-public struct FLSpacerLayout: FLLayout {
-    public let size: CGSize
-}
+// MARK: - Node
 
 public struct FLSpacer: FLNode {
     public typealias View = FLSpacerView
@@ -23,6 +21,14 @@ public struct FLSpacer: FLNode {
         FLSpacerLayout(size: CGSize(width: minLength, height: minLength))
     }
 }
+
+// MARK: - Layout
+
+public struct FLSpacerLayout: FLLayout {
+    public let size: CGSize
+}
+
+// MARK: - View
 
 public final class FLSpacerView: UIView, FLNodeView {
     public typealias Node = FLSpacer
