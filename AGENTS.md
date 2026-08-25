@@ -42,6 +42,7 @@ The authoritative project rules live in `.claude/rules/` and are shared across a
 Claude Code loads that directory directly; other agents should read the files listed here.
 
 - `.claude/rules/style/value-expressions.md` — producing values at declaration, and keeping expressions short enough to infer
+- `.claude/rules/style/commit-messages.md` — a manifest of what changed first, the reasoning after
 - `.claude/rules/architecture/leaf-views.md` — wrap UIKit controls rather than subclassing them; picking `FLStructuralView` vs `UIView` and how hit-test pass-through works
 - `.claude/rules/architecture/node-equality.md` — let `Hashable` synthesis produce a node's `==`/`hash`, and why no identity fast path
 - `.claude/rules/architecture/layout-proposals.md` — a proposal is a question, not a constraint; only a pinned frame hands a size down, and how to measure parity against real SwiftUI
