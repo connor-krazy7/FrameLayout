@@ -37,4 +37,3 @@ public struct FLAlignment: Sendable, Hashable {
         )
     }
 }
-

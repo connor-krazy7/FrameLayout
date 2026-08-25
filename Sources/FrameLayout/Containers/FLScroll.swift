@@ -1,48 +1,5 @@
 import UIKit
 
-public enum FLScrollAxis: Sendable, Hashable {
-    case vertical
-    case horizontal
-    case both
-
-    var scrollsVertically: Bool { self != .horizontal }
-    var scrollsHorizontally: Bool { self != .vertical }
-}
-
-public enum FLScrollIndicatorVisibility: Sendable, Hashable {
-    case automatic
-    case hidden
-}
-
-/// A type-erased, `Sendable` box for the content id: `AnyHashable` is not `Sendable`, and a node must be.
-public struct FLScrollIdentity: Sendable, Hashable {
-    private let token: any Hashable & Sendable
-
-    init(_ token: some Hashable & Sendable) {
-        self.token = token
-    }
-
-    public static func == (lhs: FLScrollIdentity, rhs: FLScrollIdentity) -> Bool {
-        AnyHashable(lhs.token) == AnyHashable(rhs.token)
-    }
-
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(AnyHashable(token))
-    }
-}
-
-public struct FLScrollConfiguration: Sendable, Hashable, WithCustomisable {
-    public var contentID: FLScrollIdentity?
-    public var initialContentOffset: CGPoint = .zero
-    public var indicators: FLScrollIndicatorVisibility = .automatic
-    public var contentInsets: FLEdgeInsets = .zero
-    public var isScrollDisabled = false
-    public var bounces = true
-    public var isPagingEnabled = false
-    public var keyboardDismissMode: UIScrollView.KeyboardDismissMode = .none
-    public var contentInsetAdjustmentBehavior: UIScrollView.ContentInsetAdjustmentBehavior = .never
-}
-
 public struct FLScrollLayout<WrappedLayout: FLLayout>: FLLayout {
     public let wrapped: WrappedLayout
     public let contentSize: CGSize

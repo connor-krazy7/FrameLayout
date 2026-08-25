@@ -15,4 +15,3 @@ public enum FLVerticalAlignment: Sendable, Hashable {
         }
     }
 }
-

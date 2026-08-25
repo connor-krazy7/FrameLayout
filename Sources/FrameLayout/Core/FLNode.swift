@@ -35,4 +35,3 @@ public protocol FLNodeView: UIView {
 
     func update(node: Node, layout: Node.Layout, context: FLRenderContext)
 }
-

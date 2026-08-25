@@ -44,4 +44,3 @@ public struct FLEdgeInsets: Sendable, Hashable, WithCustomisable {
         )
     }
 }
-

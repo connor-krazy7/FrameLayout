@@ -37,4 +37,3 @@ public struct FLCorners: OptionSet, Sendable, Hashable {
         return mask
     }
 }
-

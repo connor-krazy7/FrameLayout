@@ -16,4 +16,3 @@ public struct FLEdgeSet: OptionSet, Sendable, Hashable {
     public static let vertical: FLEdgeSet = [.top, .bottom]
     public static let all: FLEdgeSet = [.top, .leading, .bottom, .trailing]
 }
-
