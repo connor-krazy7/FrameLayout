@@ -5,8 +5,6 @@ import UIKit
 public struct FLSpacer: FLNode {
     public typealias View = FLSpacerView
 
-    public static var typeIdentifier: String { "spacer" }
-
     public var isSpacer: Bool { true }
 
     public let minLength: CGFloat

@@ -13,8 +13,6 @@ public extension FLNodeProviding {
 public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public typealias View = FLTaggedView<Wrapped, Tag>
 
-    public static var typeIdentifier: String { "tag(\(Wrapped.typeIdentifier))" }
-
     public let tag: Tag
     public let wrapped: Wrapped
 

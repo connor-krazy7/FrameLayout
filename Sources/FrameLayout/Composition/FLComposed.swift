@@ -6,6 +6,9 @@ public struct FLComposed<Composite: FLView>: FLNode {
     public typealias Layout = Composite.Body.Layout
     public typealias View = FLComposedView<Composite>
 
+    // The one deliberate override of the `FLNode` default. A consumer's reuse identifier reads
+    // better as the composite's own name than as `FLComposed<…>` wrapping it, and the two are in
+    // bijection, so naming the composite loses nothing the default guarantees.
     public static var typeIdentifier: String { String(reflecting: Composite.self) }
 
     public let composite: Composite

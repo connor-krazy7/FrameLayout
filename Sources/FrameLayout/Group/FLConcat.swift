@@ -5,16 +5,6 @@ import UIKit
 public struct FLConcat<each Child: FLGroup>: FLGroup {
     public typealias Views = FLConcatViews<repeat each Child>
 
-    public static var typeIdentifier: String {
-        var identifiers: [String] = []
-
-        for identifier in repeat (each Child).typeIdentifier {
-            identifiers.append(identifier)
-        }
-
-        return identifiers.joined(separator: ",")
-    }
-
     public let groups: (repeat each Child)
 
     public init(_ groups: repeat each Child) {

@@ -5,8 +5,6 @@ import UIKit
 public struct FLSingle<Node: FLNode>: FLGroup {
     public typealias Views = FLSingleViews<Node>
 
-    public static var typeIdentifier: String { Node.typeIdentifier }
-
     public let node: Node
 
     public var childCount: Int { 1 }

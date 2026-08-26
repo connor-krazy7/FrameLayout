@@ -5,8 +5,6 @@ import UIKit
 public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public typealias View = FLButtonView<Wrapped, Tag>
 
-    public static var typeIdentifier: String { "button(\(Wrapped.typeIdentifier))" }
-
     public let tag: Tag
     public let style: FLButtonStyle
     public let wrapped: Wrapped

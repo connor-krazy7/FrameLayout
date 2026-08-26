@@ -5,8 +5,6 @@ import UIKit
 public struct FLOptionalGroup<Wrapped: FLGroup>: FLGroup {
     public typealias Views = FLOptionalGroupViews<Wrapped>
 
-    public static var typeIdentifier: String { "optional(\(Wrapped.typeIdentifier))" }
-
     public let wrapped: Wrapped?
 
     public var childCount: Int { wrapped?.childCount ?? 0 }

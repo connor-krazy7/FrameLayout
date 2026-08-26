@@ -13,8 +13,6 @@ public extension FLNodeProviding {
 public struct FLAccessible<Wrapped: FLNode>: FLNode {
     public typealias View = FLAccessibleView<Wrapped>
 
-    public static var typeIdentifier: String { "accessible(\(Wrapped.typeIdentifier))" }
-
     public let label: String?
     public let wrapped: Wrapped
 

@@ -39,8 +39,6 @@ public struct FLEnvironmentOverride<Wrapped: FLNode>: FLNode {
     public typealias Layout = Wrapped.Layout
     public typealias View = FLEnvironmentOverrideView<Wrapped>
 
-    public static var typeIdentifier: String { "environment(\(Wrapped.typeIdentifier))" }
-
     public let overrides: FLEnvironmentOverrides
     public let wrapped: Wrapped
 

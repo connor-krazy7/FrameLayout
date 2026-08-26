@@ -15,8 +15,6 @@ struct FLAnimatedListLayout<ItemLayout: FLLayout>: FLLayout {
 struct FLAnimatedList<ID: Hashable & Sendable, Item: FLNode>: FLNode {
     typealias View = FLAnimatedListView<ID, Item>
 
-    static var typeIdentifier: String { "animatedList(\(Item.typeIdentifier))" }
-
     let items: [FLListItem<ID, Item>]
     let spacing: CGFloat
     let animation: FLAnimation

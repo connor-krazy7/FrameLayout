@@ -68,8 +68,6 @@ public extension FLNodeProviding {
 public struct FLAspectRatio<Wrapped: FLNode>: FLNode {
     public typealias View = FLAspectRatioView<Wrapped>
 
-    public static var typeIdentifier: String { "aspectRatio(\(Wrapped.typeIdentifier))" }
-
     /// `nil` derives the ratio from the child's ideal size, which is what makes this behave as "fit
     /// the content's own shape".
     public let ratio: CGFloat?

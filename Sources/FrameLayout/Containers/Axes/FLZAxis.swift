@@ -3,7 +3,6 @@ import UIKit
 public enum FLZAxis: FLStackAxis {
     public typealias Alignment = FLAlignment
 
-    public static var typeToken: String { "zstack" }
     public static var defaultAlignment: FLAlignment { .center }
     public static var distributesAlongAxis: Bool { false }
 

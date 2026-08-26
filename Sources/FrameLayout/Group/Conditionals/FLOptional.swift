@@ -5,8 +5,6 @@ import UIKit
 public struct FLOptional<Wrapped: FLNode>: FLNode {
     public typealias View = FLOptionalView<Wrapped>
 
-    public static var typeIdentifier: String { "optional(\(Wrapped.typeIdentifier))" }
-
     public let wrapped: Wrapped?
 
     public var isSpacer: Bool { wrapped.map(\.isSpacer).or(false) }

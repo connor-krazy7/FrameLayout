@@ -53,8 +53,6 @@ public extension FLPadded {
 public struct FLPadded<Wrapped: FLNode>: FLNode {
     public typealias View = FLPaddedView<Wrapped>
 
-    public static var typeIdentifier: String { "padded(\(Wrapped.typeIdentifier))" }
-
     public let insets: FLEdgeInsets
     public let wrapped: Wrapped
 

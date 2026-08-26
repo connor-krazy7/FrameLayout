@@ -41,8 +41,6 @@ public extension FLNodeProviding {
 public struct FLFrame<Wrapped: FLNode>: FLNode {
     public typealias View = FLFrameView<Wrapped>
 
-    public static var typeIdentifier: String { "frame(\(Wrapped.typeIdentifier))" }
-
     public let minWidth: CGFloat?
     public let maxWidth: CGFloat?
     public let minHeight: CGFloat?

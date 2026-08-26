@@ -5,8 +5,6 @@ import UIKit
 public struct FLText: FLNode {
     public typealias View = FLTextView
 
-    public static var typeIdentifier: String { "text" }
-
     /// Matches `UILabel`'s own defaults, so an unstyled `FLText` renders the same as an unstyled label.
     public static var defaultFont: UIFont { .systemFont(ofSize: UIFont.labelFontSize) }
     public static var defaultColor: UIColor { .label }

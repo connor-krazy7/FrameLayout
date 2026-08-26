@@ -13,8 +13,6 @@ import UIKit
 public struct FLScroll<Content: FLNode>: FLNode {
     public typealias View = FLScrollView<Content>
 
-    public static var typeIdentifier: String { "scroll(\(Content.typeIdentifier))" }
-
     public let axis: FLScrollAxis
     public let configuration: FLScrollConfiguration
     public let content: Content

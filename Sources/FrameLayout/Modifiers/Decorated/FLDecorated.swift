@@ -94,8 +94,6 @@ public extension FLDecorated {
 public struct FLDecorated<Wrapped: FLNode>: FLNode {
     public typealias View = FLDecoratedView<Wrapped>
 
-    public static var typeIdentifier: String { "decorated(\(Wrapped.typeIdentifier))" }
-
     public let decoration: FLDecoration
     public let wrapped: Wrapped
 

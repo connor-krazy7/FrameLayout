@@ -5,8 +5,6 @@ import UIKit
 public struct FLColor: FLNode {
     public typealias View = FLColorView
 
-    public static var typeIdentifier: String { "color" }
-
     public let color: UIColor
 
     public init(_ color: UIColor) {

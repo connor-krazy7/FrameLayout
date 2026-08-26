@@ -7,8 +7,6 @@ public struct FLRepresentableLayout: FLLayout {
 public struct FLRepresentableNode<Content: FLUIViewRepresentable>: FLNode {
     public typealias View = FLRepresentableView<Content>
 
-    public static var typeIdentifier: String { "representable(\(Content.self))" }
-
     public let content: Content
 
     public func layout(in context: FLContext) -> FLRepresentableLayout {

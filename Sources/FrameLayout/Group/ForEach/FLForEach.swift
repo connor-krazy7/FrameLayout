@@ -5,8 +5,6 @@ import UIKit
 public struct FLForEach<ID: Hashable & Sendable, Item: FLNode>: FLGroup {
     public typealias Views = FLForEachViews<ID, Item>
 
-    public static var typeIdentifier: String { "forEach(\(Item.typeIdentifier))" }
-
     public let items: [FLForEachItem<ID, Item>]
 
     public var childCount: Int { items.count }

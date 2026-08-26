@@ -7,8 +7,6 @@ import UIKit
 public struct FLImage: FLNode {
     public typealias View = FLImageView
 
-    public static var typeIdentifier: String { "image" }
-
     public let image: UIImage?
     public let contentMode: UIView.ContentMode
     public let overrides: FLEnvironmentOverrides

@@ -22,6 +22,8 @@ public protocol FLNode: FLNodeProviding, Sendable, Hashable {
 }
 
 public extension FLNode {
+    static var typeIdentifier: String { String(reflecting: Self.self) }
+
     var isSpacer: Bool { false }
 
     var flNode: Self { self }
