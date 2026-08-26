@@ -5,8 +5,6 @@ import UIKit
 public struct FLGrid<Axis: FLGridAxis, Group: FLGroup>: FLNode {
     public typealias View = FLGridView<Axis, Group>
 
-    public static var typeIdentifier: String { "\(Axis.gridToken)(\(Group.typeIdentifier))" }
-
     public let tracks: FLGridTracks
     public let flowSpacing: CGFloat
     public let crossSpacing: CGFloat

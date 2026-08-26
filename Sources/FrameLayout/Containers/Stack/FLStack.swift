@@ -5,8 +5,6 @@ import UIKit
 public struct FLStack<Axis: FLStackAxis, Group: FLGroup>: FLNode {
     public typealias View = FLStackView<Axis, Group>
 
-    public static var typeIdentifier: String { "\(Axis.typeToken)(\(Group.typeIdentifier))" }
-
     public let alignment: Axis.Alignment
     public let spacing: CGFloat
     public let group: Group

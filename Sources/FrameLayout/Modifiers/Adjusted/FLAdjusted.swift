@@ -39,8 +39,6 @@ public extension FLAdjusted {
 public struct FLAdjusted<Wrapped: FLNode>: FLNode {
     public typealias View = FLAdjustedView<Wrapped>
 
-    public static var typeIdentifier: String { "adjusted(\(Wrapped.typeIdentifier))" }
-
     public let adjustments: FLAdjustments
     public let wrapped: Wrapped
 

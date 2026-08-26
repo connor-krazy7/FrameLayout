@@ -23,10 +23,6 @@ public extension FLNodeProviding {
 public struct FLBackground<Content: FLNode, Background: FLNode>: FLNode {
     public typealias View = FLBackgroundView<Content, Background>
 
-    public static var typeIdentifier: String {
-        "background(\(Content.typeIdentifier),\(Background.typeIdentifier))"
-    }
-
     public let content: Content
     public let background: Background
     public let alignment: FLAlignment

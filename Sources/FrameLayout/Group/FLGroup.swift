@@ -17,6 +17,8 @@ public protocol FLGroup: Sendable, Hashable {
 // MARK: - Helpers
 
 public extension FLGroup {
+    static var typeIdentifier: String { String(reflecting: Self.self) }
+
     func childContext(_ contexts: ArraySlice<FLContext>, at offset: Int) -> FLContext {
         let index = contexts.startIndex + offset
 

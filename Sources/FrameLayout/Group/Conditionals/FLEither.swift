@@ -9,10 +9,6 @@ public enum FLEither<First: FLNode, Second: FLNode>: FLNode {
     case first(First)
     case second(Second)
 
-    public static var typeIdentifier: String {
-        "either(\(First.typeIdentifier),\(Second.typeIdentifier))"
-    }
-
     public var isSpacer: Bool {
         switch self {
         case let .first(node): node.isSpacer

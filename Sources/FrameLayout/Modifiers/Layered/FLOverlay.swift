@@ -23,10 +23,6 @@ public extension FLNodeProviding {
 public struct FLOverlay<Content: FLNode, Overlay: FLNode>: FLNode {
     public typealias View = FLOverlayView<Content, Overlay>
 
-    public static var typeIdentifier: String {
-        "overlay(\(Content.typeIdentifier),\(Overlay.typeIdentifier))"
-    }
-
     public let content: Content
     public let overlay: Overlay
     public let alignment: FLAlignment

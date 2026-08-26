@@ -8,10 +8,6 @@ public enum FLEitherGroup<First: FLGroup, Second: FLGroup>: FLGroup {
     case first(First)
     case second(Second)
 
-    public static var typeIdentifier: String {
-        "either(\(First.typeIdentifier),\(Second.typeIdentifier))"
-    }
-
     public var childCount: Int {
         switch self {
         case let .first(group): group.childCount

@@ -3,7 +3,6 @@ import UIKit
 public protocol FLStackAxis: Sendable {
     associatedtype Alignment: Sendable, Hashable
 
-    static var typeToken: String { get }
     static var defaultAlignment: Alignment { get }
 
     /// Whether children compete for a bounded extent along this axis. False for Z, where they overlay.

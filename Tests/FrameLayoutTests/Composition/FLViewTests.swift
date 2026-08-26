@@ -32,6 +32,7 @@ struct FLViewTests {
     @Test("the type identifier names the composite, not its body")
     func typeIdentifierNamesComposite() {
         #expect(FLComposed<ComposedCard>.typeIdentifier.contains("ComposedCard"))
+        #expect(!FLComposed<ComposedCard>.typeIdentifier.contains("FLComposed"))
         #expect(FLComposed<ComposedCard>.typeIdentifier != FLComposed<ComposedNested>.typeIdentifier)
     }
 

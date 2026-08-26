@@ -24,8 +24,6 @@ public struct FLAnimationAlways: Hashable, Sendable {}
 public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
     public typealias View = FLAnimatedView<Wrapped, Value>
 
-    public static var typeIdentifier: String { "animated(\(Wrapped.typeIdentifier))" }
-
     public let animation: FLAnimation?
     public let value: Value?
     public let wrapped: Wrapped

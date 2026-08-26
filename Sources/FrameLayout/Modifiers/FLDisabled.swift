@@ -13,8 +13,6 @@ public extension FLNodeProviding {
 public struct FLDisabled<Wrapped: FLNode>: FLNode {
     public typealias View = FLDisabledView<Wrapped>
 
-    public static var typeIdentifier: String { "disabled(\(Wrapped.typeIdentifier))" }
-
     public let isDisabled: Bool
     public let wrapped: Wrapped
 

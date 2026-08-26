@@ -3,7 +3,6 @@ import UIKit
 public enum FLHorizontalAxis: FLStackAxis {
     public typealias Alignment = FLVerticalAlignment
 
-    public static var typeToken: String { "hstack" }
     public static var defaultAlignment: FLVerticalAlignment { .center }
     public static var distributesAlongAxis: Bool { true }
 
@@ -51,8 +50,6 @@ public enum FLHorizontalAxis: FLStackAxis {
 }
 
 extension FLHorizontalAxis: FLGridAxis {
-    public static var gridToken: String { "hgrid" }
-
     public static func flowExtent(of size: CGSize) -> CGFloat { size.width }
     public static func crossExtent(of size: CGSize) -> CGFloat { size.height }
     public static func crossProposal(in context: FLContext) -> FLProposal { context.height }
