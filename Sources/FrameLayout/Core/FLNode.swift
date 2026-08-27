@@ -10,7 +10,7 @@ public protocol FLNodeProviding {
     var flNode: ProvidedNode { get }
 }
 
-public protocol FLNode: FLNodeProviding, Sendable, Hashable {
+public protocol FLNode: FLNodeProviding, Sendable, FLLayoutEquatable {
     associatedtype Layout: FLLayout
     associatedtype View: FLNodeView where View.Node == Self
 

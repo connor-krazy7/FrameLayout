@@ -16,13 +16,8 @@ import UIKit
 /// It is also only ever keyed at the root a caller hands it. Nothing memoises below that point, so a
 /// subtree shared between two roots is measured once per root.
 public final class FLLayoutCache<Node: FLNode>: @unchecked Sendable {
-    private struct Key: Hashable {
-        let node: Node
-        let context: FLContext
-    }
-
     private let lock = NSLock()
-    private var contextToLayout: [Key: Node.Layout] = [:]
+    private var contextToLayout: [FLLayoutKey<Node>: Node.Layout] = [:]
 
     public init() {}
 
@@ -31,7 +26,7 @@ public final class FLLayoutCache<Node: FLNode>: @unchecked Sendable {
     }
 
     public func layout(for node: Node, in context: FLContext) -> Node.Layout {
-        let key = Key(node: node, context: context)
+        let key = FLLayoutKey(node: node, context: context)
 
         if let cached = lock.withLock({ contextToLayout[key] }) {
             return cached

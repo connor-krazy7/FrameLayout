@@ -25,6 +25,49 @@ acceptable; most styling in this system lives in `overrides`, which hashes separ
 What matters is that row 1 holds: `NSAttributedString.hash` is **content**-based, not identity-based.
 A node built fresh from the same model must hash equal to the cached one or the cache never hits.
 
+## Layout identity is a separate question from equality
+
+`FLLayoutEquatable` asks whether two values produce the same **geometry**; `==` asks whether they are the
+same value. Both exist, neither replaces the other, and `Hashable` stays synthesised exactly as above.
+
+```
+a == b                        ⟹  a.layout(in: c) == b.layout(in: c)
+a.isLayoutEquivalent(to: b)   ⟹  a.layout(in: c) == b.layout(in: c)
+```
+
+The first holds because `layout(in:)` is a pure function of node and context, which is why the protocol's
+default is `==` and every type satisfies the contract for nothing. Layout identity is the **coarser**
+relation: the same classes, merged further. So over-narrowing is the only unsound direction, and the
+mark is on the properties that are layout-*neutral* rather than a list of the ones that matter — an
+omission from a list of what matters is a wrong hit, an omission from a list of what is neutral is a
+missed merge.
+
+Note the obligation is stated on the **layout**, not the size, and the difference is not academic — a
+cache hands back the whole `Layout` and the renderer applies child frames out of it:
+
+| type | agrees on `size`, differs in |
+| --- | --- |
+| `FLFrameLayout` | `wrappedFrame` — `.frame(width:height:alignment:)` at `.leading` against `.trailing` |
+| `FLScrollLayout` | `contentSize` — one viewport, two contents |
+| `FLStackLayout` | `childFrames` — alignment inside a stack wider than its children |
+
+`layout-proposals.md` records the same trap one level up, as something this project actually hit: "outer
+sizes agreed for a whole session while the rendering diverged, because a frame that crops a 160×320 child
+and one that fits a 50×100 child both report 160×100". Stating the obligation on the size would write
+that failure into the type system.
+
+It also costs nothing to state the stronger version, since `FLLayout: Equatable` already. A contract test
+must compare layouts for the same reason — one comparing sizes would pass while the design was broken.
+
+**A partial conformance is safe in both directions**, which is what makes the pair cheap to hand-write.
+Narrow `isLayoutEquivalent` and forget `hashLayoutIdentity`, and the two values land in different buckets
+— a miss. Narrow the hash and forget equality, and they share a bucket and `==` then rejects — also a
+miss. Neither produces a wrong hit, so getting it half-right costs only the benefit.
+
+`FLLayoutKey` hand-writes `==` and `hash(into:)` and is not an exception to the synthesis rule: it is not
+a node, and delegating to layout identity is the entire reason it exists. Synthesis there would compare
+its two fields as values, which is the behaviour it replaces.
+
 ## No `===` fast path
 
 Do not guard a content comparison with an identity check:
