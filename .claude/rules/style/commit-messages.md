@@ -40,16 +40,32 @@ modifiers arrived.
 
 ## After that: why, in prose
 
-The constraint that forced the shape, the measurement that settled a question, the alternative that was
-rejected and what ruled it out. This is the part a diff cannot recover later, and it is worth as much
-space as it needs — but it belongs *below* the manifest, never instead of it.
+Why the change looks like this, and why now. This is the part a diff cannot recover later, and it
+belongs *below* the manifest, never instead of it.
 
 Paragraphs, not points. The manifest is a list because it is a set of independent facts to scan; an
 argument has a thread, and bulleting it drops the connectives that carry the reasoning.
 
-Worth recording: a limitation in the language or framework that dictated the design; a number that
-decided a trade-off; a plausible-looking approach that was tried and failed; a behaviour that surprised
-the author and is now pinned by a test.
+### The durability test: will this reasoning govern the next change?
+
+**If yes, it is a rule and the commit points at it. If it explains only why this diff looks the way it
+does, it is the commit's own.** [rationale-placement.md](rationale-placement.md) is authoritative on the
+split; this section is the commit's half of it.
+
+| the commit's own | a rule's, cited from the commit |
+| --- | --- |
+| what was observed that prompted the change | the standing prohibition it produced |
+| what the code did before, and what that cost | the table or the number a reader must not undo |
+| an approach tried during this change that failed | a rejected alternative that will tempt the next author too |
+| what is still unfinished, and what was deliberately left out | the test that decides the next case |
+
+So a commit that lands a rule says **what changed in the rule and why now** — it does not restate the
+rule's argument. Two copies of an argument drift, and the commit is the copy nobody re-reads.
+
+Worth recording, all of it the momentary kind: a number this change measured; a plausible-looking
+approach that was tried here and failed; a behaviour that surprised the author and is now pinned by a
+test; a claim the change could not verify and left open. Where one of those turns out to govern the
+next change too, it goes in a rule file *in the same commit*, and the message names the file.
 
 ## The failure this rule exists for
 
@@ -86,4 +102,17 @@ root, so nothing memoises below it.
 
 ## Wrapping and trailers
 
-Wrap the body at ~80 characters. End with the co-author and session trailers, separated by a blank line.
+Wrap the body at ~80 characters. End with both trailers, after a blank line:
+
+```
+Co-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_<id>
+```
+
+Both, every time. The session trailer is the only link from a commit back to the conversation that
+produced it, which is where the reasoning that did not fit the message still lives — and it is the
+first thing wanted when a decision has to be revisited a month later. Git trailers are
+case-insensitive, so an older `Co-Authored-By:` in the log is the same trailer, not a different one.
+
+If a session id is genuinely unavailable, say so in the PR rather than dropping the line silently: a
+missing trailer is indistinguishable from a commit nobody bothered to attribute.

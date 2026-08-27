@@ -12,6 +12,9 @@ decides *where* a given piece of it goes, because right now some of it lives in 
 | the commit message | what changed and why it changed then; see [commit-messages.md](commit-messages.md) | no |
 
 The split is not about length. It is about which copy someone has to update when the behaviour changes.
+The test that decides the first row against the third is durability — will this reasoning govern the
+next change, or does it only explain this diff — and `commit-messages.md` states it from the commit's
+side.
 
 ## What earns a comment
 
