@@ -81,6 +81,56 @@ Two habits manufacture false optionals:
   the bound sits on the side it acts from: a floor is `max(lower, x)`, a cap is `min(x, upper)`.
   `FLProposal.inset(by:)` already reads `Swift.max(0, value - amount)`.
 
+## Two peers share a helper; neither calls the other
+
+When two operations do the same work over different data, both call one private helper. The variant that
+does more must not be built by calling the variant that does less.
+
+`FLText` resolves its stored string twice, for two different consumers: `resolvedText(in:)` fills the
+font and the colour for rendering, `measuredText(in:)` fills the font alone for `layout(in:)`. Written as
+a chain it looked economical — the resolved string *is* the measured string plus a colour:
+
+```swift
+// no — the render path now depends on the measurement path
+public func resolvedText(in environment: FLEnvironment) -> NSAttributedString {
+    let filled = NSMutableAttributedString(attributedString: measuredText(in: environment))
+    …
+}
+```
+
+```swift
+// yes — both are peers over one helper
+public func resolvedText(in environment: FLEnvironment) -> NSAttributedString {
+    let resolved = environment.applying(overrides)
+
+    return text(withDefaults: [
+        .font: resolved.font.or(Self.defaultFont),
+        .foregroundColor: resolved.foregroundColor.or(Self.defaultColor),
+    ])
+}
+
+func measuredText(in environment: FLEnvironment) -> NSAttributedString {
+    let resolved = environment.applying(overrides)
+
+    return text(withDefaults: [.font: resolved.font.or(Self.defaultFont)])
+}
+```
+
+Name the helper for what it returns and what the argument means to it, not for the step it performs. The
+first draft here was `filling(_:)`, which answers neither "filling what?" nor "filling it with what
+authority?" — `text(withDefaults:)` says it returns the text and that the attributes lose to anything the
+string already carries, which is the precedence rule the two callers depend on.
+
+Two things are wrong with the chain and only one of them is about coupling. It **points the dependency
+the wrong way**: measurement exists to be cheap and colour-free, and rendering is the richer path, so a
+change made for the measurement path silently reaches drawing. And it **invents a hierarchy that is not
+in the domain** — neither string is a special case of the other; they are two projections of the same
+stored string, and the helper is what says so.
+
+The tell is a reader who has to open the callee to understand the caller, for a caller that does not
+otherwise care about it. Saving an allocation is not a reason to chain: the chain here cost the render
+path a second `NSMutableAttributedString` copy, so it was not even the cheaper shape.
+
 ## Declarations
 
 - **No leading-dot `.init(...)` — spell the type.** A node file names three closely related types in
@@ -100,3 +150,29 @@ Two habits manufacture false optionals:
   neighbours of the same kind. Neither the compiler nor a formatter enforces this. Where a one-liner
   carries a doc comment, the comment is the separator and the run is broken anyway — which is why
   `FLProposal`'s cases are spaced and `FLDecoration`'s properties are not.
+- **A call that does not fit one line puts every argument on its own line, and the closing paren on
+  its own.** Not a hanging bracket that keeps the first argument on the call line:
+
+  ```swift
+  // no
+  return text(withDefaults: [
+      .font: resolved.font.or(Self.defaultFont),
+      .foregroundColor: resolved.foregroundColor.or(Self.defaultColor),
+  ])
+
+  // yes
+  return text(
+      withDefaults: [
+          .font: resolved.font.or(Self.defaultFont),
+          .foregroundColor: resolved.foregroundColor.or(Self.defaultColor),
+      ]
+  )
+  ```
+
+  The hanging form reads as one argument even when there are three, and the indentation of the last line
+  no longer says where the call ends. `FLText`'s own initialiser calls and `NSTextContainer(size:)` were
+  already written the second way; it is one line either way at the point of the label.
+- **The same inside a body.** A blank line groups statements; it does not punctuate a binding and the
+  `return` that consumes it. `let resolved = …` followed by a blank line and a one-line `return` using
+  `resolved` is three lines of body for one derivation. Keep the blank line where what follows spans
+  lines, or where a genuine second phase begins — a guard block, then the work.
