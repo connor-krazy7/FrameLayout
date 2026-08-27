@@ -55,10 +55,11 @@ Two answers, and the choice decides whether the view eats touches:
 | positions or configures children only | `FLStructuralView` | passes through unless a descendant claims them |
 | draws content of its own | `UIView` (or a wrapped control) | keeps them |
 
-Structural today: `FLPadded`, `FLFrame`, `FLAspectRatio`, `FLDecorated`, `FLBackground`, `FLOverlay`,
-`FLEnvironmentOverride`, `FLStack`, `FLComposed`, `FLAdjusted`, `FLEither`, `FLOptional`. Content:
-`FLColor`, `FLImage`, `FLText`. This mirrors SwiftUI, where a layout container is not a view at all but
-`Color` and `.background` are tappable where they draw.
+Almost every view in the package is structural; the ones that draw are the three leaves `FLColor`,
+`FLImage` and `FLText`, plus `FLScroll` and `FLRepresentableNode`, which wrap a control. Read the
+current split off the code — `grep -rl ': FLStructuralView' Sources` — rather than from a list here, which
+goes stale every time a modifier is added. This mirrors SwiftUI, where a layout container is not a view
+at all but `Color` and `.background` are tappable where they draw.
 
 **A new node's view defaults to `FLStructuralView` unless it draws.** Getting this wrong is invisible
 until some unrelated screen finds a button that will not tap.

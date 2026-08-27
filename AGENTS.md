@@ -136,7 +136,9 @@ out.
 Two `#expect` traps that look like real failures and are not. Arithmetic over more than one literal
 infers `Int`, so `#expect(width == 8 * 60 + 7 * 4)` fails as `508.0 == 508` — swift-testing compares the
 captured values as `Any`, and the dynamic types differ. The same happens when a `CGFloat` meets a
-`Double` produced by literal division. Wrap the expression in `CGFloat(...)` or annotate the binding. A codegen check is still worth running when parameter packs change:
+`Double` produced by literal division. Wrap the expression in `CGFloat(...)` or annotate the binding.
+
+A codegen check is still worth running when parameter packs change:
 
 ```sh
 SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
@@ -160,10 +162,10 @@ Report timings and pass/fail from an actual test run, never from a clean build.
 To read the concrete type of a modifier chain, force a mismatch and let the compiler print it:
 
 ```swift
-func probe() { let chain = FLBox(width: 40, height: 40).background(.systemBlue); let _: Never = chain }
+func probe() { let chain = FLColor(.systemRed).frame(width: 40, height: 40); let _: Never = chain }
 ```
 
-Benchmarks live in `PlaygroundsTests/Benchmarks/` — same target as the tests, so they are runnable from
+Benchmarks live in `Tests/FrameLayoutTests/Benchmarks/` — same target as the tests, so they are runnable from
 the test diamond and inspectable in the navigator, and they get the simulator runtime (UIKit types are
 measurable there). They assert on semantics only and print timings; a Debug test build is `-Onone` and
 inflates every figure, so switch the test action to Release before trusting absolute numbers. Each
