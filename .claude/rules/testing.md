@@ -112,11 +112,24 @@ Visually, the two systems sit side by side in `Demo/FLChainPreview.swift` and
 
 Know the gaps before trusting a green run:
 
-- **Nothing runs off the main thread.** There is no `Thread` or `Task {` anywhere in `Tests/`, so
-  `FLLayoutComputer`'s `!Thread.isMainThread` precondition never fires and no suite exercises a
-  concurrent measurement. See [architecture/concurrency.md](architecture/concurrency.md).
-- **`FLLayoutCache` has no suite of its own.** Three suites use it as a tool, which covers hit and miss,
-  but nothing covers concurrent probes or the duplicate-measure race.
+- **No timing is asserted anywhere.** The benchmarks print and assert on semantics, so a change that
+  makes measurement ten times slower passes every suite. `layout-proposals.md` carries the cost tables
+  that would notice, and they are read by hand.
+- **`FLLayoutCache` has no suite of its own.** `FLOffMainMeasurementTests` covers concurrent probes and
+  concurrent fills, and three suites cover hit and miss by using it as a tool, but nothing covers
+  `removeAll()` under contention.
+- **Off-main behaviour is covered for measurement only.** `FLOffMainMeasurementTests` is the one suite
+  that leaves the main thread; see [architecture/concurrency.md](architecture/concurrency.md) for what
+  it pins and what remains design.
+
+Writing a test that leaves the main thread has two traps, both hit while writing that suite:
+
+- **`Thread.isMainThread` is unavailable from an asynchronous context** in this target — though the same
+  read compiles in the framework target, which sets `SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated`. Read
+  it from a synchronous `@MainActor` function, or use `pthread_main_np()`, which carries no such
+  restriction.
+- **A non-`Sendable` value cannot be sent into the task.** Passing an `NSAttributedString` to
+  `Task.detached` fails to compile; build it from `Sendable` inputs inside the closure instead.
 
 ## Environment notes
 

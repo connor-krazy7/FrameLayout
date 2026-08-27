@@ -35,7 +35,7 @@ different design; say that rather than smuggling a view into the layout.
 
 ### What a measurement may touch
 
-The conservative allowlist — what the package already relies on:
+The allowlist, pinned by `FLOffMainMeasurementTests` for the two rows that call into UIKit:
 
 | allowed | forbidden |
 | --- | --- |
@@ -47,6 +47,18 @@ The conservative allowlist — what the package already relies on:
 Environmental input arrives *through* `FLEnvironment` — that is what the type is for. A node reading
 `UITraitCollection.current` instead is both a data race and a cache bug, since the value never reaches
 the key the layout is memoised on.
+
+Two rows of that table are **platform** behaviour this package depends on and does not control, so
+`FLOffMainMeasurementTests` asserts them directly rather than trusting them:
+`NSAttributedString.boundingRect` returns the same rect off the main thread as on it, and so do the
+`UIFont` values `FLText` defaults to. If either changes, text measurement is what breaks, and it should
+break there first.
+
+**A non-`Sendable` value cannot be sent into a measurement task at all.** Handing an
+`NSAttributedString` to `Task.detached` does not compile — *"sending value of non-Sendable type risks
+causing data races"* — which is the constraint `FLText.attributedText` answers with
+`nonisolated(unsafe)`. Build such a value from `Sendable` inputs on the side that needs it; that is also
+the shape a real cache probe takes, per [node-equality.md](node-equality.md).
 
 ## Give a new node no isolation at all
 
@@ -125,19 +137,30 @@ no miss to signal it. Do not add a second node that stores a caller's mutable re
 is closed. The fix is an immutable copy at the boundary, probably cheap because
 `NSAttributedString(attributedString:)` shares backing storage, but unmeasured.
 
-## What none of this is verified by
+## What is pinned, and what is still design
 
-Read the rules above as design, not as tested behaviour:
+`FLOffMainMeasurementTests` in `Tests/FrameLayoutTests/Runtime/` covers the correctness half:
 
-- **No test in the package runs anything off the main thread.** There is no `Thread` or `Task {` in
-  `Tests/`, so `FLLayoutComputer`'s `!Thread.isMainThread` precondition never fires under test and no
-  suite exercises a concurrent measurement.
-- **`FLLayoutCache` has no suite of its own.** Three suites use it as a tool — `FLDecorationCostTests`,
-  `FLTextHashingTests`, `FLViewTests` — which covers hit and miss behaviour, but nothing covers
-  concurrent probes, the duplicate-measure race, or `removeAll()` under contention.
+- a detached task genuinely leaves the main thread
+- text and a four-level composite measure identically off-main and on-main, frames included
+- `FLLayoutComputer` returns what a direct call returns
+- sixty-four concurrent measurements of one node all agree, and of thirty-two distinct nodes do not
+  interfere
+- a cache probed concurrently for one key ends with one entry and every answer agrees; filled
+  concurrently from distinct keys, it keeps all of them
+- the two platform calls above
+
+Still design rather than result:
+
 - **No pool-saturation measurement exists.** `Benchmarks/` times a single measurement, never N
   concurrent ones, so the queueing claim above is mechanism rather than a number.
+- **The instrument table is reasoned.** Nothing tests that an `actor` would have forced `layout(in:)`
+  async; that follows from the protocol being synchronous, and it is worth re-deriving before trusting
+  it if `FLNode` ever changes.
+- **`FLLayoutCache` still has no suite of its own.** Its concurrent behaviour is covered above and its
+  hit-and-miss behaviour by three suites that use it as a tool, but nothing covers `removeAll()` under
+  contention.
 
-When you change anything in this file's territory, you are changing unpinned behaviour. Add the test
-with the change, and record any number you take here, as `node-equality.md` and `layout-proposals.md`
-both do.
+When you change something in this file's territory that the list above does not cover, you are changing
+unpinned behaviour. Add the test with the change, and record any number you take here, as
+`node-equality.md` and `layout-proposals.md` both do.
