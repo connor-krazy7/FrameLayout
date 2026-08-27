@@ -79,6 +79,57 @@ Note this is the opposite conclusion from `FLText`, and for a concrete reason �
 comparison is bounded by message length and short-circuits on a length mismatch, `UIImage` comparison
 is bounded by pixel count. Do not generalise either verdict to the next reference type; measure it.
 
+## A dynamic `UIColor` must be one shared instance
+
+`UIColor(dynamicProvider:)` wraps a closure, and nothing about two blocks tells `isEqual:` whether they
+compute the same thing. So for dynamic colours `UIColor` falls back to instance equality:
+
+| | `===` | `==` | hash |
+| --- | --- | --- | --- |
+| `.label`, two separate accesses | yes | yes | yes |
+| two `UIColor(dynamicProvider:)`, identical closures | no | **no** | **no** |
+| one `UIColor(dynamicProvider:)`, against itself | yes | yes | yes |
+| two component colours, same components | — | yes | yes |
+| `.label` vs `.label.resolvedColor(with:)` | — | no | — |
+
+Pointer identity **does** short-circuit, so one shared instance is equal to itself and hashes stably.
+That is the whole fix, and it is why a system colour is safe — `.label` is a cached singleton.
+
+**The mistake is `static var`, and it is invisible at the call site.**
+
+```swift
+// no — a computed `static var` makes a new object on every access
+extension UIColor {
+    static var bubble: UIColor { UIColor { $0.userInterfaceStyle == .dark ? .dark : .light } }
+}
+
+// yes — one object, created once, shared by every reference
+extension UIColor {
+    static let bubble = UIColor { $0.userInterfaceStyle == .dark ? .dark : .light }
+}
+```
+
+Both read as `.bubble` where they are used. The only symptom of the first is a layout cache that never
+hits, with no diagnostic — which is why this is a written rule rather than a doc comment. Sharing an
+instance costs no dynamic behaviour; UIKit still resolves it per trait collection at draw time.
+
+Four places a colour reaches a cache key, and note which one is absent: a colour built inside a
+composite's `body` is not among them, because `FLComposed.==` compares `composite` alone.
+
+1. Stored on whatever the cache is rooted on — `let bubbleColour: UIColor` on a composite.
+2. In `FLEnvironment.foregroundColor`, which is in the key at **every** root via `FLContext`.
+3. A chain-rooted cache, where `FLDecoration` is hashed directly.
+4. Inside a stored `NSAttributedString`, since attribute comparison is part of its equality.
+
+Resolution belongs in `update` — `FLTextView.update` resolves through `context.environment` — and must
+not be hoisted into node construction as an optimisation, because a resolved colour is a different
+colour from its dynamic source and changes on every appearance change.
+
+`FLColorIdentityTests` in `Tests/FrameLayoutTests/Runtime/` pins every row above, including the cache
+consequence. It asserts a *platform* behaviour, which is deliberate: the singleton identity of `.label`
+is load-bearing for hit rates across the package, and if two separately built dynamic colours ever
+start comparing equal, this rule should be revisited rather than left in place.
+
 ## When a node cannot be synthesised
 
 If a stored property is genuinely not `Hashable`, that is a signal about the property, not a reason to
