@@ -37,6 +37,7 @@ public extension FLAdjusted {
 // MARK: - Node
 
 public struct FLAdjusted<Wrapped: FLNode>: FLNode {
+    public typealias Layout = Wrapped.Layout
     public typealias View = FLAdjustedView<Wrapped>
 
     public let adjustments: FLAdjustments
@@ -44,17 +45,9 @@ public struct FLAdjusted<Wrapped: FLNode>: FLNode {
 
     public var isSpacer: Bool { wrapped.isSpacer }
 
-    public func layout(in context: FLContext) -> FLAdjustedLayout<Wrapped.Layout> {
-        FLAdjustedLayout(wrapped: wrapped.layout(in: context))
+    public func layout(in context: FLContext) -> Wrapped.Layout {
+        wrapped.layout(in: context)
     }
-}
-
-// MARK: - Layout
-
-public struct FLAdjustedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
 }
 
 // MARK: - View
@@ -75,11 +68,11 @@ public final class FLAdjustedView<Wrapped: FLNode>: FLStructuralView, FLNodeView
         fatalError("init(coder:) is not supported")
     }
 
-    public func update(node: FLAdjusted<Wrapped>, layout: FLAdjustedLayout<Wrapped.Layout>, context: FLRenderContext) {
+    public func update(node: FLAdjusted<Wrapped>, layout: Wrapped.Layout, context: FLRenderContext) {
         context.perform { self.alpha = node.adjustments.opacity }
         isUserInteractionEnabled = node.adjustments.allowsHitTesting
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
+        wrappedView.update(node: node.wrapped, layout: layout, context: context)
     }
 }

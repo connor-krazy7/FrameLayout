@@ -22,6 +22,7 @@ public struct FLAnimationAlways: Hashable, Sendable {}
 // MARK: - Node
 
 public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
+    public typealias Layout = Wrapped.Layout
     public typealias View = FLAnimatedView<Wrapped, Value>
 
     public let animation: FLAnimation?
@@ -30,17 +31,9 @@ public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
 
     public var isSpacer: Bool { wrapped.isSpacer }
 
-    public func layout(in context: FLContext) -> FLAnimatedLayout<Wrapped.Layout> {
-        FLAnimatedLayout(wrapped: wrapped.layout(in: context))
+    public func layout(in context: FLContext) -> Wrapped.Layout {
+        wrapped.layout(in: context)
     }
-}
-
-// MARK: - Layout
-
-public struct FLAnimatedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
 }
 
 // MARK: - View
@@ -73,7 +66,7 @@ public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: 
         animation.run { self.frame = frame }
     }
 
-    public func update(node: Node, layout: FLAnimatedLayout<Wrapped.Layout>, context: FLRenderContext) {
+    public func update(node: Node, layout: Wrapped.Layout, context: FLRenderContext) {
         let effectiveAnimation = node.animation.filter { _ in shouldAnimate(for: node.value) }
 
         animation = effectiveAnimation
@@ -81,7 +74,7 @@ public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: 
         let childContext = context.animating(effectiveAnimation)
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
+        wrappedView.update(node: node.wrapped, layout: layout, context: childContext)
     }
 
     private func shouldAnimate(for value: Value?) -> Bool {

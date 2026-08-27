@@ -3,6 +3,7 @@ import UIKit
 // MARK: - Node
 
 public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
+    public typealias Layout = Wrapped.Layout
     public typealias View = FLButtonView<Wrapped, Tag>
 
     public let tag: Tag
@@ -15,17 +16,9 @@ public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
         wrapped = content()
     }
 
-    public func layout(in context: FLContext) -> FLButtonLayout<Wrapped.Layout> {
-        FLButtonLayout(wrapped: wrapped.layout(in: context))
+    public func layout(in context: FLContext) -> Wrapped.Layout {
+        wrapped.layout(in: context)
     }
-}
-
-// MARK: - Layout
-
-public struct FLButtonLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
 }
 
 // MARK: - View
@@ -58,7 +51,7 @@ public final class FLButtonView<Wrapped: FLNode, Tag: Hashable & Sendable>: UICo
         }
     }
 
-    public func update(node: Node, layout: FLButtonLayout<Wrapped.Layout>, context: FLRenderContext) {
+    public func update(node: Node, layout: Wrapped.Layout, context: FLRenderContext) {
         context.registry?.registerView(self, withTag: node.tag)
 
         style = node.style
@@ -68,7 +61,7 @@ public final class FLButtonView<Wrapped: FLNode, Tag: Hashable & Sendable>: UICo
         accessibilityTraits = context.isEnabled ? [.button] : [.button, .notEnabled]
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
+        wrappedView.update(node: node.wrapped, layout: layout, context: context)
         applyPressedState()
     }
 
