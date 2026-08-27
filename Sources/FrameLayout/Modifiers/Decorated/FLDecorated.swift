@@ -92,26 +92,15 @@ public extension FLDecorated {
 // MARK: - Node
 
 public struct FLDecorated<Wrapped: FLNode>: FLNode {
+    public typealias Layout = Wrapped.Layout
     public typealias View = FLDecoratedView<Wrapped>
 
     public let decoration: FLDecoration
     public let wrapped: Wrapped
 
-    public func layout(in context: FLContext) -> FLDecoratedLayout<Wrapped.Layout> {
-        FLDecoratedLayout(
-            wrapped: wrapped.layout(in: context),
-            cornerMask: decoration.corners.cornerMask(in: context.layoutDirection)
-        )
+    public func layout(in context: FLContext) -> Wrapped.Layout {
+        wrapped.layout(in: context)
     }
-}
-
-// MARK: - Layout
-
-public struct FLDecoratedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-    public let cornerMask: CACornerMask
-
-    public var size: CGSize { wrapped.size }
 }
 
 // MARK: - View
@@ -132,19 +121,19 @@ public final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeVie
         fatalError("init(coder:) is not supported")
     }
 
-    public func update(node: FLDecorated<Wrapped>, layout: FLDecoratedLayout<Wrapped.Layout>, context: FLRenderContext) {
+    public func update(node: FLDecorated<Wrapped>, layout: Wrapped.Layout, context: FLRenderContext) {
         let decoration = node.decoration
 
         backgroundColor = decoration.backgroundColor
         layer.cornerRadius = decoration.shape.cornerRadius(in: layout.size)
         layer.cornerCurve = decoration.cornerCurve.layerCornerCurve
-        layer.maskedCorners = layout.cornerMask
+        layer.maskedCorners = decoration.corners.cornerMask(in: context.environment.layoutDirection)
         layer.borderColor = decoration.borderColor.cgColor
         layer.borderWidth = decoration.borderWidth
         clipsToBounds = decoration.clipsToBounds
         drawsContent = decoration.backgroundColor.cgColor.alpha > 0 || decoration.borderWidth > 0
 
-        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.wrapped.size), in: context)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
+        wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
+        wrappedView.update(node: node.wrapped, layout: layout, context: context)
     }
 }

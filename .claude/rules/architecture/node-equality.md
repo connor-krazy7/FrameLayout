@@ -167,6 +167,47 @@ normally built per call, so there would be nothing to share.
 consequence, and passes identically on iOS 17.5 and 26.1 — the ends of the supported range. It asserts a
 platform behaviour for the same reason the colour suite does: a font that stopped comparing by content
 would cost every consumer their hit rate silently, and there would be no workaround to document.
+## A `Layout` stores geometry only
+
+Every `FLLayout` in the package stores `size`, child frames, `contentSize` or children, and nothing else.
+Keep it that way, because it is the invariant that decides whether a layout-neutral mark is sound.
+
+Anything non-geometric in a `Layout` is a **node property pinned into the cache key**. Excluding that
+property from layout identity then serves a cached layout built from different inputs — a wrong hit,
+where every other failure in this area is only a miss. With the invariant held, checking a new mark is
+one file rather than an inventory: if the property does not reach `layout(in:)`, it cannot reach the
+`Layout`, so excluding it cannot change what a cache returns.
+
+`FLDecoratedLayout.cornerMask` was the one violation. It held a four-bit `CACornerMask` derived from
+`FLDecoration.corners` and `FLContext.layoutDirection`, which made `corners` the single field of
+`FLDecoration` reaching `layout(in:)`. It is gone: `FLDecoratedView.update` resolves the mask from
+`FLRenderContext.environment.layoutDirection`.
+
+**It would not have stayed local, either.** `FLStackLayout.children` is an `FLGroupChildren` storing
+`layouts: [FLAnyLayout]`, so a decorated child's non-geometric field is part of the enclosing **stack's**
+layout equality, and the grid's. A mark excluded at the node would have been unsound at every ancestor,
+not only at the type that declared the field.
+
+### A wrapper whose payload is applied at update has no `Layout` of its own
+
+Such a node takes its child's:
+
+```swift
+public typealias Layout = Wrapped.Layout
+
+public func layout(in context: FLContext) -> Wrapped.Layout {
+    wrapped.layout(in: context)
+}
+```
+
+A `Layout` that stores only `wrapped` and computes `size` through it carries no information, so it is a
+type to delete rather than to maintain.
+
+**Being spelled that way is not the test, and `FLEnvironmentOverride` is the counterexample** — it
+already has `Layout == Wrapped.Layout` and is still layout-*affecting*, because it hands the child a
+changed `FLContext`. Both halves are required: the layout passes through **and** the context passes
+through unchanged. The second half is visible only in `layout(in:)`, so read it there rather than
+inferring from the `typealias`.
 
 ## When a node cannot be synthesised
 
