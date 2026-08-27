@@ -27,7 +27,8 @@ plausible edit that looks harmless. The good ones in the package are all one of 
   caller must plan around and none of them visible in the signature.
 - `FLLayoutComputer` — "a convenience, not a requirement". Without it the type reads as the sanctioned
   way to measure.
-- `FLText.resolvedText(in:)` — the precedence order of attributes, and that it is called twice.
+- `FLText.resolvedText(in:)` — the precedence order of attributes, and that it is the render path only.
+  No test can catch measurement being routed back through it, because a colour changes no size.
 - `FLShape` — the commented-out `case path` and why it is absent. Commented-out code is otherwise banned;
   this one states what it would cost (an offscreen composite per view, no continuous corners, and the
   loss of `Hashable`/`Sendable` synthesis on `FLDecoration`) and what would make it worth adding. That is

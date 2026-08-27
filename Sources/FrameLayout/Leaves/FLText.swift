@@ -54,40 +54,44 @@ public struct FLText: FLNode {
         self.overrides = overrides
     }
 
-    /// Fills in the attributes the string does not already carry. Precedence runs: attributes already
-    /// on the string, then styling set on this text, then the inherited environment, then the
-    /// defaults. Called while measuring and again while rendering, so both see the same string.
+    /// Precedence: attributes already on the string, then this text's styling, then the environment,
+    /// then the defaults. Rendering only — `layout(in:)` measures `measuredText(in:)`.
     public func resolvedText(in environment: FLEnvironment) -> NSAttributedString {
+        let resolved = environment.applying(overrides)
+        return text(
+            withDefaults: [
+                .font: resolved.font.or(Self.defaultFont),
+                .foregroundColor: resolved.foregroundColor.or(Self.defaultColor),
+            ]
+        )
+    }
+
+    func measuredText(in environment: FLEnvironment) -> NSAttributedString {
+        let resolved = environment.applying(overrides)
+        return text(withDefaults: [.font: resolved.font.or(Self.defaultFont)])
+    }
+
+    private func text(withDefaults attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
         guard attributedText.length > 0 else { return attributedText }
 
-        let resolved = environment.applying(overrides)
-        let fullRange = NSRange(location: 0, length: attributedText.length)
         let filled = NSMutableAttributedString(attributedString: attributedText)
 
-        Self.fill(
-            .font,
-            with: resolved.font.or(Self.defaultFont),
-            in: filled,
-            range: fullRange
-        )
-        Self.fill(
-            .foregroundColor,
-            with: resolved.foregroundColor.or(Self.defaultColor),
-            in: filled,
-            range: fullRange
-        )
+        for (key, value) in attributes {
+            Self.fillGaps(of: key, with: value, in: filled)
+        }
 
         return filled
     }
 
-    private static func fill(
-        _ key: NSAttributedString.Key,
+    private static func fillGaps(
+        of key: NSAttributedString.Key,
         with value: Any,
-        in target: NSMutableAttributedString,
-        range: NSRange
+        in target: NSMutableAttributedString
     ) {
+        let fullRange = NSRange(location: 0, length: target.length)
+
         var missing: [NSRange] = []
-        target.enumerateAttribute(key, in: range, options: []) { existing, subrange, _ in
+        target.enumerateAttribute(key, in: fullRange, options: []) { existing, subrange, _ in
             guard existing == nil else { return }
             missing.append(subrange)
         }
@@ -98,7 +102,7 @@ public struct FLText: FLNode {
     }
 
     public func layout(in context: FLContext) -> FLTextLayout {
-        let text = resolvedText(in: context.environment)
+        let text = measuredText(in: context.environment)
 
         guard text.length > 0 else { return FLTextLayout(size: .zero) }
 
