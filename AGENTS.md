@@ -15,31 +15,22 @@ The package is the repository root, the demo app is an example of consuming it:
 | `Examples/Playgrounds.xcodeproj`, `Examples/Playgrounds/` | the demo app: playgrounds, previews, demo models |
 | `Examples/PlaygroundsTests/` | tests that are *about the demo* — playground rows, the conversation cell |
 
-Inside `Sources/FrameLayout/`, a file is named after the type in it and holds nothing else — except a
-node, whose `Layout` and `View` share its file because the three are one mutually recursive
-declaration. A node with companion types gets a folder named after it without the `FL` prefix
-(`Containers/Grid/`, `Modifiers/Decorated/`); one without stays a plain file. Inside a file the entry
-point comes first — the `FLNodeProviding` verb in `Modifiers/`, the type itself everywhere else — then
-the node with its extensions, then the layout, then the view. `Core/` is the vocabulary, `Leaves/` `Containers/` `Modifiers/` `Controls/` are the nodes,
-`Group/` is the builder machinery, `Composition/` is `FLView` and `FLComposed`, and `Runtime/` is everything
-that drives a description: hosting, measurement, caching, the registry, frame application. The
-file-organisation rule below is authoritative.
+Inside `Sources/FrameLayout/`, `Core/` is the vocabulary, `Leaves/` `Containers/` `Modifiers/`
+`Controls/` are the nodes, `Group/` is the builder machinery, `Composition/` is `FLView` and
+`FLComposed`, and `Runtime/` is everything that drives a description: hosting, measurement, caching, the
+registry, frame application. Which file a declaration goes in, what a folder means, and how a file is
+ordered internally are all `.claude/rules/architecture/file-organisation.md`, which is authoritative —
+do not re-derive it from this paragraph.
 
 The example app links the root package by relative path, so it compiles against `public` API only —
 that is what proves the surface is complete. Both test targets use `@testable import FrameLayout`,
 since they assert on internals: child frames inside layout structs, registry bookkeeping,
 `FLText.resolvedText`.
 
-Inside `Tests/FrameLayoutTests/` the folders mirror `Sources/FrameLayout/`, plus `Parity/` and
-`Benchmarks/`, which correspond to no source folder. A suite named `FL*TestsFixtures.swift` sits beside
-the suites it backs; `Fixtures/` is the cross-cutting set.
-
-Which target a test belongs in follows from what it is *about*. Framework behaviour goes in
-`Tests/FrameLayoutTests/` and depends only on `Fixtures/` — a small item model, a four-level composite
-row, a swatch generator, and two injected UIKit views, one laying out by frames and one by constraints.
-A test that asserts something about a playground or the demo conversation cell stays in
-`Examples/PlaygroundsTests/`. If a framework test needs a demo type, the fixture is missing something;
-add to `Fixtures/` rather than reaching across.
+`Fixtures/` in the package suite is the cross-cutting set every area may draw on: a small item model, a
+four-level composite row, a swatch generator, and two injected UIKit views, one laying out by frames and
+one by constraints. Which target a suite belongs in is `.claude/rules/testing.md`; which folder inside
+it, and where a `FL*TestsFixtures.swift` file sits, is the file-organisation rule.
 
 Neither side needs project edits when files are added — `Examples/Playgrounds/` is a file-system
 synchronised group and SwiftPM discovers package sources by path.
@@ -55,9 +46,14 @@ is for.
 The authoritative project rules live in `.claude/rules/` and are shared across all agents.
 Claude Code loads that directory directly; other agents should read the files listed here.
 
+- `.claude/rules/precedence.md` — the rules outrank the neighbouring declaration, which folder owns which question, and the three deliberate exceptions most likely to be copied
+- `.claude/rules/testing.md` — run `make test` before believing a change is done, which target a suite goes in, the `#expect` traps, and what a green run does not cover
 - `.claude/rules/style/value-expressions.md` — producing values at declaration, and keeping expressions short enough to infer
+- `.claude/rules/style/swift-conventions.md` — exhaustive switches over an enum, no false optionals, clamping, and declaration layout
+- `.claude/rules/style/rationale-placement.md` — which of the three homes a piece of reasoning goes in: a rule file, a comment, or the commit message
 - `.claude/rules/style/commit-messages.md` — a manifest of what changed first, the reasoning after
 - `.claude/rules/architecture/file-organisation.md` — one file per nameable thing, why a node's Layout/Node/View triple is the exception, and what each folder means
+- `.claude/rules/architecture/concurrency.md` — never touch a `UIView` while measuring, what a measurement may touch, and which instrument protects state that outlives one
 - `.claude/rules/architecture/leaf-views.md` — wrap UIKit controls rather than subclassing them; picking `FLStructuralView` vs `UIView` and how hit-test pass-through works
 - `.claude/rules/architecture/node-equality.md` — let `Hashable` synthesis produce a node's `==`/`hash`, and why no identity fast path
 - `.claude/rules/architecture/layout-proposals.md` — a proposal is a question, not a constraint; only a pinned frame hands a size down, and how to measure parity against real SwiftUI
@@ -103,72 +99,15 @@ must never hold closures, handlers, or view references.
 
 ## Verifying changes
 
-Everything goes through the `Makefile`, which derives the simulator UDID by name so no machine-specific
-id is baked into a command:
-
 ```sh
-make test              # both suites
-make test-package      # Tests/FrameLayoutTests
-make test-examples     # Examples/PlaygroundsTests
+make test              # both suites — run this before believing a change is done
 make build-package     # fastest loop: no app, no simulator boot
-make test SIMULATOR="iPhone 16 Pro"
 ```
 
-`make build-package` catches everything inside the framework, including access-control mistakes. It
-does **not** catch a public surface missing something the example needs, which is what building the app
-does — so run `make test` before believing a change is done.
+`make build-package` catches everything inside the framework, access-control mistakes included, but not
+a public surface missing something the example needs — only building the app does that.
 
-`FrameLayout.xcworkspace` holds the package and the example project, so one Xcode window covers both
-and ⌘U runs whichever scheme is selected. Both schemes are committed under `xcshareddata`; the
-package's auto-generated scheme has no test action when driven through a workspace, which is why the
-workspace ships its own.
+The rest is `.claude/rules/testing.md`: which target a suite goes in, the two `#expect` traps,
+`Issue.record` instead of `print`, the parameter-pack codegen check, what the benchmarks can and cannot
+tell you, and the gaps a green run does not cover.
 
-The package suite runs **unhosted** — no host app — and window-dependent behaviour still works there:
-`UIWindow`, hit-testing, `didMoveToWindow` teardown, and `ImageRenderer` were all verified under it.
-
-`print` from a test reaches neither the log nor the result bundle; use `Issue.record` to get numbers
-out.
-
-Two `#expect` traps that look like real failures and are not. Arithmetic over more than one literal
-infers `Int`, so `#expect(width == 8 * 60 + 7 * 4)` fails as `508.0 == 508` — swift-testing compares the
-captured values as `Any`, and the dynamic types differ. The same happens when a `CGFloat` meets a
-`Double` produced by literal division. Wrap the expression in `CGFloat(...)` or annotate the binding. A codegen check is still worth running when parameter packs change:
-
-```sh
-SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
-
-xcrun swiftc -emit-object -wmo -swift-version 6 \
-  -enable-upcoming-feature MemberImportVisibility -O -module-name FrameLayout \
-  -sdk "$SDK" -target arm64-apple-ios17.0-simulator -o /tmp/fl.o \
-  $(find Sources -name '*.swift' | sort)
-```
-
-Typecheck alone is not sufficient: parameter packs have hit SILGen crashes that only appear at
-codegen. Storing a pack expansion in a returned struct crashes Swift 6.2.1, which is why
-`FLGroupChildren` holds `[FLAnyLayout]` rather than `(repeat (each Child).Layout)`.
-
-The package boundary now enforces what a hand-rolled two-step `swiftc` check used to: app and test
-sources cannot silently merge into one module with the framework, so a missing import is a real error
-rather than something that resolves by accident.
-
-Report timings and pass/fail from an actual test run, never from a clean build.
-
-To read the concrete type of a modifier chain, force a mismatch and let the compiler print it:
-
-```swift
-func probe() { let chain = FLBox(width: 40, height: 40).background(.systemBlue); let _: Never = chain }
-```
-
-Benchmarks live in `PlaygroundsTests/Benchmarks/` — same target as the tests, so they are runnable from
-the test diamond and inspectable in the navigator, and they get the simulator runtime (UIKit types are
-measurable there). They assert on semantics only and print timings; a Debug test build is `-Onone` and
-inflates every figure, so switch the test action to Release before trusting absolute numbers. Each
-suite documents its own results table.
-
-Visual behaviour is checked against SwiftUI side by side in `Demo/FLChainPreview.swift`
-(previews: `all cases`, `padding + background`, `alpha compositing`, `lineLimit + alignment`) and
-`Demo/FLImageComparison.swift` (intrinsic vs resizable, aspect ratio, content mode, tinting).
-
-Layout parity is also asserted numerically: `FLSwiftUIParityTests` measures FL's computed sizes against
-real SwiftUI through `UIHostingController.sizeThatFits(in:)`. See the layout-proposals rule for what that
-measurement can and cannot tell you.

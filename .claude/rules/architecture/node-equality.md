@@ -53,7 +53,7 @@ length mismatch is rejected without reading content. `hash(into:)` on the same s
 bucketing is cheap and only the final confirming `==` walks content.
 
 Reproduce with the `Benchmark: NSAttributedString equality` suite in
-`PlaygroundsTests/Benchmarks/`, which carries the full table and both readings as documentation. It
+`Tests/FrameLayoutTests/Benchmarks/`, which carries the full table and both readings as documentation. It
 lives in the test target so it runs on the simulator and is one click away, at the cost of a Debug
 build inflating the numbers — set the test action to Release in the scheme when the absolute figures
 matter. The suite asserts only on semantics, never on a timing.
@@ -65,15 +65,17 @@ compare strings of *equal* length — otherwise the length check answers before 
 
 ## Existing hand-written conformances
 
-Three, each for a reason that is not "the synthesised one looked wrong":
+`FLTuple`, `FLComposed` and `FLImage`, each for a reason that is not "the synthesised one looked
+wrong":
 
 - `FLTuple` and `FLComposed` — structural. A parameter pack and a stored existential body cannot be
   compared field-wise by synthesis.
 - `FLImage` — deliberate. `UIImage.isEqual:` compares pixel data, which is unbounded work on a cache
   probe, and its `hash` semantics are unverified. It hashes `image?.size` instead: cheap,
   content-derived, and consistent with an `==` that accepts either identity or content equality.
-  Settling it needs a `UIImage` benchmark alongside the string one — the suites run on the simulator,
-  so that is now possible where the earlier standalone script could not have done it.
+  **Do not change this conformance without a `UIImage` benchmark alongside the string one** — the claim
+  it rests on, that pixel comparison is unbounded work on a cache probe, is reasoned rather than
+  measured. `Tests/FrameLayoutTests/Benchmarks/` is where that measurement goes.
 
 Note this is the opposite conclusion from `FLText`, and for a concrete reason — `NSAttributedString`
 comparison is bounded by message length and short-circuits on a length mismatch, `UIImage` comparison

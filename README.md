@@ -15,7 +15,7 @@ struct MessageRow: FLView {
             FLImage(message.avatar)
                 .resizable()
                 .aspectRatio(1, contentMode: .fit, maxHeight: 32)
-                .clipShape(.circle)
+                .clipShape(.capsule)
 
             FLVStack(alignment: .leading, spacing: 4) {
                 FLText(message.author)

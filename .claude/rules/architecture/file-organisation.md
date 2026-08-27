@@ -27,10 +27,9 @@ associatedtype View: FLNodeView where View.Node == Self
 ```
 
 `FLPaddedView.update(node:layout:)` reads exactly the fields `FLPadded.layout(in:)` wrote, so a change
-to a stored property is one edit across all three. Measured over the history: of the last five commits
-that touched a node file, four changed two or more of its three types. Splitting them triples the cost
-of the common edit and buys nothing, because you never look for `FLPaddedLayout` without already
-knowing about `FLPadded`.
+to a stored property is one edit across all three — and that is the common edit, not a rare one.
+Splitting them triples its cost and buys nothing, because you never look for `FLPaddedLayout` without
+already knowing about `FLPadded`.
 
 The same argument covers three other groupings, and no others:
 
@@ -123,12 +122,15 @@ Both blocks, in that order: the wrapping entry point first, then the collapsing 
 concrete wrapper. The collapse rule is a property of the type, so it belongs beside it — see the
 modifier notes in `AGENTS.md` for which modifiers collapse and why.
 
-This is the one thing the layout does **not** make discoverable, and the gap is still open. You cannot
-find `padding` by browsing filenames, because the file is named after `FLPadded` — nineteen universal
-verbs are spread over twelve extension blocks in eleven files, and `background` means two different
-things in two of them. Whatever closes it — a documented table, or a single façade file — must not
-scatter the entry points themselves into a folder of their own, which would separate a modifier from
-the merge rule that defines it.
+This is the one thing the layout does **not** make discoverable: you cannot find `padding` by browsing
+filenames, because the file is named after `FLPadded`. The universal verbs are spread across an
+extension block per node, and `background` means two different things in two of them.
+
+**To find a verb, grep the extension rather than the filename** — `grep -rn 'extension FLNodeProviding'
+Sources` lists every entry point with its file. Do not add a `Modifiers/Verbs/` folder or otherwise
+move the entry points out of the node files to close the gap: that would separate a modifier from the
+merge rule that defines it, which is the one thing this layout gets right. A documented table or a
+single façade file that leaves the declarations in place is fine.
 
 ## A node with companion types gets a folder, named without the prefix
 
@@ -142,8 +144,8 @@ Containers/
   Stack/    FLStack FLStackChildren FLStackGeometry FLStackAllocation
 ```
 
-Flat, that folder was nineteen files of which three were containers; the rest were grid and stack
-vocabulary sitting at the same level as the nodes that own them.
+Flat, the three containers sat at the same level as the grid and stack vocabulary they own, and were
+outnumbered by it.
 
 A node with **no** companion types stays a plain file — `Modifiers/FLPadded.swift`, not
 `Modifiers/Padded/FLPadded.swift`. A folder holding one file is ceremony.
@@ -187,17 +189,16 @@ Do not classify a suite by which types it mentions most. Nearly every test build
 of `FLText`, `FLColor` and `FLContext`, so a frequency count finds the scaffolding and not the
 subject; the filename is the reliable signal.
 
-Grouping makes a shape visible that forty-nine flat files hid: eight of the suites — a fifth of the
-target — are about `FLViewRegistry`, and now sit together in `Runtime/`.
+Grouping makes a shape visible that a flat directory hid: a large share of the suites are about
+`FLViewRegistry`, and now sit together in `Runtime/`.
 
-**A fixture lives with the suites it serves.** The six `FL*TestsFixtures.swift` files each back one
-area, so they sit in that folder beside it, including `FLBindingTestsFixtures`, whose five consumers
-are all `Runtime/` suites. `Fixtures/` stays what `AGENTS.md` describes — the cross-cutting set every
-area may draw on — and nothing was moved into or out of it.
+**A fixture lives with the suites it serves.** Each `FL*TestsFixtures.swift` file backs one area, so it
+sits in that folder beside it — including `FLBindingTestsFixtures`, whose consumers are all `Runtime/`
+suites. `Fixtures/` stays the cross-cutting set every area may draw on.
 
-A fixture is named after the suite that uses it. `FLNestedCompositeTestsFixtures` was named after a
-suite in `Examples/PlaygroundsTests` that never touched it, while its real consumer was
-`FLCompositeModifierTests`; it now carries that name.
+**A fixture is named after the suite that actually consumes it**, never after one that merely sounds
+related. Check the consumer before naming the file; a fixture named for a suite that never imports it
+sends every later reader to the wrong place.
 
 ## Where this bites
 

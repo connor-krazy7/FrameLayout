@@ -46,7 +46,7 @@ picked the height-limited scale, and returned a size **wider than the box**, so 
 `.frame(maxHeight:)` spilled out of the cell. Neither is visible in the modifier that causes it; both
 surface as a parent that is mysteriously too wide.
 
-## Overflow is real, and it propagates
+## Never clamp a child's answer to what you proposed
 
 A child that answers larger than proposed is not clipped by its parent, and the parent's own reported
 size grows to match. Measured against SwiftUI at a 160pt-wide box, 16:9 image:
@@ -80,6 +80,10 @@ axis, every bound that did not clamp), and it never iterates. `.fill` deliberate
 proposal, so re-proposing to it returns the same oversized answer — a fixed-point loop would never
 converge, and a deliberate `aspectRatio(.fill)` + `clipped()` crop still works.
 
+**Reach for the `aspectRatio` cap overloads over a bare `frame(maxHeight:)` inside deep trees.** A
+clamping frame roughly doubles in cost and nesting them compounds, while the cap overloads are shaped so
+the bound never clamps and the second pass never fires.
+
 What it costs, Debug `-Onone`, so read the ratios and not the absolute numbers:
 
 | case | before | after |
@@ -90,9 +94,8 @@ What it costs, Debug `-Onone`, so read the ratios and not the absolute numbers:
 | three clamping frames inside a clamped stack | 12 518 ns | 45 373 ns |
 | the nested demo conversation row | 1 356 µs | 1 322 µs |
 
-A clamping frame roughly doubles, and nesting clamping frames compounds — four stacked clamps cost 3.6×.
-Realistic content is unaffected, because a frame only pays when its bound actually bites. Reach for the
-`aspectRatio` cap overloads over a bare `frame(maxHeight:)` inside deep trees and the pass never fires.
+Four stacked clamps cost 3.6×. Realistic content is unaffected, because a frame only pays when its
+bound actually bites.
 
 ## Reserving a box that hugs a ratio-driven image
 
@@ -160,14 +163,14 @@ the rendering diverged, because a frame that crops a 160×320 child and one that
 report 160×100. For any claim about placement, render and measure the drawn pixels — `FLSwiftUIParityTests`
 does it with `ImageRenderer` and a bounding-box scan.
 
-`print` from a test is not captured in `xcodebuild` output or in the result bundle. To get numbers out of
-an exploratory test, accumulate them and fail on purpose — `Issue.record(Comment(rawValue: report))`
-surfaces the string in the failure message.
+To get numbers out of an exploratory test, use the `Issue.record` rule in
+[../testing.md](../testing.md) — `print` reaches neither the log nor the result bundle.
 
-## Consequences
+## Give a parity assertion containing `FLText` a 1pt tolerance
 
-- Text metrics differ from UIKit's by a fraction of a point, so parity assertions on anything containing
-  `FLText` need a tolerance of about 1pt. Pure geometry matches exactly.
-- A cell's width is almost always an exact proposal, so the `.exact` path is what production layout
-  exercises. The `.unspecified` path is mostly the height axis — which is precisely where the bug lived
-  and where new bounded-frame behaviour needs a test.
+Text metrics differ from UIKit's by a fraction of a point. Pure geometry matches exactly, so assert
+that exactly and reserve the tolerance for text.
+
+**Put a new bounded-frame test on the height axis.** A cell's width is almost always an exact proposal,
+so the `.exact` path is what production layout already exercises; the `.unspecified` path is mostly the
+height axis, which is where the bug this rule exists for lived.
