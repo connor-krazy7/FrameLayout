@@ -11,6 +11,7 @@ public extension FLNodeProviding {
 // MARK: - Node
 
 public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
+    public typealias Layout = Wrapped.Layout
     public typealias View = FLTaggedView<Wrapped, Tag>
 
     public let tag: Tag
@@ -18,17 +19,9 @@ public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
 
     public var isSpacer: Bool { wrapped.isSpacer }
 
-    public func layout(in context: FLContext) -> FLTaggedLayout<Wrapped.Layout> {
-        FLTaggedLayout(wrapped: wrapped.layout(in: context))
+    public func layout(in context: FLContext) -> Wrapped.Layout {
+        wrapped.layout(in: context)
     }
-}
-
-// MARK: - Layout
-
-public struct FLTaggedLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
 }
 
 // MARK: - View
@@ -49,10 +42,10 @@ public final class FLTaggedView<Wrapped: FLNode, Tag: Hashable & Sendable>: FLSt
         fatalError("init(coder:) is not supported")
     }
 
-    public func update(node: Node, layout: FLTaggedLayout<Wrapped.Layout>, context: FLRenderContext) {
+    public func update(node: Node, layout: Wrapped.Layout, context: FLRenderContext) {
         context.registry?.registerView(self, withTag: node.tag)
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: context)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: context)
+        wrappedView.update(node: node.wrapped, layout: layout, context: context)
     }
 }

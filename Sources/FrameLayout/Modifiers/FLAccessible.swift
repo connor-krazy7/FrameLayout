@@ -11,6 +11,7 @@ public extension FLNodeProviding {
 // MARK: - Node
 
 public struct FLAccessible<Wrapped: FLNode>: FLNode {
+    public typealias Layout = Wrapped.Layout
     public typealias View = FLAccessibleView<Wrapped>
 
     public let label: String?
@@ -18,17 +19,9 @@ public struct FLAccessible<Wrapped: FLNode>: FLNode {
 
     public var isSpacer: Bool { wrapped.isSpacer }
 
-    public func layout(in context: FLContext) -> FLAccessibleLayout<Wrapped.Layout> {
-        FLAccessibleLayout(wrapped: wrapped.layout(in: context))
+    public func layout(in context: FLContext) -> Wrapped.Layout {
+        wrapped.layout(in: context)
     }
-}
-
-// MARK: - Layout
-
-public struct FLAccessibleLayout<WrappedLayout: FLLayout>: FLLayout {
-    public let wrapped: WrappedLayout
-
-    public var size: CGSize { wrapped.size }
 }
 
 // MARK: - View
@@ -49,10 +42,10 @@ public final class FLAccessibleView<Wrapped: FLNode>: FLStructuralView, FLNodeVi
         fatalError("init(coder:) is not supported")
     }
 
-    public func update(node: Node, layout: FLAccessibleLayout<Wrapped.Layout>, context: FLRenderContext) {
+    public func update(node: Node, layout: Wrapped.Layout, context: FLRenderContext) {
         let childContext = context.accessibilityLabel(node.label)
 
         wrappedView.flSetFrame(CGRect(origin: .zero, size: layout.size), in: childContext)
-        wrappedView.update(node: node.wrapped, layout: layout.wrapped, context: childContext)
+        wrappedView.update(node: node.wrapped, layout: layout, context: childContext)
     }
 }
