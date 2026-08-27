@@ -55,9 +55,13 @@ is for.
 The authoritative project rules live in `.claude/rules/` and are shared across all agents.
 Claude Code loads that directory directly; other agents should read the files listed here.
 
+- `.claude/rules/precedence.md` — the rules outrank the neighbouring declaration, which folder owns which question, and the three deliberate exceptions most likely to be copied
 - `.claude/rules/style/value-expressions.md` — producing values at declaration, and keeping expressions short enough to infer
+- `.claude/rules/style/swift-conventions.md` — exhaustive switches over an enum, no false optionals, clamping, and declaration layout
+- `.claude/rules/style/rationale-placement.md` — which of the three homes a piece of reasoning goes in: a rule file, a comment, or the commit message
 - `.claude/rules/style/commit-messages.md` — a manifest of what changed first, the reasoning after
 - `.claude/rules/architecture/file-organisation.md` — one file per nameable thing, why a node's Layout/Node/View triple is the exception, and what each folder means
+- `.claude/rules/architecture/concurrency.md` — never touch a `UIView` while measuring, what a measurement may touch, and which instrument protects state that outlives one
 - `.claude/rules/architecture/leaf-views.md` — wrap UIKit controls rather than subclassing them; picking `FLStructuralView` vs `UIView` and how hit-test pass-through works
 - `.claude/rules/architecture/node-equality.md` — let `Hashable` synthesis produce a node's `==`/`hash`, and why no identity fast path
 - `.claude/rules/architecture/layout-proposals.md` — a proposal is a question, not a constraint; only a pinned frame hands a size down, and how to measure parity against real SwiftUI
