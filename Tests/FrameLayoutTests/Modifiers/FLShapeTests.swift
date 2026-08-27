@@ -35,16 +35,48 @@ struct FLShapeTests {
         #expect(grouped.cornerMask(in: .rightToLeft) == [.layerMaxXMinYCorner, .layerMaxXMaxYCorner])
     }
 
-    @Test("the corner mask is resolved at layout time from the context")
-    func maskResolvedInLayout() {
-        let node = FLColor(.red)
+    // No measured value carries the direction, so mirroring can only be read off the rendered layer.
+    @Test("the corner mask is resolved at update from the render environment")
+    @MainActor
+    func maskResolvedAtUpdate() {
+        #expect(
+            Self.maskedCorners(of: Self.leadingRounded, in: .leftToRight)
+                == [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+        )
+        #expect(
+            Self.maskedCorners(of: Self.leadingRounded, in: .rightToLeft)
+                == [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+        )
+    }
+
+    @Test("the layout carries no direction, so both directions share it")
+    func layoutIsDirectionIndependent() {
+        let node = Self.leadingRounded
+
+        #expect(
+            node.layout(in: FLContext(width: 300, layoutDirection: .leftToRight))
+                == node.layout(in: FLContext(width: 300, layoutDirection: .rightToLeft))
+        )
+    }
+
+    private static var leadingRounded: some FLNode {
+        FLColor(.red)
             .frame(width: 40, height: 40)
             .clipShape(.roundedRectangle(8), corners: .leading)
+    }
 
-        let ltr = node.layout(in: FLContext(width: 300, layoutDirection: .leftToRight))
-        let rtl = node.layout(in: FLContext(width: 300, layoutDirection: .rightToLeft))
+    @MainActor
+    private static func maskedCorners<Node: FLNode>(
+        of node: Node,
+        in direction: FLLayoutDirection
+    ) -> CACornerMask {
+        let layout = node.layout(in: FLContext(width: 300, layoutDirection: direction))
+        let host = FLHostView<Node>()
 
-        #expect(ltr.cornerMask == [.layerMinXMinYCorner, .layerMinXMaxYCorner])
-        #expect(rtl.cornerMask == [.layerMaxXMinYCorner, .layerMaxXMaxYCorner])
+        host.frame = CGRect(origin: .zero, size: layout.size)
+        host.apply(node: node, layout: layout, environment: FLEnvironment(layoutDirection: direction))
+        host.layoutIfNeeded()
+
+        return host.subviews[0].layer.maskedCorners
     }
 }

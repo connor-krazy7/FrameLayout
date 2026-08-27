@@ -37,14 +37,22 @@ struct FLDecorationCostTests {
         #expect(bubble(radius: 4) != bubble(radius: 20))
     }
 
-    @Test("corner selection is carried in the layout, the radius is applied at update")
-    func cornerMaskIsPartOfTheLayout() {
+    @Test("corner selection is applied at update, so two corner sets produce equal layouts")
+    func cornerSelectionIsLayoutNeutral() {
         let all = FLText("x").background(.systemBlue, in: .roundedRectangle(8)).layout(in: context)
         let top = FLText("x")
             .background(.systemBlue, in: .roundedRectangle(8), corners: .top)
             .layout(in: context)
 
-        #expect(all.cornerMask != top.cornerMask)
+        #expect(all == top)
         #expect(all.size == top.size)
+    }
+
+    @Test("a decoration reports its child's layout unchanged")
+    func decorationIsLayoutTransparent() {
+        let undecorated = FLText("a bubble").padding(10)
+        let decorated = undecorated.background(.systemBlue, in: .roundedRectangle(16))
+
+        #expect(decorated.layout(in: context) == undecorated.layout(in: context))
     }
 }
