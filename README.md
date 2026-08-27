@@ -77,6 +77,14 @@ A few consequences worth knowing before using it:
 - **A proposal is a question, not a constraint.** A parent offers a size; a child may answer with
   something larger, and the overflow reaches the parent. Only a bounded frame clamps, and it hands its
   resolved box back to the child to lay out in.
+- **A cached layout keys on the whole description, so share your colour instances.** Equality is
+  synthesised over every stored property, and a `UIColor(dynamicProvider:)` compares equal only to
+  itself — nothing about two closures can tell UIKit whether they compute the same thing. So a theme
+  colour spelled `static var` hands back a new object on every access, and a cache keyed on a node
+  holding it never hits at all, with no diagnostic and nothing in the API suggesting why. Spell it
+  `static let`; the system semantic colours are cached singletons and are already safe. Resolving early
+  defeats it too — `.label` is a different colour from `.label.resolvedColor(with:)` — so leave
+  resolution to the render pass, which reads it from the environment for you.
 - **Behaviour is wired by identity, not by closures.** `tag(_:)` names a region, and `FLViewRegistry`
   binds to it — `bindView`, `bindButton`, `bindAction` — so a binding declared once survives a subtree
   disappearing and coming back. A tag names a *region*, so reach the view you want by kind:

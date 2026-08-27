@@ -130,6 +130,42 @@ consequence. It asserts a *platform* behaviour, which is deliberate: the singlet
 is load-bearing for hit rates across the package, and if two separately built dynamic colours ever
 start comparing equal, this rule should be revisited rather than left in place.
 
+## A `UIFont` needs nothing — and that is a measurement, not an assumption
+
+The same question asked of the other reference type in the key, with the opposite answer. `UIFont`
+compares and hashes by **content**, so a font rebuilt per access is one cache key and a consumer has
+nothing to do:
+
+| | `===` | `==` | hash |
+| --- | --- | --- | --- |
+| `.systemFont(ofSize: 17)`, two accesses | yes | yes | yes |
+| `.preferredFont(forTextStyle: .body)`, two accesses | yes | yes | yes |
+| two `UIFont(descriptor:size:)` from equivalent descriptors | yes | yes | yes |
+| `.systemFont(ofSize: 17)` vs `.systemFont(ofSize: 17, weight: .regular)` | **no** | yes | yes |
+| `.systemFont(ofSize: 17)` vs `.systemFont(ofSize: 18)` | no | no | no |
+| `.body` vs `.body` at `.extraLarge` | no | no | no |
+
+The reason, which is what generalises: a font is fully described by its **descriptor**, which is
+comparable data. A dynamic colour is described by a closure, which is not. Nothing about being a UIKit
+reference type in a cache key decides the answer either way.
+
+**Row 4 is the load-bearing one, and the trap in reading this table.** UIKit caches fonts, so every
+"two accesses" row is pointer-identical and each of those `==` results is equally well explained by
+identity alone — exactly as `.label`'s is. Only two *distinct* instances comparing equal proves the
+relation is content-based, and it is that proof, not the caching, which makes the key safe if the font
+cache ever misses. A table without such a row cannot tell the two situations apart; the first pass of
+the colour probe had the same gap.
+
+Note also why this cannot be dodged the way the colour case can. `foregroundColor` is layout-neutral and
+leaves the key entirely; `font` affects measurement and stays in it at every root, through `FLContext`.
+And the colour mitigation would not transfer — a theme colour is held as a `static let`, while a font is
+normally built per call, so there would be nothing to share.
+
+`FLFontIdentityTests` in `Tests/FrameLayoutTests/Runtime/` pins every row, including the cache
+consequence, and passes identically on iOS 17.5 and 26.1 — the ends of the supported range. It asserts a
+platform behaviour for the same reason the colour suite does: a font that stopped comparing by content
+would cost every consumer their hit rate silently, and there would be no workaround to document.
+
 ## When a node cannot be synthesised
 
 If a stored property is genuinely not `Hashable`, that is a signal about the property, not a reason to
