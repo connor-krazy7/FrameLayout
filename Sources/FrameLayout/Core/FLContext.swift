@@ -1,6 +1,6 @@
 import UIKit
 
-public struct FLContext: Sendable, Hashable, WithCustomisable {
+public struct FLContext: Sendable, FLLayoutEquatable, WithCustomisable {
     public var width: FLProposal
     public var height: FLProposal
     public var environment: FLEnvironment
