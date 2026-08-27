@@ -73,8 +73,9 @@ wrong":
 - `FLImage` — deliberate. `UIImage.isEqual:` compares pixel data, which is unbounded work on a cache
   probe, and its `hash` semantics are unverified. It hashes `image?.size` instead: cheap,
   content-derived, and consistent with an `==` that accepts either identity or content equality.
-  Settling it needs a `UIImage` benchmark alongside the string one — the suites run on the simulator,
-  so that is now possible where the earlier standalone script could not have done it.
+  **Do not change this conformance without a `UIImage` benchmark alongside the string one** — the claim
+  it rests on, that pixel comparison is unbounded work on a cache probe, is reasoned rather than
+  measured. `Tests/FrameLayoutTests/Benchmarks/` is where that measurement goes.
 
 Note this is the opposite conclusion from `FLText`, and for a concrete reason — `NSAttributedString`
 comparison is bounded by message length and short-circuits on a length mismatch, `UIImage` comparison

@@ -18,9 +18,13 @@ final class FLImageView: UIView, FLNodeView {
 }
 ```
 
-## The warning sign
+Configure the inner control in `update(node:layout:)`, and keep the outer view's own state to layout
+concerns such as `clipsToBounds`. The cost is one extra view per wrapped control, which is acceptable
+and consistent with every other leaf.
 
-**If a leaf view needs a hand-written `init()`, wrap instead of subclassing.**
+### Apply the test: does the leaf need a hand-written `init()`?
+
+**If it does, wrap instead of subclassing.**
 
 `FLNodeView` requires `init()`, and wrappers reach it generically as `Wrapped.View()`. A plain `UIView`
 subclass inherits `init()` and needs nothing. A subclass only has to write one when its UIKit
@@ -31,20 +35,18 @@ not. That missing inheritance is the signal.
 (`FLImage(…).background(…)`). Making the initialiser designated rather than convenience did **not**
 help; only dropping the subclass did.
 
-## Why the usual checks miss it
+`FLTextView` subclasses `UILabel` and is fine by this test — `UILabel` declares no designated
+initialiser, so `init()` is inherited and nothing had to be written.
+
+### Suspect the initialiser when a leaf faults with an address that looks like a size
+
+Do not reach for the compiler to catch this one.
 
 `swiftc -typecheck` and `-emit-object -O` were both clean the whole time — it is a runtime memory
 fault, not a compile error. The crash report from the preview shell had no backtrace at all; the only
 usable signal was the faulting address `0x4073C00000000000`, which decodes as the `Double` `316.0` —
 a `CGFloat` where a pointer was expected. If a leaf faults with an address that looks like a size,
 suspect the view's initialiser before anything else.
-
-## Consequences
-
-- One extra view per wrapped control. Acceptable, and consistent with every other leaf.
-- Configure the inner control in `update(node:layout:)`; keep the outer view's own state to layout
-  concerns such as `clipsToBounds`.
-- `FLTextView` subclasses `UILabel` and is fine by the test above — it never needed an `init()`.
 
 ## Pick the base class by whether the view draws
 
@@ -70,9 +72,9 @@ until some unrelated screen finds a button that will not tap.
 drawsContent = decoration.backgroundColor.cgColor.alpha > 0 || decoration.borderWidth > 0
 ```
 
-## Why `super.hitTest`, and not checking subview frames
+## Delegate to `super.hitTest` and disclaim the result — never test subview frames
 
-`FLStructuralView` asks UIKit and then disclaims the result:
+`FLStructuralView` asks UIKit, then declines to be the answer:
 
 ```swift
 let hitView = super.hitTest(point, with: event)
