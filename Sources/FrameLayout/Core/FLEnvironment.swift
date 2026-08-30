@@ -3,7 +3,7 @@ import UIKit
 /// Values that flow down the tree rather than being proposed. Present in `FLContext` because some of
 /// them (font, content size category) affect measurement, and passed to `update` because others
 /// (colours) only affect drawing.
-public struct FLEnvironment: Sendable, Hashable, WithCustomisable {
+public struct FLEnvironment: Sendable, FLLayoutEquatable, WithCustomisable {
     public var layoutDirection: FLLayoutDirection
     public var contentSizeCategory: String
     public var foregroundColor: UIColor?
@@ -23,6 +23,24 @@ public struct FLEnvironment: Sendable, Hashable, WithCustomisable {
 
     public static var `default`: FLEnvironment { FLEnvironment() }
 }
+
+// MARK: - FLLayoutEquatable
+
+public extension FLEnvironment {
+    func isLayoutEquivalent(to other: FLEnvironment) -> Bool {
+        layoutDirection == other.layoutDirection
+            && contentSizeCategory == other.contentSizeCategory
+            && font == other.font
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        hasher.combine(layoutDirection)
+        hasher.combine(contentSizeCategory)
+        hasher.combine(font)
+    }
+}
+
+// MARK: - Helpers
 
 public extension FLEnvironment {
     func applying(_ overrides: FLEnvironmentOverrides) -> FLEnvironment {

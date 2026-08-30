@@ -1,7 +1,7 @@
 import UIKit
 
 /// A subtree's overrides. Values, not a closure, so a node carrying them stays `Hashable`.
-public struct FLEnvironmentOverrides: Sendable, Hashable {
+public struct FLEnvironmentOverrides: Sendable, FLLayoutEquatable {
     public var foregroundColor: UIColor?
     public var font: UIFont?
 
@@ -17,5 +17,17 @@ public struct FLEnvironmentOverrides: Sendable, Hashable {
             foregroundColor: foregroundColor.or(other.foregroundColor),
             font: font.or(other.font)
         )
+    }
+}
+
+// MARK: - FLLayoutEquatable
+
+public extension FLEnvironmentOverrides {
+    func isLayoutEquivalent(to other: FLEnvironmentOverrides) -> Bool {
+        font == other.font
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        hasher.combine(font)
     }
 }

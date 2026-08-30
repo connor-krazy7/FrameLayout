@@ -24,6 +24,18 @@ public struct FLDisabled<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLDisabled {
+    func isLayoutEquivalent(to other: FLDisabled<Wrapped>) -> Bool {
+        wrapped.isLayoutEquivalent(to: other.wrapped)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        wrapped.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLDisabledView<Wrapped: FLNode>: FLStructuralView, FLNodeView {

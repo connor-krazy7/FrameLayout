@@ -3,21 +3,20 @@ import UIKit
 
 @testable import FrameLayout
 
-/// That `FLLayoutEquatable`'s default is `==`, and that `FLLayoutKey` therefore behaves exactly as a
-/// key on `(node, context)` until a type narrows it.
+/// That `FLLayoutEquatable`'s default is `==`, that the narrowed conformances drop what they should, and
+/// that `FLLayoutKey` combines both halves.
 @Suite("Layout identity")
 struct FLLayoutIdentityTests {
-    private static func bubble(radius: CGFloat) -> FLDecorated<FLPadded<FLText>> {
-        FLText("a bubble")
-            .padding(10)
-            .background(.systemBlue, in: .roundedRectangle(radius))
+    private static func padded(_ inset: CGFloat) -> FLPadded<FLText> {
+        FLText("a line").padding(inset)
     }
 
+    // `FLPadded` takes the default, so this exercises the default rather than an override.
     @Test("the default is equality, in both directions")
     func defaultFollowsEquality() {
-        let node = Self.bubble(radius: 4)
-        let same = Self.bubble(radius: 4)
-        let other = Self.bubble(radius: 20)
+        let node = Self.padded(10)
+        let same = Self.padded(10)
+        let other = Self.padded(20)
 
         #expect(node.isLayoutEquivalent(to: same))
         #expect(node.isLayoutEquivalent(to: other) == false)
@@ -27,7 +26,7 @@ struct FLLayoutIdentityTests {
 
     @Test("the default hash is the Hashable hash")
     func defaultHashFollowsHashable() {
-        let node = Self.bubble(radius: 4)
+        let node = Self.padded(10)
 
         var identity = Hasher()
         node.hashLayoutIdentity(into: &identity)
@@ -38,55 +37,79 @@ struct FLLayoutIdentityTests {
         #expect(identity.finalize() == value.finalize())
     }
 
-    @Test("FLContext takes the default too")
-    func contextFollowsEquality() {
+    @Test("a context ignores colour and keeps everything else")
+    func contextDropsColourOnly() {
         let context = FLContext(width: 200)
-        let same = FLContext(width: 200)
-        let wider = FLContext(width: 300)
         let coloured = FLContext(width: 200, environment: FLEnvironment(foregroundColor: .systemRed))
+        let wider = FLContext(width: 300)
+        let fonted = FLContext(width: 200, environment: FLEnvironment(font: .systemFont(ofSize: 30)))
+        let large = FLContext(width: 200, contentSizeCategory: UIContentSizeCategory.extraLarge.rawValue)
+        let rightToLeft = FLContext(width: 200, layoutDirection: .rightToLeft)
 
-        #expect(context.isLayoutEquivalent(to: same))
+        #expect(context.isLayoutEquivalent(to: coloured))
         #expect(context.isLayoutEquivalent(to: wider) == false)
-        #expect(context.isLayoutEquivalent(to: coloured) == false)
+        #expect(context.isLayoutEquivalent(to: fonted) == false)
+        #expect(context.isLayoutEquivalent(to: large) == false)
+        #expect(context.isLayoutEquivalent(to: rightToLeft) == false)
     }
 
     @Test("a key matches when both halves do, and separates when either differs")
     func keyCombinesBothHalves() {
         let context = FLContext(width: 200)
-        let key = FLLayoutKey(node: Self.bubble(radius: 4), context: context)
+        let key = FLLayoutKey(node: Self.padded(10), context: context)
 
-        #expect(key == FLLayoutKey(node: Self.bubble(radius: 4), context: context))
-        #expect(key.hashValue == FLLayoutKey(node: Self.bubble(radius: 4), context: context).hashValue)
+        #expect(key == FLLayoutKey(node: Self.padded(10), context: context))
+        #expect(key.hashValue == FLLayoutKey(node: Self.padded(10), context: context).hashValue)
 
-        #expect(key != FLLayoutKey(node: Self.bubble(radius: 20), context: context))
-        #expect(key != FLLayoutKey(node: Self.bubble(radius: 4), context: FLContext(width: 300)))
+        #expect(key != FLLayoutKey(node: Self.padded(20), context: context))
+        #expect(key != FLLayoutKey(node: Self.padded(10), context: FLContext(width: 300)))
     }
 
-    // Not a stale assertion — #2 is what makes these equal.
-    @Test("a context differing only in colour is a different key")
-    func colourStillSeparatesKeys() {
-        let plain = FLLayoutKey(node: Self.bubble(radius: 4), context: FLContext(width: 200))
+    // The acceptance criterion for the context half: one geometry, one key, under two colours.
+    @Test("a context differing only in colour is the same key")
+    func colourNoLongerSeparatesKeys() {
+        let plain = FLLayoutKey(node: Self.padded(10), context: FLContext(width: 200))
         let coloured = FLLayoutKey(
-            node: Self.bubble(radius: 4),
+            node: Self.padded(10),
             context: FLContext(width: 200, environment: FLEnvironment(foregroundColor: .systemRed))
         )
 
-        #expect(plain != coloured)
+        #expect(plain == coloured)
+        #expect(plain.hashValue == coloured.hashValue)
     }
 
-    @Test("the cache keys on it without changing what it separates")
-    func cacheBehaviourIsUnchanged() {
-        let cache = FLLayoutCache<FLDecorated<FLPadded<FLText>>>()
+    @Test("the cache separates what still matters")
+    func cacheSeparatesLayoutAffectingInputsOnly() {
+        let cache = FLLayoutCache<FLPadded<FLText>>()
         let context = FLContext(width: 200)
 
-        _ = cache.layout(for: Self.bubble(radius: 4), in: context)
-        _ = cache.layout(for: Self.bubble(radius: 4), in: context)
+        _ = cache.layout(for: Self.padded(10), in: context)
+        _ = cache.layout(for: Self.padded(10), in: context)
 
         #expect(cache.count == 1)
 
-        _ = cache.layout(for: Self.bubble(radius: 20), in: context)
-        _ = cache.layout(for: Self.bubble(radius: 4), in: FLContext(width: 300))
+        _ = cache.layout(for: Self.padded(20), in: context)
+        _ = cache.layout(for: Self.padded(10), in: FLContext(width: 300))
 
         #expect(cache.count == 3)
+
+        _ = cache.layout(
+            for: Self.padded(10),
+            in: FLContext(width: 200, environment: FLEnvironment(foregroundColor: .systemRed))
+        )
+
+        #expect(cache.count == 3, "a colour in the environment must not add an entry")
+    }
+
+    // A structural wrapper takes the default, which is full `==` — so it does not recurse into a
+    // child's narrowed identity and a chain-rooted key stays coarse. #8's second deliverable is what
+    // closes this; `FLStack` and `FLGrid` need `FLGroup` to gain layout identity first.
+    @Test("narrowing does not propagate through a wrapper that takes the default")
+    func narrowingStopsAtADefaultWrapper() {
+        let plain = FLText("a line")
+        let coloured = FLText("a line").foregroundColor(.systemRed)
+
+        #expect(plain.isLayoutEquivalent(to: coloured))
+        #expect(plain.padding(10).isLayoutEquivalent(to: coloured.padding(10)) == false)
     }
 }

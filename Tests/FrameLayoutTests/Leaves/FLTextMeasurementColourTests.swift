@@ -70,14 +70,25 @@ struct FLTextMeasurementColourTests {
         #expect(resolved.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor == .systemRed)
     }
 
-    // Two, not one: the key is the whole `FLContext`. Not a stale assertion — #2 is what makes it one.
-    @Test("colour still splits the cache, because the key is the whole context")
-    func colourStillSplitsTheCache() {
+    @Test("one text under two colours is one cache entry")
+    func colourNoLongerSplitsTheCache() {
         let cache = FLLayoutCache<FLText>()
 
         _ = cache.layout(for: Self.wrapping, in: Self.context(foregroundColor: .systemRed))
         _ = cache.layout(for: Self.wrapping, in: Self.context(foregroundColor: .systemBlue))
+        _ = cache.layout(for: Self.wrapping, in: Self.context(foregroundColor: nil))
 
-        #expect(cache.count == 2)
+        #expect(cache.count == 1)
+    }
+
+    @Test("a colour set on the text is one entry too")
+    func overriddenColourIsOneEntry() {
+        let cache = FLLayoutCache<FLText>()
+        let context = Self.context(foregroundColor: nil)
+
+        _ = cache.layout(for: Self.wrapping, in: context)
+        _ = cache.layout(for: Self.wrapping.foregroundColor(.systemGreen), in: context)
+
+        #expect(cache.count == 1)
     }
 }

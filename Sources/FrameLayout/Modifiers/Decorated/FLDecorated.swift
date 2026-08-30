@@ -103,6 +103,18 @@ public struct FLDecorated<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLDecorated {
+    func isLayoutEquivalent(to other: FLDecorated<Wrapped>) -> Bool {
+        wrapped.isLayoutEquivalent(to: other.wrapped)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        wrapped.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLDecoratedView<Wrapped: FLNode>: FLStructuralView, FLNodeView {

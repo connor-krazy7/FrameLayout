@@ -19,22 +19,30 @@ struct FLDecorationCostTests {
         #expect(bubble(radius: 4).layout(in: context).size == bubble(radius: 20).layout(in: context).size)
     }
 
-    @Test("but it does change node identity, so a cache keyed on the node misses")
-    func radiusInvalidatesTheCache() {
+    // The suite's original finding, now inverted: the radius still changes node *identity*, and no
+    // longer changes layout identity, so the cache hits where it used to miss.
+    @Test("and it no longer costs a cache entry, though it still changes node identity")
+    func radiusNoLongerInvalidatesTheCache() {
         let cache = FLLayoutCache<FLDecorated<FLPadded<FLText>>>()
 
         _ = cache.layout(for: bubble(radius: 4), in: context)
-
-        #expect(cache.count == 1)
-
-        _ = cache.layout(for: bubble(radius: 4), in: context)
-
-        #expect(cache.count == 1)
-
         _ = cache.layout(for: bubble(radius: 20), in: context)
 
-        #expect(cache.count == 2)
+        #expect(cache.count == 1)
         #expect(bubble(radius: 4) != bubble(radius: 20))
+        #expect(bubble(radius: 4).isLayoutEquivalent(to: bubble(radius: 20)))
+    }
+
+    @Test("a background colour costs no entry either")
+    func colourNoLongerInvalidatesTheCache() {
+        let cache = FLLayoutCache<FLDecorated<FLPadded<FLText>>>()
+        let blue = FLText("a bubble").padding(10).background(.systemBlue)
+        let red = FLText("a bubble").padding(10).background(.systemRed)
+
+        _ = cache.layout(for: blue, in: context)
+        _ = cache.layout(for: red, in: context)
+
+        #expect(cache.count == 1)
     }
 
     @Test("corner selection is applied at update, so two corner sets produce equal layouts")

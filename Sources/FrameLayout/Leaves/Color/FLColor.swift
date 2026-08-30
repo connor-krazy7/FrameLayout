@@ -22,6 +22,15 @@ public struct FLColor: FLNode {
 
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLColor {
+    /// `layout(in:)` reads nothing but the context, so any two colours are layout-equivalent.
+    func isLayoutEquivalent(to other: FLColor) -> Bool { true }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {}
+}
+
 // MARK: - Layout
 
 public struct FLColorLayout: FLLayout {

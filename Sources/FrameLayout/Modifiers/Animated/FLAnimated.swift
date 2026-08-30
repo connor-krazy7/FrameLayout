@@ -36,6 +36,18 @@ public struct FLAnimated<Wrapped: FLNode, Value: Hashable & Sendable>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLAnimated {
+    func isLayoutEquivalent(to other: FLAnimated<Wrapped, Value>) -> Bool {
+        wrapped.isLayoutEquivalent(to: other.wrapped)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        wrapped.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLAnimatedView<Wrapped: FLNode, Value: Hashable & Sendable>: FLStructuralView, FLNodeView, FLFrameApplying {

@@ -24,6 +24,18 @@ public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLTagged {
+    func isLayoutEquivalent(to other: FLTagged<Wrapped, Tag>) -> Bool {
+        wrapped.isLayoutEquivalent(to: other.wrapped)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        wrapped.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLTaggedView<Wrapped: FLNode, Tag: Hashable & Sendable>: FLStructuralView, FLNodeView {
