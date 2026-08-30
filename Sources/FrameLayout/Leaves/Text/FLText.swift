@@ -11,14 +11,14 @@ public struct FLText: FLNode {
 
     /// Always stored attributed. Plain text is simply an attributed string with no attributes, which
     /// is what lets styling be filled in later from the environment.
-    public nonisolated(unsafe) let attributedText: NSAttributedString
+    public let attributedText: FLAttributedString
     public let lineLimit: Int
     public let lineBreakMode: NSLineBreakMode
     /// Styling set directly on this text. Unset fields inherit from the environment.
     public let overrides: FLEnvironmentOverrides
 
     public init(
-        _ attributedText: NSAttributedString,
+        _ attributedText: FLAttributedString,
         lineLimit: Int = 0,
         lineBreakMode: NSLineBreakMode = .byWordWrapping
     ) {
@@ -31,24 +31,48 @@ public struct FLText: FLNode {
     }
 
     public init(
+        _ attributedText: NSAttributedString,
+        lineLimit: Int = 0,
+        lineBreakMode: NSLineBreakMode = .byWordWrapping
+    ) {
+        self.init(
+            FLAttributedString(attributedText),
+            lineLimit: lineLimit,
+            lineBreakMode: lineBreakMode
+        )
+    }
+
+    public init(
+        _ attributedText: AttributedString,
+        lineLimit: Int = 0,
+        lineBreakMode: NSLineBreakMode = .byWordWrapping
+    ) {
+        self.init(
+            FLAttributedString(attributedText),
+            lineLimit: lineLimit,
+            lineBreakMode: lineBreakMode
+        )
+    }
+
+    public init(
         _ string: String,
         lineLimit: Int = 0,
         lineBreakMode: NSLineBreakMode = .byWordWrapping
     ) {
         self.init(
-            NSAttributedString(string: string),
+            FLAttributedString(string),
             lineLimit: lineLimit,
             lineBreakMode: lineBreakMode
         )
     }
 
     private init(
-        attributedText: NSAttributedString,
+        attributedText: FLAttributedString,
         lineLimit: Int,
         lineBreakMode: NSLineBreakMode,
         overrides: FLEnvironmentOverrides
     ) {
-        self.attributedText = NSAttributedString(attributedString: attributedText)
+        self.attributedText = attributedText
         self.lineLimit = lineLimit
         self.lineBreakMode = lineBreakMode
         self.overrides = overrides
@@ -72,9 +96,9 @@ public struct FLText: FLNode {
     }
 
     private func text(withDefaults attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
-        guard attributedText.length > 0 else { return attributedText }
+        guard attributedText.underlying.length > 0 else { return attributedText.underlying }
 
-        let filled = NSMutableAttributedString(attributedString: attributedText)
+        let filled = NSMutableAttributedString(attributedString: attributedText.underlying)
 
         for (key, value) in attributes {
             Self.fillGaps(of: key, with: value, in: filled)
@@ -144,14 +168,14 @@ public extension FLText {
     func isLayoutEquivalent(to other: FLText) -> Bool {
         lineLimit == other.lineLimit
             && lineBreakMode == other.lineBreakMode
-            && attributedText == other.attributedText
+            && attributedText.isLayoutEquivalent(to: other.attributedText)
             && overrides.isLayoutEquivalent(to: other.overrides)
     }
 
     func hashLayoutIdentity(into hasher: inout Hasher) {
         hasher.combine(lineLimit)
         hasher.combine(lineBreakMode)
-        hasher.combine(attributedText)
+        attributedText.hashLayoutIdentity(into: &hasher)
         overrides.hashLayoutIdentity(into: &hasher)
     }
 }
@@ -199,7 +223,7 @@ public extension FLText {
     /// Writes alignment into the stored string's paragraph style, leaving font and colour absent so
     /// they still inherit.
     func multilineTextAlignment(_ alignment: NSTextAlignment) -> FLText {
-        let mutable = NSMutableAttributedString(attributedString: attributedText)
+        let mutable = NSMutableAttributedString(attributedString: attributedText.underlying)
         let fullRange = NSRange(location: 0, length: mutable.length)
 
         var pendingStyles: [(NSRange, NSMutableParagraphStyle)] = []
@@ -216,7 +240,7 @@ public extension FLText {
         }
 
         return FLText(
-            attributedText: mutable,
+            attributedText: FLAttributedString(mutable),
             lineLimit: lineLimit,
             lineBreakMode: lineBreakMode,
             overrides: overrides

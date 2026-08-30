@@ -33,24 +33,24 @@ struct FLLayoutEquatableConformanceTests {
     }
 
     // The one knowingly coarse conformance, and the reason it is worth a test: the same visual change is
-    // neutral applied through the environment and layout-affecting baked into the string.
-    @Test("a colour baked into attributed text is layout-affecting, unlike one applied to the text")
-    func attributedColourIsNotNeutral() {
+    // The raw Foundation types take the default, so a colour in a run still separates them. Wrapping
+    // in `FLAttributedString` is what narrows it; this is the contrast.
+    @Test("a raw attributed string keeps colour in its layout identity, the wrapper does not")
+    func attributedColourNarrowsOnlyThroughTheWrapper() {
         let plain = NSAttributedString(string: "highlighted")
         let coloured = NSAttributedString(
             string: "highlighted",
             attributes: [.foregroundColor: UIColor.systemYellow]
         )
 
-        #expect(plain.isLayoutEquivalent(to: coloured) == false)
-
+        #expect(plain.isLayoutEquivalent(to: coloured) == false, "raw: coarse")
         #expect(
-            FLText(plain).isLayoutEquivalent(to: FLText(coloured)) == false,
-            "baked in: still separates"
+            FLAttributedString(plain).isLayoutEquivalent(to: FLAttributedString(coloured)),
+            "wrapped: narrowed"
         )
         #expect(
-            FLText(plain).isLayoutEquivalent(to: FLText(plain).foregroundColor(.systemYellow)),
-            "applied through overrides: neutral"
+            FLAttributedString(plain) != FLAttributedString(coloured),
+            "but still unequal, so a diff still sees the highlight"
         )
     }
 

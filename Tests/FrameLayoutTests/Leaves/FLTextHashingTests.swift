@@ -50,7 +50,7 @@ struct FLTextHashingTests {
 
         source.append(NSAttributedString(string: " and more text besides"))
 
-        #expect(node.attributedText.string == "Hello")
+        #expect(node.attributedText.underlying.string == "Hello")
         #expect(node.hashValue == hashBefore)
         #expect(node == FLText(NSAttributedString(string: "Hello")))
     }
@@ -62,10 +62,10 @@ struct FLTextHashingTests {
         let node = FLText("Hello").multilineTextAlignment(.center)
         let hashBefore = node.hashValue
 
-        (node.attributedText as? NSMutableAttributedString)?
+        (node.attributedText.underlying as? NSMutableAttributedString)?
             .append(NSAttributedString(string: " and more"))
 
-        #expect(node.attributedText.string == "Hello")
+        #expect(node.attributedText.underlying.string == "Hello")
         #expect(node.hashValue == hashBefore)
     }
 
