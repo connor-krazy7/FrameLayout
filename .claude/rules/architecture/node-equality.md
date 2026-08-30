@@ -115,11 +115,14 @@ compare strings of *equal* length — otherwise the length check answers before 
 
 ## Existing hand-written conformances
 
-`FLTuple`, `FLComposed` and `FLImage`, each for a reason that is not "the synthesised one looked
-wrong":
+`FLTuple`, `FLComposed`, `FLImage` and `FLAttributedString`, each for a reason that is not "the
+synthesised one looked wrong":
 
 - `FLTuple` and `FLComposed` — structural. A parameter pack and a stored existential body cannot be
   compared field-wise by synthesis.
+- `FLAttributedString` — one of its two stored strings is **derived** from the other. Synthesis would
+  compare `layoutIdentity` as well as `text`, walking a second string for an answer the first already
+  gave, on a path that runs per cache probe.
 - `FLImage` — deliberate. `UIImage.isEqual:` compares pixel data, which is unbounded work on a cache
   probe, and its `hash` semantics are unverified. It hashes `image?.size` instead: cheap,
   content-derived, and consistent with an `==` that accepts either identity or content equality.
@@ -171,7 +174,10 @@ composite's `body` is not among them, because `FLComposed.==` compares `composit
 1. Stored on whatever the cache is rooted on — `let bubbleColour: UIColor` on a composite.
 2. In `FLEnvironment.foregroundColor`, which is in the key at **every** root via `FLContext`.
 3. A chain-rooted cache, where `FLDecoration` is hashed directly.
-4. Inside a stored `NSAttributedString`, since attribute comparison is part of its equality.
+4. Inside a stored `NSAttributedString`, since attribute comparison is part of its equality. **Store an
+   `FLAttributedString` instead** — it strips the attributes that change no glyph advance once at
+   construction, so a colour in a run costs nothing, while `==` still separates the two so a diff still
+   sees the highlight. `FLText` stores one; a composite holding attributed text of its own should too.
 
 Resolution belongs in `update` — `FLTextView.update` resolves through `context.environment` — and must
 not be hoisted into node construction as an optimisation, because a resolved colour is a different
