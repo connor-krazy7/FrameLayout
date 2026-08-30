@@ -128,7 +128,7 @@ struct FLLayoutContractTests {
         Self.assertContract("FLScroll", [
             FLScroll(.vertical) { FLText("scrolling content") },
             FLScroll(.vertical) { FLText("scrolling content") }.bounces(false),
-            FLScroll(.vertical) { FLText("scrolling content") }.initialContentOffset(CGPoint(x: 0, y: 40)),
+            FLScroll(.vertical) { FLText("scrolling content") }.initialContentOffset(FLPoint(x: 0, y: 40)),
             FLScroll(.horizontal) { FLText("scrolling content") },
         ])
     }

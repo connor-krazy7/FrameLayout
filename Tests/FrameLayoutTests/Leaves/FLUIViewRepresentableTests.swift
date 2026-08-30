@@ -25,7 +25,7 @@ final class RepresentableSpy {
 private struct SpyRepresentable: FLUIViewRepresentable {
     let id: String
     let payload: String
-    let reserved: CGSize
+    let reserved: FLSize
 
     func size(in context: FLContext) -> CGSize {
         CGSize(
@@ -61,7 +61,7 @@ private struct Row: FLView {
             FLText("caption").font(.systemFont(ofSize: 12))
 
             if showsPhoto {
-                SpyRepresentable(id: id, payload: payload, reserved: CGSize(width: 90, height: 60))
+                SpyRepresentable(id: id, payload: payload, reserved: FLSize(width: 90, height: 60))
                     .frame(width: 90, height: 60)
                     .tag("photo")
             }
@@ -99,7 +99,7 @@ struct FLUIViewRepresentableTests {
 
     @Test("the node declares the size, so layout stays a pure function of node and context")
     func sizeComesFromTheNode() {
-        let content = SpyRepresentable(id: "size", payload: "x", reserved: CGSize(width: 120, height: 80))
+        let content = SpyRepresentable(id: "size", payload: "x", reserved: FLSize(width: 120, height: 80))
 
         #expect(content.flNode.layout(in: FLContext(width: .unspecified)).size == CGSize(width: 120, height: 80))
         #expect(content.flNode.layout(in: FLContext(width: 40)).size.width == 40)
@@ -108,9 +108,9 @@ struct FLUIViewRepresentableTests {
 
     @Test("equal nodes are equal and hash alike, so the layout cache can key on them")
     func equalityHolds() {
-        let first = SpyRepresentable(id: "eq", payload: "x", reserved: CGSize(width: 10, height: 10)).flNode
-        let second = SpyRepresentable(id: "eq", payload: "x", reserved: CGSize(width: 10, height: 10)).flNode
-        let different = SpyRepresentable(id: "eq", payload: "y", reserved: CGSize(width: 10, height: 10)).flNode
+        let first = SpyRepresentable(id: "eq", payload: "x", reserved: FLSize(width: 10, height: 10)).flNode
+        let second = SpyRepresentable(id: "eq", payload: "x", reserved: FLSize(width: 10, height: 10)).flNode
+        let different = SpyRepresentable(id: "eq", payload: "y", reserved: FLSize(width: 10, height: 10)).flNode
 
         #expect(first == second)
         #expect(first.hashValue == second.hashValue)

@@ -25,7 +25,7 @@ struct DemoReactionSummary: Identifiable, Hashable, Sendable {
 struct DemoPhoto: Hashable, Sendable {
     let id: String
     let symbol: String
-    let pixelSize: CGSize
+    let pixelSize: FLSize
 
     var ratio: CGFloat { pixelSize.height > 0 ? pixelSize.width / pixelSize.height : 1 }
 }
@@ -262,9 +262,9 @@ final class FLNestedPlaygroundViewController: UIViewController {
 
     private static let photoShapes: [DemoPhoto?] = [
         nil,
-        DemoPhoto(id: "landscape", symbol: "photo.fill", pixelSize: CGSize(width: 1600, height: 900)),
-        DemoPhoto(id: "portrait", symbol: "person.fill", pixelSize: CGSize(width: 900, height: 1600)),
-        DemoPhoto(id: "tiny", symbol: "seal.fill", pixelSize: CGSize(width: 80, height: 60)),
+        DemoPhoto(id: "landscape", symbol: "photo.fill", pixelSize: FLSize(width: 1600, height: 900)),
+        DemoPhoto(id: "portrait", symbol: "person.fill", pixelSize: FLSize(width: 900, height: 1600)),
+        DemoPhoto(id: "tiny", symbol: "seal.fill", pixelSize: FLSize(width: 80, height: 60)),
     ]
 
     override func viewDidLoad() {
@@ -526,7 +526,7 @@ extension DemoMessage {
                 author: DemoAuthor(id: "u2", name: "Marek Nowak", initials: "MN"),
                 text: "This one starts with a reply and an attachment.",
                 replyContext: DemoReplyContext(author: "Ann Petrova", snippet: "Every level here is its own FLView"),
-                photo: DemoPhoto(id: "p1", symbol: "photo.fill", pixelSize: CGSize(width: 1600, height: 900)),
+                photo: DemoPhoto(id: "p1", symbol: "photo.fill", pixelSize: FLSize(width: 1600, height: 900)),
                 attachments: [DemoAttachment(id: "seed", symbol: "doc.fill", title: "Spec.pdf", detail: "412 KB")],
                 reactions: [],
                 delivery: .failed

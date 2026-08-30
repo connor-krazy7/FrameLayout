@@ -139,7 +139,7 @@ final class DemoDelayedImageView: UIView {
 
 struct DemoDelayedThumbnail: FLUIViewRepresentable {
     let name: String
-    let pixelSize: CGSize
+    let pixelSize: FLSize
     let color: UIColor
     var delay: Duration = .milliseconds(900)
 
@@ -156,7 +156,7 @@ struct DemoDelayedThumbnail: FLUIViewRepresentable {
     func update(_ view: DemoDelayedImageView, previous: DemoDelayedThumbnail?, context: FLRenderContext) {
         guard previous?.name != name else { return }
 
-        view.load(FLImageSamples.swatch(size: pixelSize, color: color), named: name, after: delay)
+        view.load(FLImageSamples.swatch(size: pixelSize.cgSize, color: color), named: name, after: delay)
     }
 
     func onDetach(_ view: DemoDelayedImageView) {
@@ -371,7 +371,7 @@ private struct RepresentablePlayground: View {
         ]
         let photo = photos[photoIndex % photos.count]
 
-        return DemoDelayedThumbnail(name: photo.0, pixelSize: photo.1, color: photo.2)
+        return DemoDelayedThumbnail(name: photo.0, pixelSize: FLSize(photo.1), color: photo.2)
     }
 
     private var measured: String {

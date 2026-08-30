@@ -265,6 +265,34 @@ changed `FLContext`. Both halves are required: the layout passes through **and**
 through unchanged. The second half is visible only in `layout(in:)`, so read it there rather than
 inferring from the `typealias`.
 
+## Never store a CoreGraphics aggregate on anything `Hashable`
+
+`CGPoint`, `CGSize`, `CGRect`, `CGVector` and `CGAffineTransform` gained their `Hashable` conformances in
+**iOS 18**. This package targets iOS 17. Synthesis over a stored one compiles with no diagnostic and
+**traps at runtime** on the minimum:
+
+```
+Crash: xctest at lazy protocol witness table accessor for type CGSize and conformance CGSize
+```
+
+Store `FLPoint`, `FLSize` or `FLRect` instead, and expose the CoreGraphics spelling as an accessor if the
+public API wants one — `FLScrollConfiguration.initialContentOffset` is the worked example. Delete all
+three when the minimum reaches iOS 18.
+
+**The danger is exactly the five that conform *from* iOS 18.** A type that never conforms is safe
+*because* it never conforms: synthesis over `UIEdgeInsets`, `UIOffset` or `NSDirectionalEdgeInsets` fails
+outright with "does not conform", so the compiler stops it. The trap needs a conformance that exists when
+the code is compiled and not when it runs. `FLEdgeInsets` exists because `UIEdgeInsets` is in the safe
+row; `FLPoint` and friends exist because these five are not.
+
+An explicit `hasher.combine(aCGSize)` **is** diagnosed. Only synthesis is silent, so the audit is "types
+with a stored `CG*` property", not "every mention of one". A `Layout` may store them freely: `FLLayout`
+refines `Equatable` only, and the `Equatable` conformances are not gated.
+
+**Nothing in the package catches this except running on the floor.** `make test-minimum` exists for it,
+and it is why `make test` runs both destinations. A suite green on the latest simulator says nothing
+about iOS 17 — the whole suite was green there for months while crashing on the minimum.
+
 ## When a node cannot be synthesised
 
 If a stored property is genuinely not `Hashable`, that is a signal about the property, not a reason to

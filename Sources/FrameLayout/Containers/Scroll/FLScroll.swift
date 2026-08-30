@@ -69,7 +69,7 @@ public extension FLScroll {
     /// Applied on this view's first apply and never again. "Initial" is scoped to the view, which is only
     /// safe where the host is not recycled — a sheet or a detail screen. In a reused cell pass a
     /// `contentID:`, or a recycled view keeps whatever position the previous item left behind.
-    func initialContentOffset(_ offset: CGPoint) -> FLScroll {
+    func initialContentOffset(_ offset: FLPoint) -> FLScroll {
         configured { $0.initialContentOffset = offset }
     }
 
@@ -77,7 +77,7 @@ public extension FLScroll {
     /// default, or a stored one, which is how a gallery comes back where it was left. Within one content it
     /// is applied exactly once, so dragging survives a re-apply that only changed data.
     func initialContentOffset(
-        _ offset: CGPoint = .zero,
+        _ offset: FLPoint = .zero,
         contentID: some Hashable & Sendable
     ) -> FLScroll {
         configured {
@@ -166,7 +166,7 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
 
         applyInitialOffsetIfContentChanged(
             token: node.configuration.contentID,
-            offset: node.configuration.initialContentOffset
+            offset: node.configuration.initialContentOffset.cgPoint
         )
     }
 

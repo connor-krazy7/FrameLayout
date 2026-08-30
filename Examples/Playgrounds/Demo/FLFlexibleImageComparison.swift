@@ -11,16 +11,16 @@ struct FlexiblePhotoSample: Identifiable, Sendable {
 
     static var samples: [FlexiblePhotoSample] {
         [
-            FlexiblePhotoSample(id: "wide", pixelSize: CGSize(width: 1600, height: 900), color: .systemBlue),
-            FlexiblePhotoSample(id: "tall", pixelSize: CGSize(width: 900, height: 1600), color: .systemPink),
-            FlexiblePhotoSample(id: "square", pixelSize: CGSize(width: 800, height: 800), color: .systemPurple),
-            FlexiblePhotoSample(id: "panorama", pixelSize: CGSize(width: 2400, height: 600), color: .systemTeal),
-            FlexiblePhotoSample(id: "thumbnail", pixelSize: CGSize(width: 60, height: 40), color: .systemGreen),
+            FlexiblePhotoSample(id: "wide", pixelSize: FLSize(width: 1600, height: 900), color: .systemBlue),
+            FlexiblePhotoSample(id: "tall", pixelSize: FLSize(width: 900, height: 1600), color: .systemPink),
+            FlexiblePhotoSample(id: "square", pixelSize: FLSize(width: 800, height: 800), color: .systemPurple),
+            FlexiblePhotoSample(id: "panorama", pixelSize: FLSize(width: 2400, height: 600), color: .systemTeal),
+            FlexiblePhotoSample(id: "thumbnail", pixelSize: FLSize(width: 60, height: 40), color: .systemGreen),
         ]
     }
 
     let id: String
-    let pixelSize: CGSize
+    let pixelSize: FLSize
     let color: UIColor
 
     var ratio: CGFloat { pixelSize.width / pixelSize.height }

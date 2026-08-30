@@ -6,7 +6,7 @@ import UIKit
 private struct Gallery: FLView {
     let album: String
     let photos: Int
-    let restored: CGPoint
+    let restored: FLPoint
 
     var body: some FLNode {
         FLScroll(.horizontal) {
@@ -32,7 +32,7 @@ private struct Panel: FLView {
                 }
             }
         }
-        .initialContentOffset(CGPoint(x: 160, y: 0))
+        .initialContentOffset(FLPoint(x: 160, y: 0))
         .tag("panel")
     }
 }
@@ -64,7 +64,7 @@ struct FLScrollOffsetTests {
 
     @Test("a gallery comes back where it was left, per album, across reuse")
     func perContentRestore() {
-        var offsets: [String: CGPoint] = [:]
+        var offsets: [String: FLPoint] = [:]
         let host = hosted(Gallery(album: "a", photos: 8, restored: .zero))
 
         func scroll() -> UIScrollView? {
@@ -72,7 +72,7 @@ struct FLScrollOffsetTests {
         }
 
         scroll()?.contentOffset = CGPoint(x: 120, y: 0)
-        offsets["a"] = CGPoint(x: 120, y: 0)
+        offsets["a"] = FLPoint(x: 120, y: 0)
 
         apply(Gallery(album: "b", photos: 8, restored: offsets["b"].or(.zero)), to: host)
 
@@ -85,7 +85,7 @@ struct FLScrollOffsetTests {
 
     @Test("within one content it is applied once, so dragging is not undone by a data change")
     func appliedOncePerContent() {
-        let host = hosted(Gallery(album: "a", photos: 8, restored: CGPoint(x: 40, y: 0)))
+        let host = hosted(Gallery(album: "a", photos: 8, restored: FLPoint(x: 40, y: 0)))
 
         func scroll() -> UIScrollView? {
             host.registry.view(withTag: "gallery", as: UIScrollView.self)
@@ -94,7 +94,7 @@ struct FLScrollOffsetTests {
         #expect(scroll()?.contentOffset.x == 40)
 
         scroll()?.contentOffset = CGPoint(x: 200, y: 0)
-        apply(Gallery(album: "a", photos: 9, restored: CGPoint(x: 40, y: 0)), to: host)
+        apply(Gallery(album: "a", photos: 9, restored: FLPoint(x: 40, y: 0)), to: host)
 
         #expect(scroll()?.contentOffset.x == 200)
     }
@@ -117,7 +117,7 @@ struct FLScrollOffsetTests {
 
     @Test("the offset lands after contentSize, so it is not clamped away")
     func offsetIsNotClampedByAnEmptyContent() {
-        let host = hosted(Gallery(album: "a", photos: 8, restored: CGPoint(x: 300, y: 0)))
+        let host = hosted(Gallery(album: "a", photos: 8, restored: FLPoint(x: 300, y: 0)))
         let scroll = host.registry.view(withTag: "gallery", as: UIScrollView.self)
 
         #expect(scroll?.contentSize.width == CGFloat(8 * 80 + 7 * 4))
