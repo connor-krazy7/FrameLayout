@@ -41,4 +41,47 @@ struct FLTextHashingTests {
         _ = cache.layout(for: FLText("Hello").font(.systemFont(ofSize: 30)), in: context)
         #expect(cache.count == 2)
     }
+
+    @Test("mutating the source string afterwards does not change the node")
+    func constructionSnapshotsTheString() {
+        let source = NSMutableAttributedString(string: "Hello")
+        let node = FLText(source)
+        let hashBefore = node.hashValue
+
+        source.append(NSAttributedString(string: " and more text besides"))
+
+        #expect(node.attributedText.string == "Hello")
+        #expect(node.hashValue == hashBefore)
+        #expect(node == FLText(NSAttributedString(string: "Hello")))
+    }
+
+    // The same snapshot on the paths that rebuild a node, since `multilineTextAlignment` hands the
+    // private initialiser a mutable string of its own.
+    @Test("a rebuilt node snapshots too, so its string cannot be mutated through a downcast")
+    func modifiersSnapshotAsWell() {
+        let node = FLText("Hello").multilineTextAlignment(.center)
+        let hashBefore = node.hashValue
+
+        (node.attributedText as? NSMutableAttributedString)?
+            .append(NSAttributedString(string: " and more"))
+
+        #expect(node.attributedText.string == "Hello")
+        #expect(node.hashValue == hashBefore)
+    }
+
+    @Test("a cache keyed before a mutation still answers for the original content")
+    func cacheStaysConsistentAcrossAMutation() {
+        let cache = FLLayoutCache<FLText>()
+        let context = FLContext(width: 300)
+        let source = NSMutableAttributedString(string: "Hello")
+        let node = FLText(source)
+
+        _ = cache.layout(for: node, in: context)
+        source.append(NSAttributedString(string: " and more text besides"))
+
+        _ = cache.layout(for: node, in: context)
+
+        #expect(cache.count == 1)
+        #expect(cache.layout(for: node, in: context) == FLText("Hello").layout(in: context))
+    }
 }
