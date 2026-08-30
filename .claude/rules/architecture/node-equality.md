@@ -279,6 +279,25 @@ Store `FLPoint`, `FLSize` or `FLRect` instead, and expose the CoreGraphics spell
 public API wants one — `FLScrollConfiguration.initialContentOffset` is the worked example. Delete all
 three when the minimum reaches iOS 18.
 
+**Waiting is the only way out: the minimum cannot go below 17.** Measured by dropping
+`platforms: [.iOS(.v17)]` a version and building, which fails at exactly two sites, both `FLConcat`:
+
+```
+Sources/FrameLayout/Group/FLConcat.swift:5:24: error: parameter packs in generic types
+are only available in iOS 17.0.0 or newer
+
+public struct FLConcat<each Child: FLGroup>: FLGroup {
+```
+
+Variadic generics in a generic *type* need runtime metadata that shipped in iOS 17, and `FLConcat` is
+produced by every multi-child builder, so it is not removable without fixed-arity overloads —
+`FLTuple2`, `FLTuple3` and so on, the shape `TupleView` had before packs. Nothing else in the package
+objected: `AttributedString` is iOS 15, and the concurrency annotations bind the toolchain rather than
+the deployment target.
+
+So the language forces 17 and 17 lacks these conformances. The three types are structural rather than a
+preference, and the only thing that removes them is a decision to raise the floor to 18.
+
 **The danger is exactly the five that conform *from* iOS 18.** A type that never conforms is safe
 *because* it never conforms: synthesis over `UIEdgeInsets`, `UIOffset` or `NSDirectionalEdgeInsets` fails
 outright with "does not conform", so the compiler stops it. The trap needs a conformance that exists when
