@@ -130,12 +130,34 @@ Two shapes are admissible, and each is a `let`:
 
 Never annotate a `var`; that is the design being wrong, not the compiler being strict.
 
-**What the annotation does not buy.** `FLText` stores the caller's string by reference without copying,
-so an `NSMutableAttributedString` passed in and mutated afterwards breaks the `Sendable` claim *and*
-node identity — the hash was taken when the node was built, so a cache entry keyed on it goes stale with
-no miss to signal it. Do not add a second node that stores a caller's mutable reference type until that
-is closed. The fix is an immutable copy at the boundary, probably cheap because
-`NSAttributedString(attributedString:)` shares backing storage, but unmeasured.
+**What the annotation does not buy, and what closes the gap.** The annotation makes a claim the compiler
+cannot check: that the node treats the value as immutable. It says nothing about the *caller*. `FLText`
+used to store the caller's string by reference, so an `NSMutableAttributedString` passed in and mutated
+afterwards broke the `Sendable` claim **and** node identity — the hash was taken when the node was built,
+so a cache entry keyed on it went stale with no miss to signal it, which is a wrong hit.
+
+`FLText`'s private initialiser now snapshots with `NSAttributedString(attributedString:)`, on every path
+rather than only the public one, so `multilineTextAlignment` and a downcast of the `public let` are
+covered too.
+
+**A node that stores a caller's reference type must copy it in, and the cost is not a reason not to.**
+Measured, Debug `-Onone`, so read the ratios:
+
+| | ns/op |
+| --- | --- |
+| copy, immutable source, ~120 characters | 242 |
+| copy, mutable source, ~120 characters | 311 |
+| copy, immutable source, 90 000 characters | **241** |
+| `FLText` construction from a `String`, for scale | 580 |
+| `==` against independent equal content | 1 362 |
+
+The copy is **flat in length** — 241 ns at 90 000 characters against 242 at 120 — which is
+`NSAttributedString(attributedString:)` sharing backing storage and letting the source copy on write.
+It costs about 40% of one node construction, once per construction, and nothing per measure or probe.
+
+Note this is the opposite trade from stripping an attribute to narrow layout identity, which
+`FLLayoutEquatable+StandardTypes.swift` rejects: that one would run per *probe*, where this runs per
+*construction*.
 
 ## What is pinned, and what is still design
 

@@ -108,4 +108,25 @@ struct FLTextTests {
             #expect(text(lineLimit: 0).layout(in: context(width: width)).size.width <= width)
         }
     }
+
+    // `FLText.defaultFont` claims an unstyled text renders the same as an unstyled label. That is a
+    // measurement claim, and this is what checks it — the existing assertion only compares point sizes.
+    // It also fixes the reference: FL's default is UIKit's, not SwiftUI's `.body`, which has different
+    // leading. `FLSwiftUIParityTests` records that divergence.
+    @Test("an unstyled text measures like an unstyled UILabel")
+    @MainActor
+    func matchesAnUnstyledLabel() {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.text = Self.sample
+
+        for width in [CGFloat(120), 200, 320] {
+            let unbounded = CGSize(width: width, height: .greatestFiniteMagnitude)
+            let fromLabel = label.sizeThatFits(unbounded)
+            let fromNode = FLText(Self.sample).layout(in: FLContext(width: width)).size
+
+            #expect(abs(fromNode.width - fromLabel.width) <= 1, "width at \(width)")
+            #expect(abs(fromNode.height - fromLabel.height) <= 1, "height at \(width)")
+        }
+    }
 }

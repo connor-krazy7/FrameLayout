@@ -48,7 +48,7 @@ public struct FLText: FLNode {
         lineBreakMode: NSLineBreakMode,
         overrides: FLEnvironmentOverrides
     ) {
-        self.attributedText = attributedText
+        self.attributedText = NSAttributedString(attributedString: attributedText)
         self.lineLimit = lineLimit
         self.lineBreakMode = lineBreakMode
         self.overrides = overrides
