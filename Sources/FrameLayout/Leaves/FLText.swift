@@ -138,6 +138,24 @@ public struct FLText: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLText {
+    func isLayoutEquivalent(to other: FLText) -> Bool {
+        lineLimit == other.lineLimit
+            && lineBreakMode == other.lineBreakMode
+            && attributedText == other.attributedText
+            && overrides.isLayoutEquivalent(to: other.overrides)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        hasher.combine(lineLimit)
+        hasher.combine(lineBreakMode)
+        hasher.combine(attributedText)
+        overrides.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - Modifiers
 
 public extension FLText {

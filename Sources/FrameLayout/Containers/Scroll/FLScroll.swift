@@ -47,6 +47,22 @@ public struct FLScroll<Content: FLNode>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLScroll {
+    func isLayoutEquivalent(to other: FLScroll<Content>) -> Bool {
+        axis == other.axis
+            && configuration.isLayoutEquivalent(to: other.configuration)
+            && content.isLayoutEquivalent(to: other.content)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        hasher.combine(axis)
+        configuration.hashLayoutIdentity(into: &hasher)
+        content.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - Modifiers
 
 public extension FLScroll {

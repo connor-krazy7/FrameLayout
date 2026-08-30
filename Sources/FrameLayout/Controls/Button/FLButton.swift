@@ -21,6 +21,18 @@ public struct FLButton<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLButton {
+    func isLayoutEquivalent(to other: FLButton<Wrapped, Tag>) -> Bool {
+        wrapped.isLayoutEquivalent(to: other.wrapped)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        wrapped.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLButtonView<Wrapped: FLNode, Tag: Hashable & Sendable>: UIControl, FLNodeView {

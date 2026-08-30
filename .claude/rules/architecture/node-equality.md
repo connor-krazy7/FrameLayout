@@ -59,6 +59,13 @@ that failure into the type system.
 It also costs nothing to state the stronger version, since `FLLayout: Equatable` already. A contract test
 must compare layouts for the same reason — one comparing sizes would pass while the design was broken.
 
+**Narrowing is a standing obligation, not a one-time edit.** A hand-written `isLayoutEquivalent` names
+the fields that matter *at the time it was written*, so adding a stored property to a narrowed type
+silently omits it — and that omission is the wrong-hit direction. When you add a field to any type with a
+conformance of its own, decide there and then whether measurement reads it. The types carrying one today
+are `FLEnvironment`, `FLEnvironmentOverrides`, `FLScrollConfiguration`, `FLColor`, `FLImage`, `FLText`,
+`FLScroll`, `FLEnvironmentOverride`, `FLComposed`, `FLContext`, and the seven pass-through wrappers.
+
 **A partial conformance is safe in both directions**, which is what makes the pair cheap to hand-write.
 Narrow `isLayoutEquivalent` and forget `hashLayoutIdentity`, and the two values land in different buckets
 — a miss. Narrow the hash and forget equality, and they share a bucket and `==` then rejects — also a

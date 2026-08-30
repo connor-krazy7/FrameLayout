@@ -47,6 +47,20 @@ public struct FLEnvironmentOverride<Wrapped: FLNode>: FLNode {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLEnvironmentOverride {
+    func isLayoutEquivalent(to other: FLEnvironmentOverride<Wrapped>) -> Bool {
+        overrides.isLayoutEquivalent(to: other.overrides)
+            && wrapped.isLayoutEquivalent(to: other.wrapped)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        overrides.hashLayoutIdentity(into: &hasher)
+        wrapped.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLEnvironmentOverrideView<Wrapped: FLNode>: FLStructuralView, FLNodeView {

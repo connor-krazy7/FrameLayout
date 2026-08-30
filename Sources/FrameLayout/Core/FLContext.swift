@@ -67,3 +67,19 @@ public struct FLContext: Sendable, FLLayoutEquatable, WithCustomisable {
         height.exactValue.map { Swift.min($0, proposedHeight) }.or(proposedHeight)
     }
 }
+
+// MARK: - FLLayoutEquatable
+
+public extension FLContext {
+    func isLayoutEquivalent(to other: FLContext) -> Bool {
+        width == other.width
+            && height == other.height
+            && environment.isLayoutEquivalent(to: other.environment)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        hasher.combine(width)
+        hasher.combine(height)
+        environment.hashLayoutIdentity(into: &hasher)
+    }
+}

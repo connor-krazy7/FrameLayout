@@ -90,6 +90,21 @@ public extension FLImage {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLImage {
+    /// **All** of `overrides` is excluded, `font` included — unlike `FLText`, an image never consults it.
+    func isLayoutEquivalent(to other: FLImage) -> Bool {
+        isResizable == other.isResizable && image?.size == other.image?.size
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        hasher.combine(isResizable)
+        hasher.combine(image?.size.width)
+        hasher.combine(image?.size.height)
+    }
+}
+
 // MARK: - Layout
 
 public struct FLImageLayout: FLLayout {

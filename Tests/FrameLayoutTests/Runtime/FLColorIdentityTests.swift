@@ -24,6 +24,14 @@ import UIKit
 /// two separately built dynamic colours is what the rule in
 /// `.claude/rules/architecture/node-equality.md` exists to warn about. Either changing should fail
 /// loudly rather than silently costing — or silently returning — every consumer their hit rate.
+private struct Swatch: FLView {
+    let colour: UIColor
+
+    var body: some FLNode {
+        FLColor(colour).frame(width: 100, height: 40)
+    }
+}
+
 @Suite("Colour identity")
 struct FLColorIdentityTests {
     /// Built once, the way a consumer's theme colour must be. The `let` is the point: a computed
@@ -94,24 +102,39 @@ struct FLColorIdentityTests {
     }
 
     // The consequence the rule is actually about, measured through the cache a consumer is told to
-    // build rather than inferred from `==`.
-    @Test("a node carrying one shared dynamic colour hits the cache; fresh instances miss")
+    // build rather than inferred from `==`. It has to be rooted on a *composite* that stores the colour:
+    // `FLColor`'s own colour is layout-neutral, so the node no longer carries it into a key.
+    @Test("a composite storing one shared dynamic colour hits the cache; fresh instances miss")
     func cacheHitsOnlyForASharedInstance() {
         let context = FLContext(width: 100, height: 40)
 
-        let shared = FLLayoutCache<FLColor>()
+        let shared = FLLayoutCache<FLComposed<Swatch>>()
 
-        _ = shared.layout(for: FLColor(Self.sharedDynamic), in: context)
-        _ = shared.layout(for: FLColor(Self.sharedDynamic), in: context)
+        _ = shared.layout(for: Swatch(colour: Self.sharedDynamic).node, in: context)
+        _ = shared.layout(for: Swatch(colour: Self.sharedDynamic).node, in: context)
 
         #expect(shared.count == 1)
 
-        let fresh = FLLayoutCache<FLColor>()
+        let fresh = FLLayoutCache<FLComposed<Swatch>>()
 
-        _ = fresh.layout(for: FLColor(Self.freshDynamic()), in: context)
-        _ = fresh.layout(for: FLColor(Self.freshDynamic()), in: context)
+        _ = fresh.layout(for: Swatch(colour: Self.freshDynamic()).node, in: context)
+        _ = fresh.layout(for: Swatch(colour: Self.freshDynamic()).node, in: context)
 
         #expect(fresh.count == 2)
+    }
+
+    // Where the exposure went. `FLColor` excludes its colour from layout identity, so two colours are
+    // one entry however they were built — which is why the rows above need a consumer's own struct.
+    @Test("FLColor's own colour no longer reaches a key at all")
+    func colourOnFLColorIsLayoutNeutral() {
+        let cache = FLLayoutCache<FLColor>()
+        let context = FLContext(width: 100, height: 40)
+
+        _ = cache.layout(for: FLColor(Self.freshDynamic()), in: context)
+        _ = cache.layout(for: FLColor(Self.freshDynamic()), in: context)
+        _ = cache.layout(for: FLColor(.systemRed), in: context)
+
+        #expect(cache.count == 1)
     }
 
     // A colour reaches a key through more than `FLColor`. `FLDecoration` is the one a consumer hits by

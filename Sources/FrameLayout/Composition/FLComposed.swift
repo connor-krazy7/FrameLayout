@@ -42,6 +42,18 @@ public extension FLComposed {
     }
 }
 
+// MARK: - FLLayoutEquatable
+
+public extension FLComposed {
+    func isLayoutEquivalent(to other: FLComposed<Composite>) -> Bool {
+        composite.isLayoutEquivalent(to: other.composite)
+    }
+
+    func hashLayoutIdentity(into hasher: inout Hasher) {
+        composite.hashLayoutIdentity(into: &hasher)
+    }
+}
+
 // MARK: - View
 
 public final class FLComposedView<Composite: FLView>: FLStructuralView, FLNodeView {
