@@ -166,6 +166,24 @@ does it with `ImageRenderer` and a bounding-box scan.
 To get numbers out of an exploratory test, use the `Issue.record` rule in
 [../testing.md](../testing.md) — `print` reaches neither the log nor the result bundle.
 
+## The default font is UIKit's, not SwiftUI's — do not "fix" the gap
+
+`FLText.defaultFont` is `UIFont.systemFont(ofSize: UIFont.labelFontSize)`. SwiftUI's default is `.body`,
+a Dynamic Type style with different leading, so an **unstyled** text is the one case where the two
+systems legitimately disagree. Measured at a 160pt box over three lines:
+
+| | FL | SwiftUI |
+| --- | --- | --- |
+| unstyled | 143 × **61** | 142.67 × **64.33** |
+
+That is 3.3pt of height, well outside the 1pt tolerance below, and it is not metric noise — it is a
+different font. FL matches **`UILabel`**, which is the right reference for a UIKit layout package, and
+`FLTextTests.matchesAnUnstyledLabel` is what pins that contract. Do not chase the SwiftUI number.
+
+Everything downstream of the default *does* agree, and is pinned in `FLSwiftUIParityTests`: a font on
+the attributed string beats `font(_:)`, resolution is per run so a modifier reaches only the bare part,
+the modifier nearest the text wins, and a text-level font beats the environment.
+
 ## Give a parity assertion containing `FLText` a 1pt tolerance
 
 Text metrics differ from UIKit's by a fraction of a point. Pure geometry matches exactly, so assert

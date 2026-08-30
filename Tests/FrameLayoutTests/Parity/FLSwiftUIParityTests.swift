@@ -546,6 +546,82 @@ struct FLSwiftUIParityTests {
         #expect(fl.height == 150)
     }
 
+    // Both resolve per run, so the modifier reaches only the text that carries no font of its own. The
+    // second pair of assertions is the load-bearing one: equality alone would still pass if both systems
+    // started letting the modifier win.
+    @Test("a font on the attributed string beats .font(_:), in both systems")
+    func attributedFontBeatsTheModifier() {
+        let body = "a line of text long enough to wrap at this width"
+        let attributed = NSAttributedString(string: body, attributes: [.font: UIFont.systemFont(ofSize: 30)])
+
+        var swiftUIAttributed = AttributedString(body)
+        swiftUIAttributed.font = .system(size: 30)
+
+        let fl = FLText(attributed).font(.systemFont(ofSize: 10)).layout(in: FLContext(width: box)).size
+        let swiftUI = swiftUISize(Text(swiftUIAttributed).font(.system(size: 10)))
+
+        expectSame(fl, swiftUI, tolerance: 1)
+
+        let atThirty = FLText(NSAttributedString(string: body)).font(.systemFont(ofSize: 30))
+            .layout(in: FLContext(width: box)).size
+        let atTen = FLText(NSAttributedString(string: body)).font(.systemFont(ofSize: 10))
+            .layout(in: FLContext(width: box)).size
+
+        #expect(fl == atThirty, "the string's 30pt font is what was used")
+        #expect(fl != atTen, "the modifier's 10pt font was not")
+    }
+
+    @Test("a font resolves per run, so a modifier reaches only the bare part")
+    func fontResolvesPerRun() {
+        let body = "a line of text long enough to wrap at this width"
+        let half = NSRange(location: 0, length: body.count / 2)
+        let partly = NSMutableAttributedString(string: body)
+        partly.addAttribute(.font, value: UIFont.systemFont(ofSize: 30), range: half)
+
+        var swiftUIPartly = AttributedString(body)
+        let upper = swiftUIPartly.index(swiftUIPartly.startIndex, offsetByCharacters: body.count / 2)
+        swiftUIPartly[swiftUIPartly.startIndex..<upper].font = .system(size: 30)
+
+        let fl = FLText(partly).font(.systemFont(ofSize: 10)).layout(in: FLContext(width: box)).size
+
+        expectSame(fl, swiftUISize(Text(swiftUIPartly).font(.system(size: 10))), tolerance: 1)
+
+        let allThirty = FLText(NSAttributedString(string: body)).font(.systemFont(ofSize: 30))
+            .layout(in: FLContext(width: box)).size
+        let allTen = FLText(NSAttributedString(string: body)).font(.systemFont(ofSize: 10))
+            .layout(in: FLContext(width: box)).size
+
+        #expect(fl.height > allTen.height, "the 30pt run is taller than an all-10pt line")
+        #expect(fl.height < allThirty.height, "and shorter than an all-30pt one")
+    }
+
+    @Test("the font nearest the text wins, and text beats the environment")
+    func nearestFontWins() {
+        let body = "a line of text long enough to wrap at this width"
+        let plain = NSAttributedString(string: body)
+
+        let flChained = FLText(plain).font(.systemFont(ofSize: 30)).font(.systemFont(ofSize: 10))
+            .layout(in: FLContext(width: box)).size
+
+        expectSame(
+            flChained,
+            swiftUISize(Text(body).font(.system(size: 30)).font(.system(size: 10))),
+            tolerance: 1
+        )
+
+        let flInherited = FLText(plain).font(.systemFont(ofSize: 10))
+            .environment(FLEnvironmentOverrides(font: .systemFont(ofSize: 30)))
+            .layout(in: FLContext(width: box)).size
+
+        expectSame(
+            flInherited,
+            swiftUISize(Text(body).font(.system(size: 10)).environment(\.font, .system(size: 30))),
+            tolerance: 1
+        )
+
+        #expect(flChained != flInherited, "the two precedence rules resolve to different fonts")
+    }
+
     @Test("padding shrinks the proposal the child sees, in both systems")
     func paddingShrinksTheProposal() {
         expectSame(
