@@ -7,7 +7,7 @@ import UIKit
 @MainActor
 @Suite("Flexible conversation photo")
 struct FLFlexiblePhotoTests {
-    private func box(_ pixelSize: CGSize, availableWidth: CGFloat) -> CGSize {
+    private func box(_ pixelSize: FLSize, availableWidth: CGFloat) -> CGSize {
         DemoConversationPhoto(photo: DemoPhoto(id: "p", symbol: "photo.fill", pixelSize: pixelSize))
             .node
             .layout(in: FLContext(width: availableWidth))
@@ -16,7 +16,7 @@ struct FLFlexiblePhotoTests {
 
     @Test("a photo wider than the space scales down and keeps its ratio")
     func wideePhotoScalesDown() {
-        let reserved = box(CGSize(width: 1600, height: 900), availableWidth: 240)
+        let reserved = box(FLSize(width: 1600, height: 900), availableWidth: 240)
 
         #expect(reserved.width == 240)
         #expect(abs(reserved.height - 240 * 900 / 1600) <= 1)
@@ -24,7 +24,7 @@ struct FLFlexiblePhotoTests {
 
     @Test("a photo smaller than the space is not stretched to fill it")
     func smallPhotoIsNotUpscaled() {
-        let reserved = box(CGSize(width: 80, height: 60), availableWidth: 300)
+        let reserved = box(FLSize(width: 80, height: 60), availableWidth: 300)
 
         #expect(reserved.width == 80)
         #expect(reserved.height == 60)
@@ -32,7 +32,7 @@ struct FLFlexiblePhotoTests {
 
     @Test("a tall photo is capped by height without distorting")
     func tallPhotoIsCappedByHeight() {
-        let pixelSize = CGSize(width: 900, height: 1600)
+        let pixelSize = FLSize(width: 900, height: 1600)
         let reserved = box(pixelSize, availableWidth: 300)
         let ratio = pixelSize.width / pixelSize.height
 
@@ -42,7 +42,7 @@ struct FLFlexiblePhotoTests {
 
     @Test("the box comes from the known dimensions, so it is reserved before anything loads")
     func boxIsReservedWithoutAnImage() {
-        let known = DemoPhoto(id: "p", symbol: "photo.fill", pixelSize: CGSize(width: 1600, height: 900))
+        let known = DemoPhoto(id: "p", symbol: "photo.fill", pixelSize: FLSize(width: 1600, height: 900))
         let withSymbol = DemoConversationPhoto(photo: known).node.layout(in: FLContext(width: 240)).size
         let missingSymbol = DemoConversationPhoto(
             photo: DemoPhoto(id: "p", symbol: "not.a.real.symbol", pixelSize: known.pixelSize)
@@ -86,7 +86,7 @@ struct FLFlexiblePhotoTests {
 
         #expect(host.registry.containsView(withTag: DemoMessagePart.photo("m1")) == false)
 
-        let with = apply(DemoPhoto(id: "p", symbol: "photo.fill", pixelSize: CGSize(width: 1600, height: 900)))
+        let with = apply(DemoPhoto(id: "p", symbol: "photo.fill", pixelSize: FLSize(width: 1600, height: 900)))
 
         #expect(with > without)
         #expect(host.registry.view(withTag: DemoMessagePart.photo("m1"))?.bounds.height ?? 0 > 0)
