@@ -37,11 +37,35 @@ private struct Panel: FLView {
     }
 }
 
+private struct TaggedGallery: FLView {
+    let album: String
+    let photos: [String]
+    let anchor: FLScrollAnchor
+
+    var body: some FLNode {
+        FLScroll(.horizontal) {
+            FLHStack(spacing: 4) {
+                FLForEach(photos, id: \.self) { photo in
+                    FLColor(.systemTeal).frame(width: 80, height: 60).tag(photo)
+                }
+            }
+        }
+        .scrollAnchor(anchor, contentID: album)
+        .tag("tagged")
+    }
+}
+
 @MainActor
 @Suite("Scroll initial offset")
 struct FLScrollOffsetTests {
     private let context = FLContext(width: 200, height: 60)
     private let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 120))
+
+    private static let photos = (0..<8).map { "photo-\($0)" }
+
+    private static func scroll(in host: FLHost<TaggedGallery>) -> UIScrollView? {
+        host.registry.view(withTag: "tagged", as: UIScrollView.self)
+    }
 
     private func apply<Content: FLView>(_ content: Content, to host: FLHost<Content>) {
         let node = content.node
@@ -122,5 +146,55 @@ struct FLScrollOffsetTests {
 
         #expect(scroll?.contentSize.width == CGFloat(8 * 80 + 7 * 4))
         #expect(scroll?.contentOffset.x == 300)
+    }
+
+    @Test("an element anchor restores to the tagged photo rather than to an index")
+    func elementRestoresToItsPhoto() {
+        let host = hosted(
+            TaggedGallery(album: "a", photos: Self.photos, anchor: .element("photo-2"))
+        )
+
+        #expect(Self.scroll(in: host)?.contentOffset.x == 168)
+    }
+
+    @Test("the same id survives an insertion that shifts every index before it")
+    func elementSurvivesAnInsertion() {
+        let host = hosted(
+            TaggedGallery(album: "a", photos: Self.photos, anchor: .element("photo-2"))
+        )
+
+        apply(
+            TaggedGallery(album: "b", photos: ["photo-new"] + Self.photos, anchor: .element("photo-2")),
+            to: host
+        )
+
+        #expect(Self.scroll(in: host)?.contentOffset.x == 252)
+    }
+
+    @Test("the alignment says where in the viewport the element lands")
+    func elementHonoursItsAlignment() {
+        let host = hosted(
+            TaggedGallery(album: "a", photos: Self.photos, anchor: .element("photo-2", alignment: .center))
+        )
+
+        #expect(Self.scroll(in: host)?.contentOffset.x == 108)
+    }
+
+    @Test("an element past the end is shown as far along as the region can reach")
+    func elementNearTheEndIsClamped() {
+        let host = hosted(
+            TaggedGallery(album: "a", photos: Self.photos, anchor: .element("photo-7"))
+        )
+
+        #expect(Self.scroll(in: host)?.contentOffset.x == CGFloat(8 * 80 + 7 * 4 - 200))
+    }
+
+    @Test("a tag that names nothing inside the region starts at the top")
+    func unknownElementStartsAtTheTop() {
+        let host = hosted(
+            TaggedGallery(album: "a", photos: Self.photos, anchor: .element("photo-elsewhere"))
+        )
+
+        #expect(Self.scroll(in: host)?.contentOffset.x == 0)
     }
 }
