@@ -66,24 +66,36 @@ public extension FLScroll {
 // MARK: - Modifiers
 
 public extension FLScroll {
-    /// Applied on this view's first apply and never again. "Initial" is scoped to the view, which is only
-    /// safe where the host is not recycled — a sheet or a detail screen. In a reused cell pass a
-    /// `contentID:`, or a recycled view keeps whatever position the previous item left behind.
-    func initialContentOffset(_ offset: FLPoint) -> FLScroll {
-        configured { $0.initialContentOffset = offset }
+    /// Where the region starts. Applied on this view's first apply and never again, so it is only safe
+    /// where the host is not recycled — a sheet or a detail screen. In a reused cell pass a `contentID:`,
+    /// or a recycled view keeps whatever position the previous item left behind.
+    func scrollAnchor(_ anchor: FLScrollAnchor) -> FLScroll {
+        configured { $0.initialAnchor = anchor }
     }
 
-    /// Applied whenever `contentID` changes, so each content gets its own initial position: the top by
+    /// Applied whenever `contentID` changes, so each content gets its own starting position: the top by
     /// default, or a stored one, which is how a gallery comes back where it was left. Within one content it
-    /// is applied exactly once, so dragging survives a re-apply that only changed data.
+    /// is applied exactly once: an anchor is where a content starts, not a position it is held at.
+    func scrollAnchor(
+        _ anchor: FLScrollAnchor,
+        contentID: some Hashable & Sendable
+    ) -> FLScroll {
+        configured {
+            $0.initialAnchor = anchor
+            $0.contentID = FLScrollIdentity(contentID)
+        }
+    }
+
+    /// `scrollAnchor(.offset(_:))`, spelled for a position that is a point.
+    func initialContentOffset(_ offset: FLPoint) -> FLScroll {
+        scrollAnchor(.offset(offset))
+    }
+
     func initialContentOffset(
         _ offset: FLPoint = .zero,
         contentID: some Hashable & Sendable
     ) -> FLScroll {
-        configured {
-            $0.initialContentOffset = offset
-            $0.contentID = FLScrollIdentity(contentID)
-        }
+        scrollAnchor(.offset(offset), contentID: contentID)
     }
 
     func scrollIndicators(_ visibility: FLScrollIndicatorVisibility) -> FLScroll {
@@ -165,8 +177,9 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
         contentView.update(node: node.content, layout: layout.wrapped, context: context)
 
         applyInitialOffsetIfContentChanged(
-            token: node.configuration.contentID,
-            offset: node.configuration.initialContentOffset.cgPoint
+            configuration: node.configuration,
+            viewport: layout.size,
+            context: context
         )
     }
 
@@ -190,9 +203,16 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
         )
     }
 
-    /// After `contentSize`, never before: `UIScrollView` clamps an offset to the content it knows about, so
-    /// a position set while the content is still empty is silently lost.
-    private func applyInitialOffsetIfContentChanged(token: FLScrollIdentity?, offset: CGPoint) {
+    /// After `contentSize` and after the content has updated, never before: `UIScrollView` clamps an offset
+    /// to the content it knows about, so a position set while the content is still empty is silently lost,
+    /// and an `.element` anchor reads a descendant that only exists once the subtree has registered itself.
+    private func applyInitialOffsetIfContentChanged(
+        configuration: FLScrollConfiguration,
+        viewport: CGSize,
+        context: FLRenderContext
+    ) {
+        let token = configuration.contentID
+
         defer {
             appliedToken = token
             hasApplied = true
@@ -200,6 +220,64 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
 
         guard !hasApplied || token != appliedToken else { return }
 
-        setContentOffset(offset, animated: false)
+        setContentOffset(
+            offset(for: configuration.initialAnchor, viewport: viewport, context: context),
+            animated: false
+        )
+    }
+
+    private func offset(
+        for anchor: FLScrollAnchor,
+        viewport: CGSize,
+        context: FLRenderContext
+    ) -> CGPoint {
+        switch anchor {
+        case let .offset(offset):
+            offset.cgPoint
+        case let .element(id, alignment):
+            offset(showing: id, alignedTo: alignment, viewport: viewport, context: context)
+        }
+    }
+
+    private func offset(
+        showing id: FLScrollIdentity,
+        alignedTo alignment: FLAlignment,
+        viewport: CGSize,
+        context: FLRenderContext
+    ) -> CGPoint {
+        // A registry is per host, not per region, so a tag used elsewhere in the tree must not resolve here.
+        guard
+            let element = context.registry?.view(withTag: id.tag),
+            element.isDescendant(of: contentView)
+        else { return .zero }
+
+        let elementFrame = convert(element.bounds, from: element)
+        let originInViewport = alignment.origin(
+            childSize: elementFrame.size,
+            containerSize: viewport,
+            direction: context.environment.layoutDirection
+        )
+        let aligned = CGPoint(
+            x: elementFrame.minX - originInViewport.x,
+            y: elementFrame.minY - originInViewport.y
+        )
+
+        return clampedToContent(aligned, viewport: viewport)
+    }
+
+    private func clampedToContent(_ offset: CGPoint, viewport: CGSize) -> CGPoint {
+        let insets = adjustedContentInset
+        let maximumX = contentSize.width - viewport.width + insets.right
+        let maximumY = contentSize.height - viewport.height + insets.bottom
+
+        return CGPoint(
+            x: Self.clamp(offset.x, min: -insets.left, max: maximumX),
+            y: Self.clamp(offset.y, min: -insets.top, max: maximumY)
+        )
+    }
+
+    /// The floor wins where the two cross, which is every axis whose content is shorter than its viewport.
+    private static func clamp(_ value: CGFloat, min lower: CGFloat, max upper: CGFloat) -> CGFloat {
+        Swift.max(lower, Swift.min(value, upper))
     }
 }
