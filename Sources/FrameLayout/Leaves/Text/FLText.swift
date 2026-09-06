@@ -82,7 +82,7 @@ public struct FLText: FLNode {
     /// then the defaults. Rendering only — `layout(in:)` measures `measuredText(in:)`.
     public func resolvedText(in environment: FLEnvironment) -> NSAttributedString {
         let resolved = environment.applying(overrides)
-        return text(
+        return attributedText.text(
             withDefaults: [
                 .font: resolved.font.or(Self.defaultFont),
                 .foregroundColor: resolved.foregroundColor.or(Self.defaultColor),
@@ -92,37 +92,7 @@ public struct FLText: FLNode {
 
     func measuredText(in environment: FLEnvironment) -> NSAttributedString {
         let resolved = environment.applying(overrides)
-        return text(withDefaults: [.font: resolved.font.or(Self.defaultFont)])
-    }
-
-    private func text(withDefaults attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
-        guard attributedText.underlying.length > 0 else { return attributedText.underlying }
-
-        let filled = NSMutableAttributedString(attributedString: attributedText.underlying)
-
-        for (key, value) in attributes {
-            Self.fillGaps(of: key, with: value, in: filled)
-        }
-
-        return filled
-    }
-
-    private static func fillGaps(
-        of key: NSAttributedString.Key,
-        with value: Any,
-        in target: NSMutableAttributedString
-    ) {
-        let fullRange = NSRange(location: 0, length: target.length)
-
-        var missing: [NSRange] = []
-        target.enumerateAttribute(key, in: fullRange, options: []) { existing, subrange, _ in
-            guard existing == nil else { return }
-            missing.append(subrange)
-        }
-
-        for subrange in missing {
-            target.addAttribute(key, value: value, range: subrange)
-        }
+        return attributedText.text(withDefaults: [.font: resolved.font.or(Self.defaultFont)])
     }
 
     public func layout(in context: FLContext) -> FLTextLayout {
