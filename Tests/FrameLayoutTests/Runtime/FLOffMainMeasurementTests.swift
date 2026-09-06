@@ -18,9 +18,17 @@ import UIKit
 /// thread. Neither is documented as safe there in a way this package controls. If either ever stops
 /// being safe, the text measurement path is what breaks, and it should break here first.
 ///
-/// What this suite does **not** establish: that a measurement is fast off-main, or that the pool is not
+/// What it pins: that a detached task genuinely leaves the main thread; that text and a four-level
+/// composite measure identically off-main and on-main, frames included; that `FLLayoutComputer` returns
+/// what a direct call returns; that sixty-four concurrent measurements of one node agree while
+/// thirty-two distinct nodes do not interfere; that a cache probed concurrently for one key ends with
+/// one entry and filled from distinct keys keeps all of them; and the two platform calls above.
+///
+/// What it does **not** establish: that a measurement is fast off-main, or that the pool is not
 /// saturated by many of them. That needs a benchmark timing N concurrent measurements, which does not
-/// exist — see the same rule.
+/// exist. `FLLayoutCache` has no suite of its own either — its concurrent behaviour is here and three
+/// suites cover hit and miss by using it as a tool, but nothing covers `removeAll()` under contention.
+/// This is also the only suite that leaves the main thread.
 @Suite("Off-main measurement")
 struct FLOffMainMeasurementTests {
     /// `FixtureRow.Body` is opaque, so its layout can only be named through the associated type.

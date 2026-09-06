@@ -18,8 +18,15 @@ side.
 
 ## What earns a comment
 
+**First remedy is the name, not the comment.** If a declaration needs prose to be understood, rename it
+or reshape it and write nothing. A comment is what remains when no name could have carried the fact.
+
 A comment stays when it changes what a **caller does**, or when the code beside it would be broken by a
-plausible edit that looks harmless. The good ones in the package are all one of those:
+plausible edit that looks harmless. The second clause is the one that gets abused: it buys **one sentence
+naming the edit**, not a paragraph explaining the design. `FLProposal`'s is the length to match — it says
+a reader must not simplify `.minimum` into `0`, and stops.
+
+The good ones in the package are all one of those:
 
 - `FLProposal` — why the cases are cases and not sentinels, in two sentences. It is the reason a reader
   does not "simplify" `.minimum` into `0`.
@@ -38,17 +45,13 @@ plausible edit that looks harmless. The good ones in the package are all one of 
 ## What belongs in a rule file instead
 
 Prose that *argues* — that compares alternatives, carries numbers, or would need rewriting if a
-measurement changed. Two blocks in `Sources/` are currently a second copy of an argument the rules
-already make in full:
+measurement changed.
 
-- `FLAspectRatio.swift` opens with six lines on why a cap bounds both axes. `layout-proposals.md` makes
-  the same case under "Reserving a box that hugs a ratio-driven image", with the three equivalent
-  spellings and the `.fill` reason the comment compresses into one clause.
-- `FLFrame.swift` carries two blocks on what a bounded frame may propose. `layout-proposals.md` opens
-  with that rule, the code it replaced, and the two bugs that came out of the earlier version.
-
-Neither is wrong today. Both are a duplicate that will drift, and the source copy is the one that will
-be left behind, because a behaviour change is made in the file and recorded in the rule.
+The shape to watch for is a source comment restating an argument a rule file already makes in full: six
+lines above a modifier on why a cap bounds both axes, where the layout rule makes the same case with the
+equivalent spellings and the reason the comment compresses into one clause. Such a block is not wrong the
+day it is written. It is a duplicate that will drift, and the source copy is the one left behind, because
+a behaviour change is made in the file and recorded in the rule.
 
 **When you change one of those behaviours, the rule file is what must change**, and the comment shrinks
 to a pointer — `// A cap bounds both axes; see layout-proposals.md.` — or goes. Do not do that
@@ -67,6 +70,20 @@ The species that are always spam, no matter what surrounds them:
 - commented-out code with no argument beside it (`FLShape` is the standard to meet, not a licence)
 - a doc comment on a protocol requirement describing what an implementation does — `layout(in:)` states
   the contract, not how `FLStack` fulfils it
+- **rationale essays** — multi-sentence prose defending a design decision. This is the most common
+  failure in this package and the hardest to see, because it reads as a legitimate "why" comment. Three
+  that were written here and removed:
+  - four lines inside `FLTextEditor.layout(in:)` on why an editable editor takes the box it is offered
+    and a display-only one hugs. The `switch` on `isEditable` is the whole contract, and the property it
+    switches on already carries the one sentence a caller needs.
+  - `FLRuntimeIssue` opening with "nothing here is a dependency: the `com.apple.runtime-issues` subsystem
+    is what Xcode watches, so an `os_log` fault into it is the whole mechanism a package like
+    swift-issue-reporting wraps" — a defence of a decision, addressed to whoever reads the diff.
+  - `FLTextMeasurement` explaining that a second TextKit stack "would not fail loudly" and how two stacks
+    diverge. That is an argument, and arguments live here, in `.claude/rules/`.
+
+  The tell is length before content: a `///` block of three or more sentences on a declaration whose
+  signature and body already say what it does is almost always this.
 
 The test that separates a spam comment from a real one: does it tell a caller something, or does it
 justify the code to whoever is reading the diff? If it justifies, it is a commit message or a rule in

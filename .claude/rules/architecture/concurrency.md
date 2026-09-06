@@ -24,14 +24,18 @@ func layout(in context: FLContext) -> FLTextLayout {
 }
 ```
 
-`FLText` does not do this. It measures with
-`NSAttributedString.boundingRect(with:options:.usesLineFragmentOrigin, .usesFontLeading)` and
-re-implements line breaking over the string, which is most of why the file is as long as it is.
+Text is measured from the attributed string's own metrics instead — a TextKit stack built for the
+measurement, never a label or a text view asked how big it would be.
 
 **Measure from the model, never from a view.** A leaf's metrics come from the data the node already
 holds — the attributed string, the font, the image's `size` — plus the environment. If a control's size
 genuinely cannot be derived that way, the node cannot be measured off the main thread and needs a
 different design; say that rather than smuggling a view into the layout.
+
+**And through one implementation.** Where a measurement primitive already exists, measure through it; a
+node that grows a second one is the failure this rule cannot catch. Two stacks configured slightly
+differently agree on most strings and diverge on truncation and line breaking, so the symptom is a frame
+a point or two wrong rather than a test that fails.
 
 ### What a measurement may touch
 
@@ -159,30 +163,16 @@ Note this is the opposite trade from stripping an attribute to narrow layout ide
 `FLLayoutEquatable+StandardTypes.swift` rejects: that one would run per *probe*, where this runs per
 *construction*.
 
-## What is pinned, and what is still design
+## What is pinned, and what is still reasoned
 
-`FLOffMainMeasurementTests` in `Tests/FrameLayoutTests/Runtime/` covers the correctness half:
+Which of this file's claims a test actually holds is a question for the suites, not for this file:
+`FLOffMainMeasurementTests` documents what it pins and what it leaves open, and a suite that grows a new
+guarantee says so in its own doc comment rather than here.
 
-- a detached task genuinely leaves the main thread
-- text and a four-level composite measure identically off-main and on-main, frames included
-- `FLLayoutComputer` returns what a direct call returns
-- sixty-four concurrent measurements of one node all agree, and of thirty-two distinct nodes do not
-  interfere
-- a cache probed concurrently for one key ends with one entry and every answer agrees; filled
-  concurrently from distinct keys, it keeps all of them
-- the two platform calls above
+One claim above is reasoned rather than tested, and belongs here because it is about this file: nothing
+tests that an `actor` would have forced `layout(in:)` async. That follows from the protocol being
+synchronous, and is worth re-deriving before trusting it if `FLNode` ever changes.
 
-Still design rather than result:
-
-- **No pool-saturation measurement exists.** `Benchmarks/` times a single measurement, never N
-  concurrent ones, so the queueing claim above is mechanism rather than a number.
-- **The instrument table is reasoned.** Nothing tests that an `actor` would have forced `layout(in:)`
-  async; that follows from the protocol being synchronous, and it is worth re-deriving before trusting
-  it if `FLNode` ever changes.
-- **`FLLayoutCache` still has no suite of its own.** Its concurrent behaviour is covered above and its
-  hit-and-miss behaviour by three suites that use it as a tool, but nothing covers `removeAll()` under
-  contention.
-
-When you change something in this file's territory that the list above does not cover, you are changing
-unpinned behaviour. Add the test with the change, and record any number you take here, as
-`node-equality.md` and `layout-proposals.md` both do.
+When you change something in this file's territory that no suite covers, you are changing unpinned
+behaviour. Add the test with the change, and record any number you take here, as `node-equality.md` and
+`layout-proposals.md` both do.

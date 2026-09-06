@@ -114,13 +114,12 @@ Know the gaps before trusting a green run:
 
 - **No timing is asserted anywhere.** The benchmarks print and assert on semantics, so a change that
   makes measurement ten times slower passes every suite. `layout-proposals.md` carries the cost tables
-  that would notice, and they are read by hand.
-- **`FLLayoutCache` has no suite of its own.** `FLOffMainMeasurementTests` covers concurrent probes and
-  concurrent fills, and three suites cover hit and miss by using it as a tool, but nothing covers
-  `removeAll()` under contention.
-- **Off-main behaviour is covered for measurement only.** `FLOffMainMeasurementTests` is the one suite
-  that leaves the main thread; see [architecture/concurrency.md](architecture/concurrency.md) for what
-  it pins and what remains design.
+  that would notice, and they are read by hand. This one is a property of the rules rather than a gap
+  waiting to be closed: it changes only when the benchmark rule above does.
+- **Which behaviour a given suite leaves open is documented by that suite**, not here — a list of
+  today's gaps in this file would be out of date the moment one was closed. A suite that knows it leaves
+  something unpinned says so in its own doc comment, which is also where the reader looking for that
+  coverage will land.
 
 Writing a test that leaves the main thread has two traps, both hit while writing that suite:
 
