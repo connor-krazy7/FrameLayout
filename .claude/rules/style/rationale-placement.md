@@ -18,8 +18,15 @@ side.
 
 ## What earns a comment
 
+**First remedy is the name, not the comment.** If a declaration needs prose to be understood, rename it
+or reshape it and write nothing. A comment is what remains when no name could have carried the fact.
+
 A comment stays when it changes what a **caller does**, or when the code beside it would be broken by a
-plausible edit that looks harmless. The good ones in the package are all one of those:
+plausible edit that looks harmless. The second clause is the one that gets abused: it buys **one sentence
+naming the edit**, not a paragraph explaining the design. `FLProposal`'s is the length to match — it says
+a reader must not simplify `.minimum` into `0`, and stops.
+
+The good ones in the package are all one of those:
 
 - `FLProposal` — why the cases are cases and not sentinels, in two sentences. It is the reason a reader
   does not "simplify" `.minimum` into `0`.
@@ -67,6 +74,20 @@ The species that are always spam, no matter what surrounds them:
 - commented-out code with no argument beside it (`FLShape` is the standard to meet, not a licence)
 - a doc comment on a protocol requirement describing what an implementation does — `layout(in:)` states
   the contract, not how `FLStack` fulfils it
+- **rationale essays** — multi-sentence prose defending a design decision. This is the most common
+  failure in this package and the hardest to see, because it reads as a legitimate "why" comment. Three
+  that were written here and removed:
+  - four lines inside a node's `layout(in:)` on why an editable text editor takes the box it is offered
+    and a display-only one hugs. The `switch` is the whole contract, and the property it switches on
+    already carries the one sentence a caller needs.
+  - a diagnostic type opening with "nothing here is a dependency: the `com.apple.runtime-issues`
+    subsystem is what Xcode watches, so an `os_log` fault into it is the whole mechanism a package like
+    swift-issue-reporting wraps" — a defence of a decision, addressed to whoever reads the diff.
+  - a measurement helper explaining that a second TextKit stack "would not fail loudly" and how two
+    stacks diverge. That is an argument, and arguments live here, in `.claude/rules/`.
+
+  The tell is length before content: a `///` block of three or more sentences on a declaration whose
+  signature and body already say what it does is almost always this.
 
 The test that separates a spam comment from a real one: does it tell a caller something, or does it
 justify the code to whoever is reading the diff? If it justifies, it is a commit message or a rule in
