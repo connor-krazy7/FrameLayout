@@ -12,9 +12,9 @@ import UIKit
 public struct FLTextEditor: FLNode {
     public typealias View = FLTextEditorView
 
-    /// What the editor starts with, and what `layout(in:)` measures. Applied on the view's first apply
-    /// and never again, so typing survives a re-render the caller did not drive. In a reused cell pass a
-    /// `contentID(_:)`, or a recycled editor keeps what the previous item left behind.
+    /// What the editor starts with, and what `layout(in:)` measures. Seeded on the first apply and again
+    /// only when `contentID` changes, so typing survives a re-render the caller did not drive. In a
+    /// reused cell pass a `contentID(_:)`, or a recycled editor keeps what the previous item left behind.
     public let initialText: FLAttributedString
     /// Drawn while the editor is empty; never measured, so it cannot change a frame.
     public let placeholder: FLAttributedString?
@@ -246,11 +246,8 @@ public struct FLTextEditorLayout: FLLayout {
 public final class FLTextEditorView: UIView, FLNodeView {
     public typealias Node = FLTextEditor
 
-    /// The node cannot see typed text, so a consumer that needs it sets `input.delegate`.
-    public let input = FLTextEditorInput()
-
-    private var appliedContent: FLContentIdentity?
-    private var hasAppliedText = false
+    private let input = FLTextEditorInput()
+    private var applied: AppliedContent?
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -273,15 +270,21 @@ public final class FLTextEditorView: UIView, FLNodeView {
 
     public func update(node: FLTextEditor, layout: FLTextEditorLayout, context: FLRenderContext) {
         let environment = context.environment
+        let current = AppliedContent(
+            contentID: node.configuration.contentID,
+            style: AppliedContent.Style(
+                font: node.resolvedFont(in: environment),
+                color: node.resolvedColor(in: environment)
+            )
+        )
 
         apply(node.configuration, isEnabled: context.isEnabled, direction: environment.layoutDirection)
-        input.typingAttributes = [
-            .font: node.resolvedFont(in: environment),
-            .foregroundColor: node.resolvedColor(in: environment),
-        ]
-        applyTextIfContentChanged(node, in: environment)
+        input.typingAttributes = [.font: current.style.font, .foregroundColor: current.style.color]
+        seedText(node: node, environment: environment)
+        restyle(to: current.style)
         input.attributedPlaceholder = node.resolvedPlaceholder(in: environment)
         input.accessibilityLabel = context.accessibilityLabel
+        applied = current
     }
 
     private func apply(
@@ -306,19 +309,48 @@ public final class FLTextEditorView: UIView, FLNodeView {
         input.textContainerInset = Self.insets(configuration.textContainerInset, in: direction)
     }
 
-    /// Assigning `attributedText` replaces whatever the user has typed and moves the caret to the end, so
-    /// the node's text seeds the editor once and every later apply leaves it alone.
-    private func applyTextIfContentChanged(_ node: FLTextEditor, in environment: FLEnvironment) {
-        let content = node.configuration.contentID
+    /// The string is the caller's content, so only a new `contentID` replaces it — which is what leaves
+    /// whatever the user has typed where it is.
+    private func seedText(node: FLTextEditor, environment: FLEnvironment) {
+        let isSameContent = applied.map { $0.contentID == node.configuration.contentID }.orFalse
+        guard !isSameContent else { return }
+        input.attributedText = node.resolvedText(in: environment)
+    }
 
-        defer {
-            appliedContent = content
-            hasAppliedText = true
+    /// Rewrites the runs carrying the *previous* resolved value and leaves every other run alone, so a run
+    /// the caller styled itself survives. Match on the value rather than on a range: ranges no longer line
+    /// up with the node's string once the user has edited.
+    private func restyle(to style: AppliedContent.Style) {
+        guard let previousStyle = applied?.style, previousStyle != style else { return }
+
+        let storage = input.textStorage
+        let range = NSRange(location: 0, length: storage.length)
+
+        guard range.length > 0 else { return }
+
+        storage.beginEditing()
+        Self.restyle(.font, in: storage, over: range, from: previousStyle.font, to: style.font)
+        Self.restyle(.foregroundColor, in: storage, over: range, from: previousStyle.color, to: style.color)
+        storage.endEditing()
+    }
+
+    private static func restyle<Value: Equatable>(
+        _ key: NSAttributedString.Key,
+        in storage: NSTextStorage,
+        over range: NSRange,
+        from previous: Value,
+        to current: Value
+    ) {
+        var staleRanges: [NSRange] = []
+
+        storage.enumerateAttribute(key, in: range, options: []) { value, subrange, _ in
+            guard let value = value as? Value, value == previous else { return }
+            staleRanges.append(subrange)
         }
 
-        guard !hasAppliedText || content != appliedContent else { return }
-
-        input.attributedText = node.resolvedText(in: environment)
+        for subrange in staleRanges {
+            storage.addAttribute(key, value: current, range: subrange)
+        }
     }
 
     private static func insets(_ insets: FLEdgeInsets, in direction: FLLayoutDirection) -> UIEdgeInsets {
@@ -330,5 +362,19 @@ public final class FLTextEditorView: UIView, FLNodeView {
             bottom: insets.bottom,
             right: insets.horizontal - left
         )
+    }
+}
+
+// MARK: - AppliedContent
+
+private extension FLTextEditorView {
+    struct AppliedContent: Hashable {
+        let contentID: FLContentIdentity?
+        let style: Style
+
+        struct Style: Hashable {
+            let font: UIFont
+            let color: UIColor
+        }
     }
 }

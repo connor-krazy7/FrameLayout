@@ -93,6 +93,59 @@ struct FLTextEditorRenderingTests {
         #expect(placeholder?.frame.size == input(in: host)?.bounds.size)
     }
 
+    // Measurement reads the resolved font, so a restyle that never reached the glyphs would leave the box
+    // and the text disagreeing about how big the content is.
+    @Test("a restyle reaches the rendered text without a new contentID")
+    func restyleReachesTheText() {
+        let host = hosted(FLTextEditor("Hello").font(.systemFont(ofSize: 12)))
+
+        apply(FLTextEditor("Hello").font(.systemFont(ofSize: 40)), to: host)
+
+        #expect(renderedFontSize(in: host) == 40)
+    }
+
+    @Test("a restyle leaves what the user typed in place")
+    func restyleKeepsTypedText() {
+        let host = hosted(FLTextEditor("").font(.systemFont(ofSize: 12)))
+
+        input(in: host)?.insertText("a draft")
+        apply(FLTextEditor("").font(.systemFont(ofSize: 40)), to: host)
+
+        #expect(input(in: host)?.text == "a draft")
+        #expect(renderedFontSize(in: host) == 40)
+    }
+
+    // Only styling from outside the string can go stale, so a restyle must reach the runs that took the
+    // resolved value and no others — a run the caller styled itself is content, and content is seeded.
+    @Test("a restyle leaves a run the caller styled itself alone")
+    func restyleKeepsTheCallersOwnRun() {
+        let styled = NSMutableAttributedString(string: "plain bold")
+        styled.addAttribute(
+            .font,
+            value: UIFont.boldSystemFont(ofSize: 30),
+            range: NSRange(location: 6, length: 4)
+        )
+
+        let host = hosted(FLTextEditor(FLAttributedString(styled)).font(.systemFont(ofSize: 12)))
+
+        apply(FLTextEditor(FLAttributedString(styled)).font(.systemFont(ofSize: 40)), to: host)
+
+        let text = input(in: host)?.attributedText
+        let plain = text?.attribute(.font, at: 0, effectiveRange: nil) as? UIFont
+        let bold = text?.attribute(.font, at: 6, effectiveRange: nil) as? UIFont
+
+        #expect(plain?.pointSize == 40)
+        #expect(bold?.pointSize == 30)
+    }
+
+    private func renderedFontSize(in host: FLHostView<Tagged>) -> CGFloat? {
+        let text = input(in: host)?.attributedText
+
+        guard let text, text.length > 0 else { return nil }
+
+        return (text.attribute(.font, at: 0, effectiveRange: nil) as? UIFont)?.pointSize
+    }
+
     // The reason the text is seeded rather than driven: a re-render the caller did not ask for must not
     // reach in and replace what the user has typed.
     @Test("typing survives a re-render the caller did not drive")
