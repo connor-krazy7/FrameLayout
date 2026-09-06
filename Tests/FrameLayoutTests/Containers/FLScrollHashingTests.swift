@@ -15,7 +15,7 @@ struct FLScrollHashingTests {
     @Test("a configuration hashes")
     func configurationHashes() {
         _ = FLScrollConfiguration().hashValue
-        _ = FLScrollConfiguration().with { $0.initialContentOffset = FLPoint(x: 4, y: 8) }.hashValue
+        _ = FLScrollConfiguration().with { $0.initialAnchor = .offset(FLPoint(x: 4, y: 8)) }.hashValue
     }
 
     @Test("a node hashes, and a set of them keeps both")
@@ -31,10 +31,21 @@ struct FLScrollHashingTests {
     @Test("the offset survives the round trip through its components")
     func offsetRoundTrips() {
         let offset = FLPoint(x: 12.5, y: -3)
-        let configuration = FLScrollConfiguration().with { $0.initialContentOffset = offset }
+        let configuration = FLScrollConfiguration().with { $0.initialAnchor = .offset(offset) }
 
-        #expect(configuration.initialContentOffset == offset)
-        #expect(Self.scroll(offset: offset).configuration.initialContentOffset == offset)
+        #expect(configuration.initialAnchor == .offset(offset))
+        #expect(Self.scroll(offset: offset).configuration.initialAnchor == .offset(offset))
+    }
+
+    @Test("an element anchor hashes, and the alignment is part of its identity")
+    func elementAnchorHashes() {
+        let leading = FLScrollAnchor.element("photo-3")
+        let centred = FLScrollAnchor.element("photo-3", alignment: .center)
+
+        #expect(leading == FLScrollAnchor.element("photo-3"))
+        #expect(leading != centred)
+        #expect(leading != FLScrollAnchor.element("photo-4"))
+        #expect(Set([leading, centred, FLScrollAnchor.element("photo-3")]).count == 2)
     }
 
     @Test("it stays layout-neutral")

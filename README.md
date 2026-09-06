@@ -115,6 +115,19 @@ A few consequences worth knowing before using it:
   changed data, and returning to an album restores it. Without a `contentID:` it is applied once for the
   view, which is only safe where the host is not recycled.
 
+  The position can also name a `tag(_:)`ed descendant instead of a point, which is what a paged gallery
+  wants: an offset is only meaningful against the width that produced it, and an index is corrupted by an
+  insertion, while an id survives both.
+
+  ```swift
+  FLScroll(.horizontal) { … }
+      .scrollAnchor(.element(visible[album.id] ?? photos[0].id), contentID: album.id)
+  ```
+
+  `alignment:` says where in the viewport it lands — `.topLeading`, the default, is the paging position, and
+  `.center` centres it. The derived offset is clamped to what the region can reach, so an element near the
+  end is shown as far along as the viewport allows rather than at a position that springs back.
+
 ## Layout of the repository
 
 | path | contents |
