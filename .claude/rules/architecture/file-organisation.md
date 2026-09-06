@@ -135,16 +135,8 @@ single façade file that leaves the declarations in place is fine.
 ## A node with companion types gets a folder, named without the prefix
 
 A folder holds one thing and its vocabulary, so opening it shows *things* rather than their parts:
-
-```
-Containers/
-  Axes/     FLStackAxis FLGridAxis FLVerticalAxis FLHorizontalAxis FLZAxis
-  Grid/     FLGrid FLGridItem FLGridTracks FLGridTrack FLGridResolution
-  Scroll/   FLScroll FLScrollAxis FLScrollConfiguration FLScrollIdentity FLScrollIndicatorVisibility
-  Stack/    FLStack FLStackChildren FLStackGeometry FLStackAllocation
-```
-
-Flat, the three containers sat at the same level as the grid and stack vocabulary they own, and were
+`Containers/` holds a folder per container — the container, plus the axis, track and configuration types
+only it names. Flat, the containers sat at the same level as the vocabulary they own, and were
 outnumbered by it.
 
 A node with **no** companion types stays a plain file — `Modifiers/FLPadded.swift`, not

@@ -62,9 +62,8 @@ must compare layouts for the same reason — one comparing sizes would pass whil
 **Narrowing is a standing obligation, not a one-time edit.** A hand-written `isLayoutEquivalent` names
 the fields that matter *at the time it was written*, so adding a stored property to a narrowed type
 silently omits it — and that omission is the wrong-hit direction. When you add a field to any type with a
-conformance of its own, decide there and then whether measurement reads it. The types carrying one today
-are `FLEnvironment`, `FLEnvironmentOverrides`, `FLScrollConfiguration`, `FLColor`, `FLImage`, `FLText`,
-`FLScroll`, `FLEnvironmentOverride`, `FLComposed`, `FLContext`, and the seven pass-through wrappers.
+conformance of its own, decide there and then whether measurement reads it. Which types carry one is a
+question for the code, not for this file — `grep -rln 'func isLayoutEquivalent' Sources` lists them.
 
 **A partial conformance is safe in both directions**, which is what makes the pair cheap to hand-write.
 Narrow `isLayoutEquivalent` and forget `hashLayoutIdentity`, and the two values land in different buckets

@@ -15,7 +15,8 @@ spends a whole rule reasoning case by case over the four. A `default:` throws th
 silently takes whichever branch happened to be the fallback, in every node at once, and the compiler
 says nothing.
 
-There is currently no `default:` in any `switch` in `Sources/`. Keep it that way.
+No `switch` in `Sources/` carries a `default:`, and `grep -rn '^\s*default:' Sources` is how you check
+that is still true. Keep it that way.
 
 ```swift
 // no — a fifth case rides the default, and .minimum/.maximum already differ
