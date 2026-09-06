@@ -59,7 +59,7 @@ final class FLTextEditorPlaygroundViewController: UIViewController {
         view.addSubview(statusLabel)
 
         // Declared before the first apply, so it reaches the editor as soon as it registers itself.
-        host.registry.bindView(withTag: EditorPart.input, as: FLTextEditorInput.self) { [weak self] input in
+        host.registry.bindView(withTag: EditorPart.input, as: UITextView.self) { [weak self] input in
             input.delegate = self
         }
 

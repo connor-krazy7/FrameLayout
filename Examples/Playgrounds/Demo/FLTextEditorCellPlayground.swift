@@ -53,7 +53,7 @@ private final class DraftCell: UITableViewCell {
             host.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
 
-        host.registry.bindView(withTag: DraftPart.input, as: FLTextEditorInput.self) { [weak self] input in
+        host.registry.bindView(withTag: DraftPart.input, as: UITextView.self) { [weak self] input in
             input.delegate = self?.delegateTarget
         }
     }

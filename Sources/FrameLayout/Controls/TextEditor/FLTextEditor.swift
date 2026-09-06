@@ -9,6 +9,10 @@ import UIKit
 ///
 /// That loop makes every keystroke a new cache key, and `FLLayoutCache` is unbounded and only ever keyed
 /// at the root: keep an editing root out of a cache, or clear it when editing ends.
+///
+/// Bind a `UITextView` under this node's tag to reach it. Assigning its `delegate` adds a forwarding
+/// target rather than replacing the editor's own, so every `UITextViewDelegate` method is yours without
+/// the editor losing the callbacks it needs.
 public struct FLTextEditor: FLNode {
     public typealias View = FLTextEditorView
 
