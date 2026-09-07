@@ -158,6 +158,25 @@ struct FLTextEditorRenderingTests {
         #expect(last??.pointSize == 12)
     }
 
+    @Test("a disabled editor is out of the hit path and says it is disabled")
+    func disabledEditor() {
+        let host = FLHostView<FLTagged<FLDisabled<FLTextEditor>, String>>()
+        let node = FLTextEditor("Hello").disabled().tag("editor")
+        let layout = node.layout(in: FLContext(width: 320))
+
+        host.frame = CGRect(origin: .zero, size: layout.size)
+        window.addSubview(host)
+        window.makeKeyAndVisible()
+        host.apply(node: node, layout: layout)
+        host.layoutIfNeeded()
+
+        let input = host.registry.view(withTag: "editor", as: FLTextEditorInput.self)
+        let point = input.map { $0.convert(CGPoint(x: 4, y: 4), to: host) }
+
+        #expect(input?.accessibilityTraits.contains(.notEnabled) == true)
+        #expect(host.hitTest(point.or(.zero), with: nil) !== input)
+    }
+
     private func renderedFontSize(in host: FLHostView<Tagged>) -> CGFloat? {
         let text = input(in: host)?.attributedText
 

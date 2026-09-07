@@ -297,7 +297,9 @@ public final class FLTextEditorView: UIView, FLNodeView {
         isEnabled: Bool,
         direction: FLLayoutDirection
     ) {
-        input.isEditable = configuration.isEditable && isEnabled
+        isUserInteractionEnabled = isEnabled
+
+        input.isEditable = configuration.isEditable
         input.isSelectable = configuration.isSelectable
         input.isScrollEnabled = configuration.isScrollEnabled
         input.showsVerticalScrollIndicator = configuration.showsIndicators
@@ -312,6 +314,12 @@ public final class FLTextEditorView: UIView, FLNodeView {
         input.dataDetectorTypes = configuration.dataDetectorTypes
         input.tintColor = configuration.caretColor
         input.textContainerInset = Self.insets(configuration.textContainerInset, in: direction)
+
+        if isEnabled {
+            input.accessibilityTraits.remove(.notEnabled)
+        } else {
+            input.accessibilityTraits.insert(.notEnabled)
+        }
     }
 
     /// The string is the caller's content, so only a new `contentID` replaces it — which is what leaves
