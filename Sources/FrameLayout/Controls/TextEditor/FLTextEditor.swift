@@ -283,9 +283,10 @@ public final class FLTextEditorView: UIView, FLNodeView {
         )
 
         apply(node.configuration, isEnabled: context.isEnabled, direction: environment.layoutDirection)
-        input.typingAttributes = [.font: current.style.font, .foregroundColor: current.style.color]
         seedText(node: node, environment: environment)
         restyle(to: current.style)
+        // After the seed, never before: assigning `attributedText` replaces `typingAttributes`.
+        input.typingAttributes = [.font: current.style.font, .foregroundColor: current.style.color]
         input.attributedPlaceholder = node.resolvedPlaceholder(in: environment)
         input.accessibilityLabel = context.accessibilityLabel
         applied = current

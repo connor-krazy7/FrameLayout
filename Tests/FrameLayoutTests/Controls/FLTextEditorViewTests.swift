@@ -138,6 +138,26 @@ struct FLTextEditorRenderingTests {
         #expect(bold?.pointSize == 30)
     }
 
+    // Assigning `attributedText` replaces `typingAttributes`, so a seed whose string ends in the caller's
+    // own run would otherwise hand that run's style to everything typed next — and a later restyle, which
+    // looks for the resolved value, would skip it.
+    @Test("text typed after a seed carries the resolved style, not the string's trailing run")
+    func typedTextCarriesTheResolvedStyle() {
+        let styled = NSMutableAttributedString(string: "plain ")
+        styled.append(
+            NSAttributedString(string: "bold", attributes: [.font: UIFont.boldSystemFont(ofSize: 30)])
+        )
+
+        let host = hosted(FLTextEditor(FLAttributedString(styled)).font(.systemFont(ofSize: 12)))
+
+        input(in: host)?.insertText("!")
+
+        let typed = input(in: host)?.attributedText
+        let last = typed.map { $0.attribute(.font, at: $0.length - 1, effectiveRange: nil) as? UIFont }
+
+        #expect(last??.pointSize == 12)
+    }
+
     private func renderedFontSize(in host: FLHostView<Tagged>) -> CGFloat? {
         let text = input(in: host)?.attributedText
 
