@@ -23,6 +23,10 @@ public final class FLHostView<Node: FLNode>: UIView, FLHosting {
 
     public override var intrinsicContentSize: CGSize { contentSize }
 
+    /// A host sized by its `intrinsicContentSize` — a cell, or anything constraint-driven — only reaches
+    /// the new size on the next layout pass, so this asks the superview for one. Left at a stale size it
+    /// fails silently: nothing clips it, so the content still draws while UIKit rejects every touch
+    /// falling outside the host's own bounds.
     public func apply(node: Node, layout: Node.Layout, environment: FLEnvironment = .default) {
         guard hasApplied else {
             UIView.performWithoutAnimation {
@@ -37,6 +41,8 @@ public final class FLHostView<Node: FLNode>: UIView, FLHosting {
     }
 
     private func applyContent(node: Node, layout: Node.Layout, environment: FLEnvironment) {
+        let resized = contentSize != layout.size
+
         registry.removeAll()
         contentSize = layout.size
         contentView.frame = CGRect(origin: .zero, size: layout.size)
@@ -45,6 +51,11 @@ public final class FLHostView<Node: FLNode>: UIView, FLHosting {
             layout: layout,
             context: FLRenderContext(environment: environment, registry: registry)
         )
+
+        guard resized else { return }
+
         invalidateIntrinsicContentSize()
+        superview?.setNeedsLayout()
     }
+
 }

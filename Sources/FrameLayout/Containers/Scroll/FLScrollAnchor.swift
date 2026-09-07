@@ -9,13 +9,13 @@ import UIKit
 /// apply, and falls back to `.zero` when the tag names nothing inside the region.
 public enum FLScrollAnchor: Sendable, Hashable {
     case offset(FLPoint)
-    case element(id: FLScrollIdentity, alignment: FLAlignment)
+    case element(id: FLContentIdentity, alignment: FLAlignment)
 
     /// `.topLeading` puts the element's own leading edge at the viewport's, which is the paging position.
     public static func element(
         _ id: some Hashable & Sendable,
         alignment: FLAlignment = .topLeading
     ) -> FLScrollAnchor {
-        .element(id: FLScrollIdentity(id), alignment: alignment)
+        .element(id: FLContentIdentity(id), alignment: alignment)
     }
 }

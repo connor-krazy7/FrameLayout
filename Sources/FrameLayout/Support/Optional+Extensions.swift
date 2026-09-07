@@ -13,3 +13,8 @@ public extension Optional {
 public extension Optional where Wrapped == String {
     var orEmpty: Wrapped { or("") }
 }
+
+public extension Optional where Wrapped == Bool {
+    var orFalse: Wrapped { or(false) }
+    var orTrue: Wrapped { or(true) }
+}
