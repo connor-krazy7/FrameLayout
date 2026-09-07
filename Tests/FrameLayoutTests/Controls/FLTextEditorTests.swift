@@ -89,6 +89,21 @@ struct FLTextEditorTests {
         #expect(editor == display)
     }
 
+    // A decision rather than an oversight: an editable editor fills the box it is given, so the smallest
+    // it can be is nothing — the answer every flexible leaf gives. A floor taken from the node's text
+    // would also be stale, since after any typing the node's string is not what the view holds.
+    @Test("asked for its minimum, an editable editor collapses where a display-only one hugs")
+    func minimumCollapsesOnlyWhenEditable() {
+        let squeezed = FLContext(width: .minimum, environment: Self.environment)
+        let editable = FLTextEditor(Self.sample).layout(in: squeezed).size.width
+        let display = FLTextEditor(Self.sample).editable(false).layout(in: squeezed).size.width
+        let text = FLText(Self.sample).layout(in: squeezed).size.width
+
+        #expect(editable == 0)
+        #expect(display > 0)
+        #expect(display == text)
+    }
+
     @Test("behaviour that never reaches layout is layout-equivalent, so a cache still hits")
     func behaviourIsLayoutNeutral() {
         let plain = FLTextEditor(Self.sample)

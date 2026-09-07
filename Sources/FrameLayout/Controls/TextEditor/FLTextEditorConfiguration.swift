@@ -9,8 +9,9 @@ public struct FLTextEditorConfiguration: Sendable, FLLayoutEquatable, WithCustom
     /// editable editor already takes the box it is offered.
     public var isScrollEnabled = false
     /// An editable editor takes the box it was offered on both axes, falling back to its content when
-    /// nothing was offered — which is what lets a frame size it, and what self-sizes a cell. A
-    /// display-only one hugs its text instead, measuring exactly as the `FLText` beside it would.
+    /// nothing was offered — which is what lets a frame size it, what self-sizes a cell, and what makes
+    /// it answer zero to a `.minimum` proposal, so a squeezed stack can collapse it. A display-only one
+    /// hugs its text instead, measuring exactly as the `FLText` beside it would.
     public var isEditable = true
     public var isSelectable = true
     public var clearsOnInsertion = false
