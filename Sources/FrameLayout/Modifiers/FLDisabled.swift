@@ -3,6 +3,10 @@ import UIKit
 // MARK: - Modifiers
 
 public extension FLNodeProviding {
+    /// Disabled means out of the hit path and announced as disabled, not merely inert: a node that takes
+    /// input turns `isUserInteractionEnabled` off and adds the `.notEnabled` trait when
+    /// `FLRenderContext.isEnabled` is false. It reaches `update` only, never `layout(in:)`, so disabling
+    /// changes no size.
     func disabled(_ isDisabled: Bool = true) -> FLDisabled<ProvidedNode> {
         FLDisabled(isDisabled: isDisabled, wrapped: flNode)
     }

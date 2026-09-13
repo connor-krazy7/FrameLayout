@@ -82,7 +82,7 @@ public struct FLText: FLNode {
     /// then the defaults. Rendering only — `layout(in:)` measures `measuredText(in:)`.
     public func resolvedText(in environment: FLEnvironment) -> NSAttributedString {
         let resolved = environment.applying(overrides)
-        return text(
+        return attributedText.text(
             withDefaults: [
                 .font: resolved.font.or(Self.defaultFont),
                 .foregroundColor: resolved.foregroundColor.or(Self.defaultColor),
@@ -92,73 +92,17 @@ public struct FLText: FLNode {
 
     func measuredText(in environment: FLEnvironment) -> NSAttributedString {
         let resolved = environment.applying(overrides)
-        return text(withDefaults: [.font: resolved.font.or(Self.defaultFont)])
-    }
-
-    private func text(withDefaults attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
-        guard attributedText.underlying.length > 0 else { return attributedText.underlying }
-
-        let filled = NSMutableAttributedString(attributedString: attributedText.underlying)
-
-        for (key, value) in attributes {
-            Self.fillGaps(of: key, with: value, in: filled)
-        }
-
-        return filled
-    }
-
-    private static func fillGaps(
-        of key: NSAttributedString.Key,
-        with value: Any,
-        in target: NSMutableAttributedString
-    ) {
-        let fullRange = NSRange(location: 0, length: target.length)
-
-        var missing: [NSRange] = []
-        target.enumerateAttribute(key, in: fullRange, options: []) { existing, subrange, _ in
-            guard existing == nil else { return }
-            missing.append(subrange)
-        }
-
-        for subrange in missing {
-            target.addAttribute(key, value: value, range: subrange)
-        }
+        return attributedText.text(withDefaults: [.font: resolved.font.or(Self.defaultFont)])
     }
 
     public func layout(in context: FLContext) -> FLTextLayout {
-        let text = measuredText(in: context.environment)
-
-        guard text.length > 0 else { return FLTextLayout(size: .zero) }
-
-        let availableWidth = measurementWidth(for: context.width, attributedText: text)
-
-        guard availableWidth > 0 else { return FLTextLayout(size: .zero) }
-
-        let storage = NSTextStorage(attributedString: text)
-        let container = NSTextContainer(
-            size: CGSize(
-                width: availableWidth,
-                height: context.height.exactValue.or(.greatestFiniteMagnitude)
-            )
-        ).then {
-            $0.lineFragmentPadding = 0
-            $0.maximumNumberOfLines = lineLimit
-            $0.lineBreakMode = lineBreakMode
-        }
-        let manager = NSLayoutManager()
-
-        manager.addTextContainer(container)
-        storage.addLayoutManager(manager)
-        manager.ensureLayout(for: container)
-
-        let used = manager.usedRect(for: container)
-
-        return FLTextLayout(
-            size: CGSize(
-                width: context.clampingWidth(ceil(used.width)),
-                height: context.clampingHeight(ceil(used.height))
-            )
+        let measurement = FLTextMeasurement(
+            attributedText: measuredText(in: context.environment),
+            lineLimit: lineLimit,
+            lineBreakMode: lineBreakMode
         )
+
+        return FLTextLayout(size: measurement.size(in: context))
     }
 }
 
@@ -245,56 +189,6 @@ public extension FLText {
             lineBreakMode: lineBreakMode,
             overrides: overrides
         )
-    }
-}
-
-// MARK: - Helpers
-
-private extension FLText {
-    func measurementWidth(for proposal: FLProposal, attributedText: NSAttributedString) -> CGFloat {
-        switch proposal {
-        case .unspecified, .maximum: .greatestFiniteMagnitude
-        case .minimum: Self.minimumWidth(of: attributedText)
-        case let .exact(value): value
-        }
-    }
-
-    // TextKit cannot be asked for an intrinsic minimum: a zero-width container is treated as
-    // unbounded, and any small width simply wraps inside words. So the minimum is a policy — the
-    // widest run that cannot be broken — and here that policy is "break only at whitespace".
-    //
-    // Hyphens and other break opportunities are not considered, so this can over-report. That is the
-    // safe direction: an over-large minimum makes a container refuse to squeeze text further than it
-    // should, where an under-report would let it wrap into something unreadable.
-    static func minimumWidth(of attributedText: NSAttributedString) -> CGFloat {
-        let string = attributedText.string as NSString
-        let unbounded = CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-
-        var widest: CGFloat = 0
-        var searchStart = 0
-
-        while searchStart < string.length {
-            let remaining = NSRange(location: searchStart, length: string.length - searchStart)
-            let separator = string.rangeOfCharacter(from: .whitespacesAndNewlines, options: [], range: remaining)
-
-            let runRange: NSRange
-            if separator.location == NSNotFound {
-                runRange = remaining
-                searchStart = string.length
-            } else {
-                runRange = NSRange(location: searchStart, length: separator.location - searchStart)
-                searchStart = separator.location + separator.length
-            }
-
-            guard runRange.length > 0 else { continue }
-
-            let bounds = attributedText
-                .attributedSubstring(from: runRange)
-                .boundingRect(with: unbounded, options: [.usesLineFragmentOrigin, .usesFontLeading], context: nil)
-            widest = Swift.max(widest, ceil(bounds.width))
-        }
-
-        return widest
     }
 }
 

@@ -36,6 +36,21 @@ public struct FLAttributedString: Sendable, Hashable, FLLayoutEquatable {
     public init(_ string: String) {
         self.init(NSAttributedString(string: string))
     }
+
+    /// The string with `attributes` filled into the runs that do not already carry them. Defaults lose
+    /// to whatever the string was built with, which is what lets a caller style part of a run and leave
+    /// the rest to the environment.
+    func text(withDefaults attributes: [NSAttributedString.Key: Any]) -> NSAttributedString {
+        guard underlying.length > 0 else { return underlying }
+
+        let filled = NSMutableAttributedString(attributedString: underlying)
+
+        for (key, value) in attributes {
+            Self.fillGaps(of: key, with: value, in: filled)
+        }
+
+        return filled
+    }
 }
 
 // MARK: - Hashable
@@ -65,6 +80,24 @@ public extension FLAttributedString {
 // MARK: - Helpers
 
 private extension FLAttributedString {
+    static func fillGaps(
+        of key: NSAttributedString.Key,
+        with value: Any,
+        in target: NSMutableAttributedString
+    ) {
+        let fullRange = NSRange(location: 0, length: target.length)
+
+        var missing: [NSRange] = []
+        target.enumerateAttribute(key, in: fullRange, options: []) { existing, subrange, _ in
+            guard existing == nil else { return }
+            missing.append(subrange)
+        }
+
+        for subrange in missing {
+            target.addAttribute(key, value: value, range: subrange)
+        }
+    }
+
     static func strippingNeutralAttributes(from string: NSAttributedString) -> NSAttributedString {
         let fullRange = NSRange(location: 0, length: string.length)
 

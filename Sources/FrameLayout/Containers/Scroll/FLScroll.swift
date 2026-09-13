@@ -82,7 +82,7 @@ public extension FLScroll {
     ) -> FLScroll {
         configured {
             $0.initialAnchor = anchor
-            $0.contentID = FLScrollIdentity(contentID)
+            $0.contentID = FLContentIdentity(contentID)
         }
     }
 
@@ -147,7 +147,7 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
     public typealias Node = FLScroll<Content>
 
     private let contentView = Content.View()
-    private var appliedToken: FLScrollIdentity?
+    private var appliedToken: FLContentIdentity?
     private var hasApplied = false
 
     public override init(frame: CGRect) {
@@ -240,7 +240,7 @@ public final class FLScrollView<Content: FLNode>: UIScrollView, FLNodeView {
     }
 
     private func offset(
-        showing id: FLScrollIdentity,
+        showing id: FLContentIdentity,
         alignedTo alignment: FLAlignment,
         viewport: CGSize,
         context: FLRenderContext

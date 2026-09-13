@@ -1,7 +1,7 @@
 import UIKit
 
 public struct FLScrollConfiguration: Sendable, FLLayoutEquatable, WithCustomisable {
-    public var contentID: FLScrollIdentity?
+    public var contentID: FLContentIdentity?
     public var initialAnchor: FLScrollAnchor = .offset(.zero)
     public var indicators: FLScrollIndicatorVisibility = .automatic
     public var contentInsets: FLEdgeInsets = .zero
