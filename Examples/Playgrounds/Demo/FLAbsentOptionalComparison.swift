@@ -54,6 +54,33 @@ private extension View {
     }
 }
 
+/// The SwiftUI half of "hosted alone", and it has to be a hosting controller rather than the view placed
+/// inline: inline it sits in this file's own `VStack`, which drops an absent child and draws nothing, so
+/// the picture would show the container reading under a caption reporting the root one.
+private struct Hosted<Content: View>: UIViewControllerRepresentable {
+    let width: CGFloat
+    @ViewBuilder let content: () -> Content
+
+    func makeUIViewController(context: Context) -> UIHostingController<Content> {
+        let controller = UIHostingController(rootView: content())
+        controller.view.backgroundColor = .clear
+
+        return controller
+    }
+
+    func updateUIViewController(_ controller: UIHostingController<Content>, context: Context) {
+        controller.rootView = content()
+    }
+
+    func sizeThatFits(
+        _ proposal: ProposedViewSize,
+        uiViewController: UIHostingController<Content>,
+        context: Context
+    ) -> CGSize? {
+        uiViewController.sizeThatFits(in: CGSize(width: width, height: CGFloat.infinity))
+    }
+}
+
 private enum SizeText {
     static func size(_ size: CGSize) -> String {
         "\(number(size.width))x\(number(size.height))"
@@ -102,7 +129,7 @@ private struct ComparisonRow<Node: FLNode, Reference: View>: View {
                 fl: SizeText.size(flAlone),
                 agrees: abs(flAlone.width - swiftUIAlone.width) <= 0.5 && abs(flAlone.height - swiftUIAlone.height) <= 0.5
             ) {
-                reference().outlined()
+                Hosted(width: width) { reference() }.outlined()
             } flContent: {
                 FLNodePreview(node: node, layoutContext: context).outlined()
             }
