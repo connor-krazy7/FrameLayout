@@ -7,10 +7,12 @@ public struct FLSingle<Node: FLNode>: FLGroup {
 
     public let node: Node
 
-    public var childCount: Int { 1 }
+    public var childCount: Int { node.isAbsent ? 0 : 1 }
 
     public func layout(in context: FLContext) -> FLGroupChildren {
-        FLGroupChildren.single(node.layout(in: context), isSpacer: node.isSpacer)
+        guard !node.isAbsent else { return .empty }
+
+        return FLGroupChildren.single(node.layout(in: context), isSpacer: node.isSpacer)
     }
 
     public func layout(childContexts: ArraySlice<FLContext>) -> FLGroupChildren {
@@ -29,7 +31,13 @@ public final class FLSingleViews<Node: FLNode>: FLGroupViews {
     public init() {}
 
     public func update(group: Group, children: FLGroupChildren, context: FLRenderContext) -> [UIView] {
-        guard let layout = children.layouts.first?.unwrap(as: Node.Layout.self) else { return [] }
+        // A group that contributes no child is not handed a frame by its container, so nothing else
+        // would take the view back off screen when the node becomes empty.
+        guard let layout = children.layouts.first?.unwrap(as: Node.Layout.self) else {
+            view.removeFromSuperview()
+
+            return []
+        }
 
         view.update(node: group.node, layout: layout, context: context)
 

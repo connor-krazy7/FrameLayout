@@ -16,6 +16,13 @@ public enum FLEither<First: FLNode, Second: FLNode>: FLNode {
         }
     }
 
+    public var isAbsent: Bool {
+        switch self {
+        case let .first(node): node.isAbsent
+        case let .second(node): node.isAbsent
+        }
+    }
+
     public func layout(in context: FLContext) -> Layout {
         switch self {
         case let .first(node): .first(node.layout(in: context))
