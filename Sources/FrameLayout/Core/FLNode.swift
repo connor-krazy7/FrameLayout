@@ -19,7 +19,7 @@ public protocol FLNode: FLNodeProviding, Sendable, FLLayoutEquatable {
     var isSpacer: Bool { get }
 
     /// Whether this node stands for content that is not there. A group gives such a child no slot and no
-    /// spacing, so a wrapper forwards its child's answer and a view of its own does not.
+    /// spacing; which nodes answer `true` is `absent-nodes.md`.
     var isAbsent: Bool { get }
 
     func layout(in context: FLContext) -> Layout
