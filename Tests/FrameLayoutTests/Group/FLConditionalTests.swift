@@ -15,6 +15,16 @@ private struct Branching: FLView {
     }
 }
 
+private struct EmptyComposite: FLView {
+    let isVisible: Bool
+
+    var body: some FLNode {
+        if isVisible {
+            FLColor(.red).frame(width: 10, height: 10)
+        }
+    }
+}
+
 @Suite("Conditionals")
 struct FLConditionalTests {
     private let context = FLContext(width: 300)
@@ -25,6 +35,21 @@ struct FLConditionalTests {
             if includesMiddle {
                 FLColor(.green).frame(width: 10, height: 10)
             }
+            FLColor(.blue).frame(width: 10, height: 10)
+        }
+    }
+
+    /// The same branch as `stack(includingMiddle:)`, reached as a node rather than written inline.
+    @FLNodeBuilder private func absent(_ isVisible: Bool) -> FLOptional<FLFrame<FLColor>> {
+        if isVisible {
+            FLColor(.green).frame(width: 10, height: 10)
+        }
+    }
+
+    private func stackThroughNode(includingMiddle includesMiddle: Bool) -> some FLNode {
+        FLVStack(spacing: 8) {
+            FLColor(.red).frame(width: 10, height: 10)
+            absent(includesMiddle)
             FLColor(.blue).frame(width: 10, height: 10)
         }
     }
@@ -145,4 +170,79 @@ struct FLConditionalTests {
         #expect(layout.size.height == 100)
         #expect(layout.childFrames[2].minY == 90)
     }
+
+    // MARK: - Reached as a node
+
+    @Test("the same branch reached through a node costs nothing either")
+    func absentNodeCostsNothing() {
+        #expect(stackThroughNode(includingMiddle: true).layout(in: context).size.height == 46)
+        #expect(stackThroughNode(includingMiddle: false).layout(in: context).size.height == 28)
+    }
+
+    @Test("a modifier over an absent node is absent too, so the slot never comes back")
+    func modifiersStayAbsent() {
+        #expect(absent(false).padding(10).isAbsent)
+        #expect(absent(false).frame(width: 100, height: 100).isAbsent)
+        #expect(absent(false).padding(10).background(.systemGreen).isAbsent)
+        #expect(absent(true).padding(10).isAbsent == false)
+
+        let stack = FLVStack(spacing: 8) {
+            FLColor(.red).frame(width: 10, height: 10)
+            absent(false).padding(10).frame(width: 100, height: 100)
+            FLColor(.blue).frame(width: 10, height: 10)
+        }
+
+        #expect(stack.layout(in: context).size.height == 28)
+    }
+
+    /// The counterpart, and the one a reader is most likely to think is a bug. Elision happens where a
+    /// group asks for children, so a chain measured on its own still resolves its modifiers — which is
+    /// also what SwiftUI reports for the same chain hosted as a root.
+    @Test("outside a group, a modifier over an absent node still resolves")
+    func modifiersResolveOutsideAGroup() {
+        #expect(absent(false).padding(10).layout(in: context).size == CGSize(width: 20, height: 20))
+        #expect(
+            absent(false).frame(width: 100, height: 100).layout(in: context).size
+                == CGSize(width: 100, height: 100)
+        )
+    }
+
+    @Test("a composite whose body is absent contributes nothing")
+    func absentCompositeCostsNothing() {
+        #expect(Branching(showsText: true).node.isAbsent == false)
+        #expect(EmptyComposite(isVisible: false).node.isAbsent)
+
+        let stack = FLVStack(spacing: 8) {
+            FLColor(.red).frame(width: 10, height: 10)
+            EmptyComposite(isVisible: false)
+            FLColor(.blue).frame(width: 10, height: 10)
+        }
+
+        #expect(stack.layout(in: context).size.height == 28)
+    }
+
+    @Test("a node that becomes absent takes its view off screen")
+    @MainActor
+    func absentNodeRemovesItsView() {
+        let host = FLHostView<FLVStack<FLConcat<FLSingle<FLFrame<FLColor>>, FLSingle<FLOptional<FLFrame<FLColor>>>>>>()
+
+        func apply(_ isVisible: Bool) {
+            let node = FLVStack(spacing: 8) {
+                FLColor(.red).frame(width: 10, height: 10)
+                absent(isVisible)
+            }
+
+            host.apply(node: node, layout: node.layout(in: context))
+            host.layoutIfNeeded()
+        }
+
+        apply(true)
+        let attached = host.subviews.first?.subviews.count
+
+        apply(false)
+
+        #expect(attached == 2)
+        #expect(host.subviews.first?.subviews.count == 1)
+    }
+
 }

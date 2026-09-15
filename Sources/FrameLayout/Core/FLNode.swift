@@ -18,6 +18,10 @@ public protocol FLNode: FLNodeProviding, Sendable, FLLayoutEquatable {
 
     var isSpacer: Bool { get }
 
+    /// Whether this node stands for content that is not there. A group gives such a child no slot and no
+    /// spacing; which nodes answer `true` is `absent-nodes.md`.
+    var isAbsent: Bool { get }
+
     func layout(in context: FLContext) -> Layout
 }
 
@@ -25,6 +29,8 @@ public extension FLNode {
     static var typeIdentifier: String { String(reflecting: Self.self) }
 
     var isSpacer: Bool { false }
+
+    var isAbsent: Bool { false }
 
     var flNode: Self { self }
 }

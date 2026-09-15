@@ -18,6 +18,8 @@ public struct FLComposed<Composite: FLView>: FLNode {
     // otherwise rebuild the whole body tree.
     public let body: Composite.Body
 
+    public var isAbsent: Bool { body.isAbsent }
+
     public init(_ composite: Composite) {
         self.composite = composite
         body = composite.body

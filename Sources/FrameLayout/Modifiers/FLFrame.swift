@@ -48,6 +48,8 @@ public struct FLFrame<Wrapped: FLNode>: FLNode {
     public let alignment: FLAlignment
     public let wrapped: Wrapped
 
+    public var isAbsent: Bool { wrapped.isAbsent }
+
     public func layout(in context: FLContext) -> FLFrameLayout<Wrapped.Layout> {
         let measuringWidth = Self.childProposal(context.width, min: minWidth, max: maxWidth)
         let measuringHeight = Self.childProposal(context.height, min: minHeight, max: maxHeight)

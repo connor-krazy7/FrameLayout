@@ -56,6 +56,8 @@ public struct FLPadded<Wrapped: FLNode>: FLNode {
     public let insets: FLEdgeInsets
     public let wrapped: Wrapped
 
+    public var isAbsent: Bool { wrapped.isAbsent }
+
     public func layout(in context: FLContext) -> FLPaddedLayout<Wrapped.Layout> {
         let wrappedLayout = wrapped.layout(in: context.inset(by: insets))
 
