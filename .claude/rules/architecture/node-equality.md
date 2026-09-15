@@ -149,7 +149,7 @@ compute the same thing. So for dynamic colours `UIColor` falls back to instance 
 Pointer identity **does** short-circuit, so one shared instance is equal to itself and hashes stably.
 That is the whole fix, and it is why a system colour is safe — `.label` is a cached singleton.
 
-**The mistake is `static var`, and it is invisible at the call site.**
+**The mistake is `static var` on a dynamic colour, and it is invisible at the call site.**
 
 ```swift
 // no — a computed `static var` makes a new object on every access
@@ -166,6 +166,14 @@ extension UIColor {
 Both read as `.bubble` where they are used. The only symptom of the first is a layout cache that never
 hits, with no diagnostic — which is why this is a written rule rather than a doc comment. Sharing an
 instance costs no dynamic behaviour; UIKit still resolves it per trait collection at draw time.
+
+**A flat colour is outside all of this, and saying so is half the rule.** Row 4 is the one a reader
+usually arrives with: `UIColor(red:green:blue:alpha:)` compares and hashes by its components, so a
+computed `static var` hands back a fresh instance that is nonetheless the same cache key, and the
+cache hits. Mirroring a palette of hex tokens into UIKit costs an allocation per access and nothing
+else. Prefer `static let` there anyway, for the ordinary reason that rebuilding an immutable value is
+waste — but do not cite this rule for it. It binds on the day a token becomes dark-mode-aware, and not
+before.
 
 Four places a colour reaches a cache key, and note which one is absent: a colour built inside a
 composite's `body` is not among them, because `FLComposed.==` compares `composite` alone.
