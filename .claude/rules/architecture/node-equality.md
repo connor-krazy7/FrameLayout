@@ -133,10 +133,10 @@ Note this is the opposite conclusion from `FLText`, and for a concrete reason �
 comparison is bounded by message length and short-circuits on a length mismatch, `UIImage` comparison
 is bounded by pixel count. Do not generalise either verdict to the next reference type; measure it.
 
-## A dynamic `UIColor` must be one shared instance
+## A hand-written dynamic `UIColor` must be one shared instance
 
 `UIColor(dynamicProvider:)` wraps a closure, and nothing about two blocks tells `isEqual:` whether they
-compute the same thing. So for dynamic colours `UIColor` falls back to instance equality:
+compute the same thing. So for a colour built that way `UIColor` falls back to instance equality:
 
 | | `===` | `==` | hash |
 | --- | --- | --- | --- |
@@ -167,25 +167,84 @@ Both read as `.bubble` where they are used. The only symptom of the first is a l
 hits, with no diagnostic — which is why this is a written rule rather than a doc comment. Sharing an
 instance costs no dynamic behaviour; UIKit still resolves it per trait collection at draw time.
 
-Four places a colour reaches a cache key, and note which one is absent: a colour built inside a
-composite's `body` is not among them, because `FLComposed.==` compares `composite` alone.
+### That is the whole rule, and it does not extend past a hand-written closure
 
-1. Stored on whatever the cache is rooted on — `let bubbleColour: UIColor` on a composite.
-2. In `FLEnvironment.foregroundColor`, which is in the key at **every** root via `FLContext`.
-3. A chain-rooted cache, where `FLDecoration` is hashed directly.
-4. Inside a stored `NSAttributedString`, since attribute comparison is part of its equality. **Store an
-   `FLAttributedString` instead** — it strips the attributes that change no glyph advance once at
-   construction, so a colour in a run costs nothing, while `==` still separates the two so a diff still
-   sees the highlight. `FLText` stores one; a composite holding attributed text of its own should too.
+Every other way of making a colour is stable however it is spelled, which is not what the `static var`
+warning above suggests if it is read as being about dynamic colours in general:
+
+| construction | `===` | `==` |
+| --- | --- | --- |
+| `UIColor(Color.red)` / `UIColor(Color.primary)`, two accesses | yes | yes |
+| `UIColor(Color.primary.opacity(0.4))`, two accesses | yes | yes |
+| `UIColor(aComputedVarReturningAColor)` | yes | yes |
+| `UIColor(Color(red:green:blue:))`, two accesses | no | yes |
+| `withAlphaComponent(_:)` on a system colour | no | yes |
+| `withAlphaComponent(_:)` on one shared dynamic colour | no | yes |
+| `UIColor(Color(uiColor:))` over **two fresh providers** | no | **no** |
+
+Two conclusions a reader would otherwise draw from the `static var` rule, both wrong:
+
+- **A SwiftUI-sourced token needs no UIKit-side ceremony.** SwiftUI caches the bridge, so `UIColor(Color)`
+  comes back pointer-identical — `.primary` included, `.opacity(_:)` included, and from a *computed* `var`.
+  A design system whose tokens are `Color`s is safe as it stands.
+- **A derivation does not have to be stored.** Two separate `withAlphaComponent(_:)` calls off one base
+  compare equal, dynamic base included, so a computed scrim is a stable key.
+
+The last row is what keeps the rule pointed at the closure rather than at UIKit: laundering a fresh
+provider through `Color(uiColor:)` does not launder the instability.
+
+### Where a colour still reaches a cache key: one place
+
+**Stored on whatever the cache is rooted on** — `let bubbleColour: UIColor` on a composite. A consumer's
+composite does not hand-write `isLayoutEquivalent`, so it falls to the whole-value default in
+`FLLayoutEquatable` and its synthesised `==` walks the colour.
+
+Three places that used to be on this list are closed, and are recorded because the closure is what makes
+the remaining one easy to check rather than because any of them is a live hazard:
+`FLEnvironment.isLayoutEquivalent` excludes `foregroundColor`, `FLDecorated` hashes `wrapped` alone, and
+`FLAttributedString` strips the four colour attributes from `layoutIdentity` at construction. **Store an
+`FLAttributedString`** rather than a bare `NSAttributedString` for that last one to keep holding: `==`
+still separates the two so a diff still sees a highlight change, while layout identity merges them.
+
+A colour built inside a composite's `body` was never on the list, because `FLComposed.==` compares
+`composite` alone.
+
+### The cache miss is the cheap half
+
+Reading `cgColor` on a **freshly built** provider colour costs milliseconds. Reading it on one that has
+been read before costs ~400 ns, and on a resolved colour ~130 ns. The cost is per instance on its first
+read, so a token rebuilt per access pays it on **every** access while a shared instance pays it once per
+process — orders of magnitude more than the missed measurement the rule above is about.
+`FLDecoratedView.update` reads `cgColor` twice per update.
+
+**Do not quote those magnitudes or act on them yet.** They are measured in a test process with no window,
+and neighbouring rows move by more than 10× between runs, so only the ordering is established. A hosted
+measurement inside a real view update is the prerequisite for changing `FLDecoratedView` — and if it
+confirms, the change is the one the next paragraph already prescribes.
 
 Resolution belongs in `update` — `FLTextView.update` resolves through `context.environment` — and must
 not be hoisted into node construction as an optimisation, because a resolved colour is a different
 colour from its dynamic source and changes on every appearance change.
 
-`FLColorIdentityTests` in `Tests/FrameLayoutTests/Runtime/` pins every row above, including the cache
-consequence. It asserts a *platform* behaviour, which is deliberate: the singleton identity of `.label`
-is load-bearing for hit rates across the package, and if two separately built dynamic colours ever
-start comparing equal, this rule should be revisited rather than left in place.
+### The hazard is not this package's
+
+A value used as an identity must be stable, and a closure cannot be compared. Anything that diffs on
+equality pays for it: SwiftUI deciding whether to re-evaluate a body, a diffable data source deciding
+whether a row changed, any `Dictionary` or `NSCache` keyed on a type storing the colour. `FLLayoutCache`
+is one entry on that list rather than the subject. Imperative UIKit is the one place it is free —
+`view.backgroundColor =` compares nothing — which is why the mistake sits in a codebase for years and
+surfaces only when something starts caching.
+
+Three suites in `Tests/FrameLayoutTests/` pin all of the above: `Runtime/FLColorIdentityTests` for the
+equality table, `Runtime/FLColorProvenanceTests` for the provenance table and the SwiftUI half, and
+`Benchmarks/FLColorCostBenchmarks` for the read costs. They assert a *platform* behaviour, which is
+deliberate: the singleton identity of `.label` is load-bearing for hit rates across the package, and if
+two separately built dynamic colours ever start comparing equal, this rule should be revisited rather
+than left in place.
+
+**An asset-catalogue colour is not covered** — `Color("Name")` / `UIColor(named:)` needs a colorset in
+the test bundle. It is the most likely shape for a real design token, so the provenance table above must
+not be read as covering one.
 
 ## A `UIFont` needs nothing — and that is a measurement, not an assumption
 

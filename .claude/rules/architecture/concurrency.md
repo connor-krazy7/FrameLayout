@@ -32,10 +32,19 @@ holds — the attributed string, the font, the image's `size` — plus the envir
 genuinely cannot be derived that way, the node cannot be measured off the main thread and needs a
 different design; say that rather than smuggling a view into the layout.
 
-**And through one implementation.** Where a measurement primitive already exists, measure through it; a
-node that grows a second one is the failure this rule cannot catch. Two stacks configured slightly
-differently agree on most strings and diverge on truncation and line breaking, so the symptom is a frame
-a point or two wrong rather than a test that fails.
+**And through one implementation.** `FLTextMeasurement` is that stack for text, and every text node
+measures through it. A node that grows a second one is the failure this rule cannot catch: two stacks
+configured slightly differently agree on most strings and diverge on truncation and line breaking, so the
+symptom is a frame a point or two wrong rather than a test that fails.
+
+It is **TextKit 1** — `NSTextStorage` → `NSLayoutManager` → `NSTextContainer`, measured with
+`ensureLayout(for:)` and `usedRect(for:)`. That is a deliberate choice rather than an accident of age, and
+what a TextKit 2 move would cost is recorded in issue #31 rather than here. A `UITextView` added to this
+package has to be pinned back to TextKit 1 on purpose, since it has defaulted to TextKit 2 since iOS 16.
+
+`NSAttributedString.boundingRect` is the *second* primitive in that file and answers a different
+question: the intrinsic minimum width on the `.minimum` proposal, which TextKit cannot be asked for
+because a zero-width container is treated as unbounded. Do not read the two as alternatives.
 
 ### What a measurement may touch
 
@@ -45,7 +54,7 @@ The allowlist, pinned by `FLOffMainMeasurementTests` for the two rows that call 
 | --- | --- |
 | value types, Foundation, Core Graphics | any `UIView` or `UIViewController` |
 | `UIFont`, `UIColor`, `UIImage.size` | `UITraitCollection.current`, `UIScreen`, `UIApplication` |
-| `NSAttributedString` metrics (`boundingRect`) | anything reading `@MainActor` state |
+| a TextKit 1 stack (`NSLayoutManager.usedRect`), `NSAttributedString.boundingRect` | anything reading `@MainActor` state |
 | `FLContext` / `FLEnvironment`, including `contentSizeCategory` | `Task`, `await`, a lock, a semaphore |
 
 Environmental input arrives *through* `FLEnvironment` — that is what the type is for. A node reading
@@ -57,6 +66,12 @@ Two rows of that table are **platform** behaviour this package depends on and do
 `NSAttributedString.boundingRect` returns the same rect off the main thread as on it, and so do the
 `UIFont` values `FLText` defaults to. If either changes, text measurement is what breaks, and it should
 break there first.
+
+**Note which path each of those covers.** `boundingRect` backs the `.minimum` width only. The TextKit 1
+stack that does the actual measuring has no platform assertion of its own — it is covered by the
+agreement test in the same suite, that text measured off the main thread matches text measured on it,
+which would catch a divergence but says nothing about why. Issue #31 records the same gap from the
+TextKit 2 side.
 
 **A non-`Sendable` value cannot be sent into a measurement task at all.** Handing an
 `NSAttributedString` to `Task.detached` does not compile — *"sending value of non-Sendable type risks
