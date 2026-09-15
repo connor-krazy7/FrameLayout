@@ -122,6 +122,33 @@ Both blocks, in that order: the wrapping entry point first, then the collapsing 
 concrete wrapper. The collapse rule is a property of the type, so it belongs beside it — see the
 modifier notes in `AGENTS.md` for which modifiers collapse and why.
 
+### Which block is chosen is decided by the static type
+
+Two overloads of one name means overload resolution, and overload resolution reads the **declared**
+type of the receiver, not what it turns out to hold. The collapsing block is reached only where that
+declared type is already the concrete wrapper. Three routine spellings erase it and silently take the
+wrapping block instead:
+
+| the receiver | resolves to |
+| --- | --- |
+| `FLColor(…).clipShape(.roundedRectangle(8))` — a chain, concrete throughout | the collapsing overload |
+| a helper returning `some FLNode` | the `FLNodeProviding` overload |
+| an `FLView`, whose `flNode` is `FLComposed<Self>` | the `FLNodeProviding` overload |
+
+Nothing marks the difference at the call site. Both spellings compile, both render something
+plausible, and the wrapped one carries a **default** payload — so the modifier a reader thinks they
+are refining is untouched inside, and the outer node is a fresh `FLDecoration` with `shape` still
+`.rectangle`.
+
+That is how `.clipped(false)` on a bubble built as an `FLView` left the bubble clipping: the flag
+landed on a new rectangular `FLDecorated<FLComposed<…>>` while the `clipsToBounds` set by the body's
+own `background(_:in:)` stayed `true`. An opaque `some FLNode` fixture in a *test* went the same way,
+which is the harder one to see, because nothing about the helper looks like erasure.
+
+`FLShapeTests.clipCollapsesOnlyOnAConcreteDecoration` pins all three rows. **A demo or fixture that
+needs the collapse must keep the chain concrete** — build it in a function body, where the types still
+are, rather than behind an opaque return.
+
 This is the one thing the layout does **not** make discoverable: you cannot find `padding` by browsing
 filenames, because the file is named after `FLPadded`. The universal verbs are spread across an
 extension block per node, and `background` means two different things in two of them.

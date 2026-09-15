@@ -76,10 +76,12 @@ must never hold closures, handlers, or view references.
   `.unspecified` / `.minimum` / `.maximum` / `.exact`; there is no sentinel value and no optional.
 - Containers take a group (`FLGroup`); `FLConcat` is a parameter-pack group, so a stack's children are
   statically typed at any arity.
-- Modifiers wrap by default. Only `cornerRadius` / `clipped` merge into an existing `FLDecorated`,
+- Modifiers wrap by default. Only `clipShape` / `cornerRadius` / `cornerRadii` / `clipped` merge into an existing `FLDecorated`,
   and `opacity` / `allowsHitTesting` into an existing `FLAdjusted` — clips compose and adjustments are
   layout-neutral. `background` and `border` must wrap so translucent colours composite and fills escape
-  an outer clip.
+  an outer clip. Merging is overload resolution on the **static** type, so an opaque return or an
+  `FLView` body loses it and wraps a default-valued node instead — `file-organisation.md` has the
+  three cases.
 - `FLLayoutCache` is unbounded and generic over one concrete `Node`, so a screen with several cell
   kinds needs one cache each and a data reload has to call `removeAll()`. Both limits are documented on
   the type. `FLLayoutComputer` is a convenience over `Task.detached`, not a requirement — a caller with

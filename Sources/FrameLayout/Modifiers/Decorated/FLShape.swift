@@ -4,12 +4,13 @@ public enum FLShape: Sendable, Hashable {
     case rectangle
     case roundedRectangle(CGFloat)
     case capsule
+    case unevenRoundedRectangle(FLCornerRadii)
 
     // case path(any FLShapePath)
     //
-    // Deliberately omitted. Every case above resolves to `layer.cornerRadius`, which Core Animation
-    // special-cases: no mask layer and no offscreen pass. It is also the only route that supports
-    // `cornerCurve = .continuous` and `layer.maskedCorners`.
+    // Deliberately omitted. The first three cases resolve to `layer.cornerRadius`, which Core
+    // Animation special-cases: no mask layer and no offscreen pass. It is also the only route that
+    // supports `cornerCurve = .continuous` and `layer.maskedCorners`.
     //
     // An arbitrary path needs `CAShapeLayer` — either as a sublayer to paint a shaped fill, or as
     // `layer.mask` to clip children. The mask form adds an offscreen composite per view, which is
@@ -21,22 +22,29 @@ public enum FLShape: Sendable, Hashable {
     // boxed-existential treatment used by `FLAnyLayout`: a captured comparator plus a hand-written
     // `hash(into:)`.
     //
-    // Worth adding when a design needs a shape that genuinely is not a rounded rectangle. Until then
-    // the closed enum is what lets the renderer stay on the cheap path.
+    // `unevenRoundedRectangle` sits on the `CAShapeLayer` side of that line: it ignores
+    // `cornerCurve`, and its path is rebuilt with the size.
+    //
+    // Worth adding when a design needs a shape that genuinely is not a rectangle with rounded
+    // corners. Until then the closed enum is what keeps the renderer on the cheap path.
 
     public var roundsCorners: Bool {
         switch self {
         case .rectangle: false
         case let .roundedRectangle(radius): radius > 0
         case .capsule: true
+        case let .unevenRoundedRectangle(radii): radii.roundsCorners
         }
     }
 
+    /// The radius Core Animation can apply to every corner at once. `unevenRoundedRectangle` has
+    /// none and answers 0, so it is not a square corner — it is drawn from `FLCornerRadii` instead.
     public func cornerRadius(in size: CGSize) -> CGFloat {
         switch self {
         case .rectangle: 0
         case let .roundedRectangle(radius): radius
         case .capsule: Swift.min(size.width, size.height) / 2
+        case .unevenRoundedRectangle: 0
         }
     }
 }
