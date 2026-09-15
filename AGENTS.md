@@ -88,6 +88,16 @@ must never hold closures, handlers, or view references.
   statically typed. Groups flatten: a group contributes *N* children to its parent, so an absent branch
   contributes none and the stack never spends spacing on it. `FLForEach` is the same mechanism at
   runtime arity.
+- `FLNode.isAbsent` carries that to a branch held as a *node* rather than written inline — a property, a
+  variable, anything with a modifier on it. Known before measuring, so `FLSingle` turns it into
+  `childCount` 0 and the group drops the child and its spacing. **A new wrapper must forward it**, like
+  `isSpacer`; forgetting restores the slot. A node that is a *view of its own* must not — `FLScroll` and
+  `FLButton` keep their slot when their content is absent, and SwiftUI agrees.
+- Two consequences of eliding at the group rather than at the node, both pinned in
+  `FLSwiftUIParityTests`. Outside a group the modifiers still resolve, so a padded absent optional is
+  20x20 hosted alone and nothing wherever it is used — measure this in a container, never with
+  `sizeThatFits`. And reserve space with `FLColor(.clear)`, which is present and empty, never with an
+  absent child in a `frame`.
 
 ## Build settings that are load-bearing
 

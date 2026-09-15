@@ -18,6 +18,7 @@ public struct FLTagged<Wrapped: FLNode, Tag: Hashable & Sendable>: FLNode {
     public let wrapped: Wrapped
 
     public var isSpacer: Bool { wrapped.isSpacer }
+    public var isAbsent: Bool { wrapped.isAbsent }
 
     public func layout(in context: FLContext) -> Wrapped.Layout {
         wrapped.layout(in: context)

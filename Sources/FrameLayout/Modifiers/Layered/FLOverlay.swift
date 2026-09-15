@@ -27,6 +27,8 @@ public struct FLOverlay<Content: FLNode, Overlay: FLNode>: FLNode {
     public let overlay: Overlay
     public let alignment: FLAlignment
 
+    public var isAbsent: Bool { content.isAbsent }
+
     public func layout(in context: FLContext) -> FLLayeredLayout<Content.Layout, Overlay.Layout> {
         FLLayered.layout(primary: content, secondary: overlay, alignment: alignment, in: context)
     }

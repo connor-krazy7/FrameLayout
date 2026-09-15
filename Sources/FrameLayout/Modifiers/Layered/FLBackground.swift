@@ -27,6 +27,8 @@ public struct FLBackground<Content: FLNode, Background: FLNode>: FLNode {
     public let background: Background
     public let alignment: FLAlignment
 
+    public var isAbsent: Bool { content.isAbsent }
+
     public func layout(in context: FLContext) -> FLLayeredLayout<Content.Layout, Background.Layout> {
         FLLayered.layout(primary: content, secondary: background, alignment: alignment, in: context)
     }

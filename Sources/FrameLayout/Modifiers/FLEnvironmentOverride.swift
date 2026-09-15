@@ -42,6 +42,8 @@ public struct FLEnvironmentOverride<Wrapped: FLNode>: FLNode {
     public let overrides: FLEnvironmentOverrides
     public let wrapped: Wrapped
 
+    public var isAbsent: Bool { wrapped.isAbsent }
+
     public func layout(in context: FLContext) -> Wrapped.Layout {
         wrapped.layout(in: context.applying(overrides))
     }
