@@ -728,4 +728,76 @@ struct FLSwiftUIParityTests {
         #expect(stacked(presentNode, spacing: 8) == 136)
     }
 
+    /// A box that survives an absent child is a **drawn** box, in both systems: a decoration sits above
+    /// the optional and fills its own bounds. Asserted in pixels because no size assertion can see it —
+    /// suppressing the fill leaves every number in this suite unchanged.
+    ///
+    /// Both rows carry a present control. A rendering probe that returns zero because it is wired wrong
+    /// looks exactly like one reporting that nothing was drawn, and did, twice, while this was written.
+    @Test("a surviving box is painted, and both systems paint it")
+    func aSurvivingBoxIsPainted() {
+        let flPresent = FLColor(.systemRed).frame(width: 40, height: 40).padding(10).background(.systemGreen)
+        let flAbsent = absentNode.padding(10).background(.systemGreen)
+
+        #expect(paintedPixels(of: presentView.padding(10).background(Color.green)) == 60 * 60)
+        #expect(paintedPixels(of: absentView.padding(10).background(Color.green)) == 20 * 20)
+        #expect(paintedPixels(of: flPresent) == 60 * 60)
+        #expect(paintedPixels(of: flAbsent) == 20 * 20)
+    }
+
+    private func paintedPixels(of view: some View) -> Int {
+        let renderer = ImageRenderer(content: view)
+
+        renderer.scale = 1
+
+        return renderer.cgImage.map(opaquePixels(of:)).or(-1)
+    }
+
+    /// Rendered through a window at scale 1, since a detached layer draws nothing and the default format
+    /// would count the screen's scale squared.
+    private func paintedPixels<Node: FLNode>(of node: Node) -> Int {
+        let layout = node.layout(in: FLContext(width: box))
+        let host = FLHostView<Node>()
+        let window = UIWindow(frame: CGRect(origin: .zero, size: layout.size))
+        let format = UIGraphicsImageRendererFormat.default()
+
+        format.scale = 1
+        host.frame = CGRect(origin: .zero, size: layout.size)
+        host.apply(node: node, layout: layout)
+        window.addSubview(host)
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+
+        let image = UIGraphicsImageRenderer(size: layout.size, format: format).image { context in
+            host.layer.render(in: context.cgContext)
+        }
+
+        return image.cgImage.map(opaquePixels(of:)).or(-1)
+    }
+
+    private func opaquePixels(of image: CGImage) -> Int {
+        let width = image.width
+        let height = image.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let context = pixels.withUnsafeMutableBytes { bytes in
+            CGContext(
+                data: bytes.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        }
+
+        context?.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        return stride(from: 3, to: pixels.count, by: 4).reduce(into: 0) { count, index in
+            if pixels[index] > 0 {
+                count += 1
+            }
+        }
+    }
+
 }

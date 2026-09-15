@@ -67,16 +67,28 @@ measures differently on its own and inside a container, and neither number is wr
 SwiftUI reports exactly the same pair. A reader meeting the first number will think it is a bug; it is
 the reason `FLSwiftUIParityTests.absentAtTheRootIsNotTheContainer` exists.
 
-**A surviving box must stay empty, and that does not follow from the sizes agreeing.** The box is real,
-so a decoration above the optional — `FLDecorated<FLPadded<FLOptional>>`, which is what
-`.padding(10).background(…)` builds — has bounds to fill, and `FLDecoratedView` filled them: a green
-20 × 20 rectangle where SwiftUI draws nothing. `FLHostView` hides its content view when the node is
-absent, which is enough because the host is the only place such a view is built at all — everywhere
-else the group dropped the chain before any view existed. The size is still reported, so the parity
-above is unchanged.
+**A surviving box is a drawn box.** A decoration above the optional —
+`FLDecorated<FLPadded<FLOptional>>`, which is what `.padding(10).background(…)` builds — has bounds of
+its own to fill, so the green rectangle is painted, 20 × 20, with nothing inside it. SwiftUI paints the
+same 20 × 20. Measured in pixels, at scale 1, by
+`FLSwiftUIParityTests.aSurvivingBoxIsPainted`:
 
-This one was invisible to every size assertion in the package and was caught by looking at the demo.
-When an absent node is involved, agreeing sizes are not agreeing pixels.
+| hosted alone, `.padding(10).background(…)` | painted |
+| --- | --- |
+| present, both systems — the control | 60 × 60 |
+| absent, both systems | 20 × 20 |
+
+**Do not "fix" this by suppressing the fill.** It was tried: hiding `FLHostView`'s content view for an
+absent node. Every size assertion in the package stayed green, because none of them can see a fill, and
+the result was a real divergence — FL drawing nothing where SwiftUI draws the box. The mistake was
+comparing against a SwiftUI view placed **inline in a container**, which draws nothing because it has no
+slot. Compare against a hosted one.
+
+Two lessons, both about the measurement rather than the behaviour. A claim about pixels needs a pixel
+assertion; sizes cannot see one. And a rendering probe that is wired wrong returns zero, which looks
+exactly like a correct probe reporting that nothing was drawn — so every such assertion carries a
+**present control** whose non-zero result proves the probe works. Two probes written for this returned
+zero across the board before that control was added.
 
 ## Measuring it: a container, and non-zero spacing
 
