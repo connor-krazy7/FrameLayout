@@ -129,9 +129,9 @@ private struct ComparisonRow<Node: FLNode, Reference: View>: View {
                 fl: SizeText.size(flAlone),
                 agrees: abs(flAlone.width - swiftUIAlone.width) <= 0.5 && abs(flAlone.height - swiftUIAlone.height) <= 0.5
             ) {
-                Hosted(width: width) { reference() }.outlined()
+                stage(swiftUIAlone) { Hosted(width: width) { reference() } }
             } flContent: {
-                FLNodePreview(node: node, layoutContext: context).outlined()
+                stage(flAlone) { FLNodePreview(node: node, layoutContext: context) }
             }
 
             section(
@@ -165,6 +165,18 @@ private struct ComparisonRow<Node: FLNode, Reference: View>: View {
                 column("SwiftUI — \(swiftUI)", agrees: agrees, content: swiftUIContent)
                 column("FrameLayout — \(fl)", agrees: agrees, content: flContent)
             }
+        }
+    }
+
+    /// A box with no area cannot be outlined — the border collapses to a line, or to nothing, and reads
+    /// as content that is there. Say so in words instead.
+    @ViewBuilder private func stage(_ size: CGSize, @ViewBuilder content: () -> some View) -> some View {
+        if size.width == 0 || size.height == 0 {
+            Text("no box")
+                .font(.caption2.italic())
+                .foregroundStyle(.quaternary)
+        } else {
+            content().outlined()
         }
     }
 
@@ -223,7 +235,7 @@ private struct ModifierCases: View {
 
             ComparisonRow(
                 title: ".padding(\(Int(inset))).background(colour)",
-                note: "The box survives hosted alone but nothing is drawn in it, which is the pair to watch: agreeing sizes are not agreeing pixels.",
+                note: "Hosted alone the box survives and is painted, in both systems — a decoration above the optional has bounds of its own to fill. In a stack there is no box to paint.",
                 node: FLAbsentOptionalSamples.node(isVisible).padding(inset).background(.systemGreen)
             ) {
                 FLAbsentOptionalSamples.view(isVisible).padding(inset).background(Color.green)
@@ -277,7 +289,7 @@ private struct AbsentOptionalComparison: View {
             VStack(alignment: .leading, spacing: 32) {
                 Toggle("condition", isOn: $isVisible)
                     .font(.subheadline.weight(.semibold))
-                Text("Off is the absent case. An orange caption marks a row where the two systems disagree; none should.")
+                Text("Off is the absent case. A dashed border is the box a chain reserved, not something drawn in it — where a chain reserves no box at all the column says so instead. An orange caption marks a row where the two systems disagree; none should.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
