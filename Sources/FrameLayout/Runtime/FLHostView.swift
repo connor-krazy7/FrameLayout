@@ -45,6 +45,9 @@ public final class FLHostView<Node: FLNode>: UIView, FLHosting {
 
         registry.removeAll()
         contentSize = layout.size
+        // The host is the one place an absent node's view is built at all, since a group drops it
+        // everywhere else; see absent-nodes.md.
+        contentView.isHidden = node.isAbsent
         contentView.frame = CGRect(origin: .zero, size: layout.size)
         contentView.update(
             node: node,

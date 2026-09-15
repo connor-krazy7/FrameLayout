@@ -221,6 +221,29 @@ struct FLConditionalTests {
         #expect(stack.layout(in: context).size.height == 28)
     }
 
+    /// The host is the only place an absent node's view is built, so it is the only place a decoration
+    /// over one could paint. `FLDecoratedView` fills its own bounds, and the bounds survive.
+    @Test("an absent node draws nothing at the host root, though it still reports its size")
+    @MainActor
+    func absentNodeDrawsNothingAtTheRoot() {
+        let node = absent(false).padding(10).background(.systemGreen)
+        let layout = node.layout(in: context)
+        let host = FLHostView<FLDecorated<FLPadded<FLOptional<FLFrame<FLColor>>>>>()
+
+        host.frame = CGRect(origin: .zero, size: layout.size)
+        host.apply(node: node, layout: layout)
+        host.layoutIfNeeded()
+
+        #expect(layout.size == CGSize(width: 20, height: 20))
+        #expect(host.subviews.first?.isHidden == true)
+
+        let present = absent(true).padding(10).background(.systemGreen)
+
+        host.apply(node: present, layout: present.layout(in: context))
+
+        #expect(host.subviews.first?.isHidden == false)
+    }
+
     @Test("a node that becomes absent takes its view off screen")
     @MainActor
     func absentNodeRemovesItsView() {
