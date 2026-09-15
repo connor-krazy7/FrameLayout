@@ -56,6 +56,7 @@ Claude Code loads that directory directly; other agents should read the files li
 - `.claude/rules/architecture/concurrency.md` — never touch a `UIView` while measuring, what a measurement may touch, and which instrument protects state that outlives one
 - `.claude/rules/architecture/leaf-views.md` — wrap UIKit controls rather than subclassing them; picking `FLStructuralView` vs `UIView` and how hit-test pass-through works
 - `.claude/rules/architecture/node-equality.md` — let `Hashable` synthesis produce a node's `==`/`hash`, and why no identity fast path
+- `.claude/rules/architecture/absent-nodes.md` — what a branch that did not run contributes, which nodes forward `isAbsent`, and how to measure an elision
 - `.claude/rules/architecture/layout-proposals.md` — a proposal is a question, not a constraint; only a pinned frame hands a size down, and how to measure parity against real SwiftUI
 
 ## Architecture
@@ -91,15 +92,8 @@ must never hold closures, handlers, or view references.
   contributes none and the stack never spends spacing on it. `FLForEach` is the same mechanism at
   runtime arity.
 - `FLNode.isAbsent` carries that to a branch held as a *node* rather than written inline — a property, a
-  variable, anything with a modifier on it. Known before measuring, so `FLSingle` turns it into
-  `childCount` 0 and the group drops the child and its spacing. **A new wrapper must forward it**, like
-  `isSpacer`; forgetting restores the slot. A node that is a *view of its own* must not — `FLScroll` and
-  `FLButton` keep their slot when their content is absent, and SwiftUI agrees.
-- Two consequences of eliding at the group rather than at the node, both pinned in
-  `FLSwiftUIParityTests`. Outside a group the modifiers still resolve, so a padded absent optional is
-  20x20 hosted alone and nothing wherever it is used — measure this in a container, never with
-  `sizeThatFits`. And reserve space with `FLColor(.clear)`, which is present and empty, never with an
-  absent child in a `frame`.
+  variable, anything with a modifier on it — so both spellings agree. A new wrapper must forward it and
+  a node that is a view of its own must not; `absent-nodes.md` is authoritative and has the measurements.
 
 ## Build settings that are load-bearing
 
