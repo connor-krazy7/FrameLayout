@@ -196,10 +196,18 @@ private struct ModifierCases: View {
 
             ComparisonRow(
                 title: ".padding(\(Int(inset))).background(colour)",
-                note: "A background is proposed the content's size, so it paints nothing either way.",
+                note: "The box survives hosted alone but nothing is drawn in it, which is the pair to watch: agreeing sizes are not agreeing pixels.",
                 node: FLAbsentOptionalSamples.node(isVisible).padding(inset).background(.systemGreen)
             ) {
                 FLAbsentOptionalSamples.view(isVisible).padding(inset).background(Color.green)
+            }
+
+            ComparisonRow(
+                title: "FLScroll { optionalView }",
+                note: "The boundary: a scroll view is a thing of its own, so it does not forward isAbsent and keeps its slot — \(Int(FLAbsentOptionalSamples.swatch) * 2 + Int(FLAbsentOptionalSamples.spacing) * 2) against \(Int(FLAbsentOptionalSamples.swatch) * 2 + Int(FLAbsentOptionalSamples.spacing)) for the rows above. SwiftUI agrees.",
+                node: FLScroll { FLAbsentOptionalSamples.node(isVisible) }
+            ) {
+                ScrollView { FLAbsentOptionalSamples.view(isVisible) }
             }
         }
     }
