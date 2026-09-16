@@ -75,6 +75,8 @@ public struct FLAspectRatio<Wrapped: FLNode>: FLNode {
     public let alignment: FLAlignment
     public let wrapped: Wrapped
 
+    public var isAbsent: Bool { wrapped.isAbsent }
+
     public func layout(in context: FLContext) -> FLAspectRatioLayout<Wrapped.Layout> {
         let ideal = ratio == nil ? idealSize(in: context) : nil
         let derivedRatio = ideal.flatMap(Self.ratio(of:))

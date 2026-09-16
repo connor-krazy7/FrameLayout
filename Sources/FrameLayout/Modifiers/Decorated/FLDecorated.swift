@@ -106,6 +106,8 @@ public struct FLDecorated<Wrapped: FLNode>: FLNode {
     public let decoration: FLDecoration
     public let wrapped: Wrapped
 
+    public var isAbsent: Bool { wrapped.isAbsent }
+
     public func layout(in context: FLContext) -> Wrapped.Layout {
         wrapped.layout(in: context)
     }

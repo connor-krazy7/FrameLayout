@@ -163,6 +163,12 @@ the rendering diverged, because a frame that crops a 160×320 child and one that
 report 160×100. For any claim about placement, render and measure the drawn pixels — `FLSwiftUIParityTests`
 does it with `ImageRenderer` and a bounding-box scan.
 
+**It says nothing about whether the child was given a slot, either**, and that one is worse because the
+number looks like an ordinary answer. It measures the chain as a **root**, where the modifiers around an
+absent child still resolve, so it reports 20 × 20 for a padded absent optional that occupies nothing in
+any container. Measuring an elision means measuring inside a container, with non-zero spacing —
+[absent-nodes.md](absent-nodes.md) is authoritative and carries both traps.
+
 To get numbers out of an exploratory test, use the `Issue.record` rule in
 [../testing.md](../testing.md) — `print` reaches neither the log nor the result bundle.
 

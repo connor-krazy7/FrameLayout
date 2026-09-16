@@ -8,6 +8,7 @@ public struct FLOptional<Wrapped: FLNode>: FLNode {
     public let wrapped: Wrapped?
 
     public var isSpacer: Bool { wrapped.map(\.isSpacer).or(false) }
+    public var isAbsent: Bool { wrapped == nil }
 
     public func layout(in context: FLContext) -> FLOptionalLayout<Wrapped.Layout> {
         FLOptionalLayout(wrapped: wrapped.map { $0.layout(in: context) })

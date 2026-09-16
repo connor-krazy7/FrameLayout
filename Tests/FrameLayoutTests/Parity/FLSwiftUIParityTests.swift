@@ -29,6 +29,45 @@ struct FLSwiftUIParityTests {
         #expect(abs(fl.height - swiftUI.height) <= tolerance, "height", sourceLocation: sourceLocation)
     }
 
+    private var absentNode: FLOptional<FLFrame<FLColor>> { optionalNode(false) }
+    private var presentNode: FLOptional<FLFrame<FLColor>> { optionalNode(true) }
+    private var absentView: some View { optionalView(false) }
+    private var presentView: some View { optionalView(true) }
+
+    @FLNodeBuilder private func optionalNode(_ isVisible: Bool) -> FLOptional<FLFrame<FLColor>> {
+        if isVisible {
+            FLColor(.systemRed).frame(width: 40, height: 40)
+        }
+    }
+
+    @ViewBuilder private func optionalView(_ isVisible: Bool) -> some View {
+        if isVisible {
+            Color.red.frame(width: 40, height: 40)
+        }
+    }
+
+    /// The sample between two 40pt swatches, so a child that is dropped reads as 88 and one that is kept
+    /// at zero size reads as 96.
+    private func stacked(_ node: some FLNode, spacing: CGFloat) -> CGFloat {
+        FLVStack(spacing: spacing) {
+            FLColor(.systemTeal).frame(width: 40, height: 40)
+            node
+            FLColor(.systemIndigo).frame(width: 40, height: 40)
+        }
+        .layout(in: FLContext(width: box)).size.height
+    }
+
+    private func stacked(_ view: some View, spacing: CGFloat) -> CGFloat {
+        UIHostingController(
+            rootView: VStack(spacing: spacing) {
+                Color.teal.frame(width: 40, height: 40)
+                view
+                Color.indigo.frame(width: 40, height: 40)
+            }
+        )
+        .sizeThatFits(in: CGSize(width: box, height: CGFloat.infinity)).height
+    }
+
     @Test("an image reports its own point size until it is made resizable")
     func intrinsicMatches() {
         expectSame(
@@ -633,4 +672,132 @@ struct FLSwiftUIParityTests {
             )
         )
     }
+
+    // MARK: - An absent optional
+
+    /// Measured in a container rather than with `swiftUISize`, because the question is whether the child
+    /// is given a **slot**, which a root measurement cannot see. Do not drop the spacing argument: at
+    /// spacing 0 every assertion here passes with the elision broken.
+    @Test("an absent optional contributes no slot, and neither does anything wrapped around it")
+    func absentContributesNoSlot() {
+        #expect(stacked(absentNode, spacing: 8) == stacked(absentView, spacing: 8))
+        #expect(stacked(absentNode.padding(10), spacing: 8) == stacked(absentView.padding(10), spacing: 8))
+        #expect(
+            stacked(absentNode.frame(width: 100, height: 100), spacing: 8)
+                == stacked(absentView.frame(width: 100, height: 100), spacing: 8)
+        )
+        #expect(
+            stacked(absentNode.frame(maxHeight: 100), spacing: 8)
+                == stacked(absentView.frame(maxHeight: 100), spacing: 8)
+        )
+        #expect(
+            stacked(absentNode.padding(10).background(.systemGreen), spacing: 8)
+                == stacked(absentView.padding(10).background(Color.green), spacing: 8)
+        )
+        #expect(stacked(absentNode.padding(10), spacing: 8) == 88, "the two swatches and one gap")
+    }
+
+    /// The boundary of the rule above: a wrapper is transparent to its child being absent, a view that is
+    /// a thing of its own is not.
+    @Test("a scroll view and a button keep their slot when their content is absent")
+    func aViewOfItsOwnKeepsItsSlot() {
+        let flScroll = FLScroll { absentNode }
+        let flButton = FLButton(tag: "probe") { absentNode }
+
+        #expect(stacked(flScroll, spacing: 8) == stacked(ScrollView { absentView }, spacing: 8))
+        #expect(stacked(flButton, spacing: 8) == stacked(Button(action: {}) { absentView }, spacing: 8))
+        #expect(stacked(flButton, spacing: 8) == 96)
+        #expect(flScroll.isAbsent == false)
+        #expect(flButton.isAbsent == false)
+    }
+
+    /// Why the row above can only be measured in a container: at the root both systems resolve the
+    /// modifiers around the absent child and report 20x20, while a container gives it nothing.
+    /// `sizeThatFits` reports the first and says nothing about the second.
+    @Test("at the root, both systems still resolve a modifier over an absent optional")
+    func absentAtTheRootIsNotTheContainer() {
+        expectSame(absentNode.padding(10).layout(in: FLContext(width: box)).size, swiftUISize(absentView.padding(10)))
+
+        #expect(absentNode.padding(10).layout(in: FLContext(width: box)).size == CGSize(width: 20, height: 20))
+        #expect(stacked(absentNode.padding(10), spacing: 8) == 88)
+    }
+
+    @Test("a present optional is unaffected, slot and spacing included")
+    func presentKeepsItsSlot() {
+        #expect(stacked(presentNode, spacing: 8) == stacked(presentView, spacing: 8))
+        #expect(stacked(presentNode, spacing: 8) == 136)
+    }
+
+    /// A box that survives an absent child is a **drawn** box, in both systems: a decoration sits above
+    /// the optional and fills its own bounds. Asserted in pixels because no size assertion can see it —
+    /// suppressing the fill leaves every number in this suite unchanged.
+    ///
+    /// Both rows carry a present control. A rendering probe that returns zero because it is wired wrong
+    /// looks exactly like one reporting that nothing was drawn, and did, twice, while this was written.
+    @Test("a surviving box is painted, and both systems paint it")
+    func aSurvivingBoxIsPainted() {
+        let flPresent = FLColor(.systemRed).frame(width: 40, height: 40).padding(10).background(.systemGreen)
+        let flAbsent = absentNode.padding(10).background(.systemGreen)
+
+        #expect(paintedPixels(of: presentView.padding(10).background(Color.green)) == 60 * 60)
+        #expect(paintedPixels(of: absentView.padding(10).background(Color.green)) == 20 * 20)
+        #expect(paintedPixels(of: flPresent) == 60 * 60)
+        #expect(paintedPixels(of: flAbsent) == 20 * 20)
+    }
+
+    private func paintedPixels(of view: some View) -> Int {
+        let renderer = ImageRenderer(content: view)
+
+        renderer.scale = 1
+
+        return renderer.cgImage.map(opaquePixels(of:)).or(-1)
+    }
+
+    /// Rendered through a window at scale 1, since a detached layer draws nothing and the default format
+    /// would count the screen's scale squared.
+    private func paintedPixels<Node: FLNode>(of node: Node) -> Int {
+        let layout = node.layout(in: FLContext(width: box))
+        let host = FLHostView<Node>()
+        let window = UIWindow(frame: CGRect(origin: .zero, size: layout.size))
+        let format = UIGraphicsImageRendererFormat.default()
+
+        format.scale = 1
+        host.frame = CGRect(origin: .zero, size: layout.size)
+        host.apply(node: node, layout: layout)
+        window.addSubview(host)
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+
+        let image = UIGraphicsImageRenderer(size: layout.size, format: format).image { context in
+            host.layer.render(in: context.cgContext)
+        }
+
+        return image.cgImage.map(opaquePixels(of:)).or(-1)
+    }
+
+    private func opaquePixels(of image: CGImage) -> Int {
+        let width = image.width
+        let height = image.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let context = pixels.withUnsafeMutableBytes { bytes in
+            CGContext(
+                data: bytes.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        }
+
+        context?.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        return stride(from: 3, to: pixels.count, by: 4).reduce(into: 0) { count, index in
+            if pixels[index] > 0 {
+                count += 1
+            }
+        }
+    }
+
 }
